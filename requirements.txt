@@ -1,0 +1,7 @@
+pandas
+networkx
+pyvis
+python-dotenv
+neo4j==5.13.0 ; extra == "neo"
+openai>=1.3
+tqdm
