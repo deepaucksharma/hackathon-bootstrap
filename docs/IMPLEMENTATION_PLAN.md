@@ -10,7 +10,7 @@ This document provides a high-level overview of the implementation plan for the 
 - Create pipeline orchestrator and script stubs
 - Implement basic workflow to verify end-to-end functionality
 
-### [Phase 2: Extract & Normalize Stack](PHASE2_EXTRACT_NORMALIZE.md)
+### [Phase 2: Extract & Normalize Stack](PHASE2_EXTRACT_NORMALIZE.md) ✅
 - Implement New Relic NRDB client for log extraction
 - Develop LLM-powered event normalization
 - Add correlation key extraction
@@ -37,7 +37,7 @@ This document provides a high-level overview of the implementation plan for the 
 ## Progress Tracking
 
 - [x] Phase 1: Repo Skeleton and Basic Pipeline
-- [ ] Phase 2: Extract & Normalize Stack
+- [x] Phase 2: Extract & Normalize Stack
 - [ ] Phase 3: Graph & Visual Modules
 - [ ] Phase 4: Policy Guardrails and Neo4j Integration
 - [ ] Phase 5: Realtime Stream and GitHub PR Publisher
@@ -45,7 +45,7 @@ This document provides a high-level overview of the implementation plan for the 
 ## Timeline
 
 - Phase 1: 1 day (Completed on May 16, 2025)
-- Phase 2: 2 days
+- Phase 2: 2 days (Completed on May 16, 2025)
 - Phase 3: 2 days
 - Phase 4: 2 days
 - Phase 5: 2-3 days
