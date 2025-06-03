@@ -1,0 +1,83 @@
+{
+  "protocol_version": "3",
+  "integration": {
+    "name": "com.newrelic.kafka",
+    "version": "1.0.0"
+  },
+  "data": [
+    {
+      "entity": {
+        "name": "test-kafka-cluster",
+        "type": "AwsMskClusterSample"
+      },
+      "metrics": [
+        {
+          "entity.guid": "123456789012|INFRA|AWS_MSK_CLUSTER|dGVzdC1rYWZrYS1jbHVzdGVy",
+          "provider.clusterName": "test-kafka-cluster",
+          "provider.awsRegion": "us-east-1",
+          "provider.accountId": "123456789012",
+          "provider.activeControllerCount.Sum": 1,
+          "provider.offlinePartitionsCount.Sum": 0,
+          "provider.underReplicatedPartitions.Sum": 2,
+          "provider.globalPartitionCount": 150,
+          "provider.globalTopicCount": 10,
+          "provider.bytesInPerSec.Sum": 3072.5,
+          "provider.bytesOutPerSec.Sum": 4096.8,
+          "event_type": "AwsMskClusterSample"
+        }
+      ],
+      "inventory": {},
+      "events": []
+    },
+    {
+      "entity": {
+        "name": "test-kafka-cluster-broker-1",
+        "type": "AwsMskBrokerSample"
+      },
+      "metrics": [
+        {
+          "entity.guid": "123456789012|INFRA|AWS_MSK_BROKER|dGVzdC1rYWZrYS1jbHVzdGVyL2Jyb2tlci0x",
+          "provider.brokerId": 1,
+          "provider.clusterName": "test-kafka-cluster",
+          "provider.bytesInPerSec.Average": 1024.5,
+          "provider.bytesOutPerSec.Average": 2048.7,
+          "provider.messagesInPerSec.Average": 100.0,
+          "provider.underReplicatedPartitions.Maximum": 2,
+          "provider.partitionCount": 50,
+          "provider.cpuUser.Average": 45.5,
+          "provider.memoryUsed.Average": 78.2,
+          "provider.kafkaDataLogsDiskUsed.Average": 65.0,
+          "provider.networkRxThroughput.Average": 1500.0,
+          "provider.fetchConsumerTotalTimeMsMean.Average": 15.5,
+          "provider.produceTotalTimeMsMean.Average": 8.3,
+          "provider.requestHandlerAvgIdlePercent.Average": 85.0,
+          "event_type": "AwsMskBrokerSample"
+        }
+      ],
+      "inventory": {},
+      "events": []
+    },
+    {
+      "entity": {
+        "name": "test-kafka-cluster/test-topic",
+        "type": "AwsMskTopicSample"
+      },
+      "metrics": [
+        {
+          "entity.guid": "123456789012|INFRA|AWS_MSK_TOPIC|dGVzdC1rYWZrYS1jbHVzdGVyL3Rlc3QtdG9waWM=",
+          "provider.topic": "test-topic",
+          "provider.clusterName": "test-kafka-cluster",
+          "provider.bytesInPerSec.Average": 512.3,
+          "provider.bytesOutPerSec.Average": 768.9,
+          "provider.messagesInPerSec.Average": 50.0,
+          "provider.partitionCount": 10,
+          "provider.replicationFactor": 3,
+          "provider.minInSyncReplicas": 2,
+          "event_type": "AwsMskTopicSample"
+        }
+      ],
+      "inventory": {},
+      "events": []
+    }
+  ]
+}

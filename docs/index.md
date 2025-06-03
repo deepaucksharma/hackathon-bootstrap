@@ -6,9 +6,7 @@
 - [Metrics Verification Report](./metrics-verification-report.md) - Verification of metrics collection
 
 ## MSK Shim Documentation
-- [MSK Shim Reference](./MSK-SHIM-REFERENCE.md) - Complete guide for MSK compatibility mode
-- [MSK Shim Implementation](./MSK-SHIM-IMPLEMENTATION.md) - Implementation details and file structure
-- [MSK Shim Metrics](./MSK-SHIM-METRICS.md) - Quick reference for all MSK metrics
+- [MSK Shim Complete Guide](./MSK-SHIM.md) - Comprehensive guide for AWS MSK compatibility mode
 
 ## External Documentation
 - [New Relic Documentation](https://docs.newrelic.com/docs/integrations/host-integrations/host-integrations-list/kafka-monitoring-integration)

@@ -30,7 +30,7 @@ export AWS_REGION=us-east-1
 export KAFKA_CLUSTER_NAME=my-cluster
 ```
 
-See [MSK Shim Documentation](./docs/MSK-SHIM-REFERENCE.md) for configuration options and metrics mapping.
+See [MSK Shim Documentation](./docs/MSK-SHIM.md) for complete setup and configuration.
 
 ## Installation and usage
 
