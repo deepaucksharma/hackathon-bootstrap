@@ -1,0 +1,25 @@
+# Build stage
+FROM golang:1.21-alpine AS builder
+
+RUN apk add --no-cache git make
+
+WORKDIR /src
+COPY . .
+
+RUN go mod download
+RUN make build
+
+# Runtime stage
+FROM alpine:3.18
+
+RUN apk add --no-cache ca-certificates
+
+COPY --from=builder /src/bin/nri-kafka /usr/local/bin/nri-kafka
+COPY kafka-msk-config.yml.sample /etc/newrelic-infra/integrations.d/kafka-config.yml.sample
+COPY jmx-config-msk.yml /etc/newrelic-infra/integrations.d/jmx-config.yml
+
+# Set default environment variables
+ENV MSK_SHIM_ENABLED=true
+ENV VERBOSE=1
+
+ENTRYPOINT ["/usr/local/bin/nri-kafka"]

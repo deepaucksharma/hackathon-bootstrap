@@ -18,6 +18,20 @@ JMX is required to be enabled on the following entities in order to be able to c
 
 Information on configuring JMX can be found [here](https://docs.oracle.com/javase/8/docs/technotes/guides/management/agent.html).
 
+## MSK Compatibility Mode
+
+Transform your self-managed Kafka metrics to be compatible with New Relic's AWS MSK Message Queues & Streams UI.
+
+### Quick Start
+```bash
+export MSK_SHIM_ENABLED=true
+export AWS_ACCOUNT_ID=123456789012
+export AWS_REGION=us-east-1
+export KAFKA_CLUSTER_NAME=my-cluster
+```
+
+See [MSK Shim Documentation](./docs/MSK-SHIM-REFERENCE.md) for configuration options and metrics mapping.
+
 ## Installation and usage
 
 For installation and usage instructions, see our [documentation web site](https://docs.newrelic.com/docs/integrations/host-integrations/host-integrations-list/kafka-monitoring-integration).
