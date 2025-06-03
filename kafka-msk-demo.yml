@@ -1,0 +1,39 @@
+integrations:
+  - name: nri-kafka
+    env:
+      CLUSTER_NAME: "${KAFKA_CLUSTER_NAME}"
+      KAFKA_VERSION: "2.6.0"
+      AUTODISCOVER_STRATEGY: "bootstrap"
+      BOOTSTRAP_BROKER_HOST: "localhost"
+      BOOTSTRAP_BROKER_KAFKA_PORT: 9092
+      BOOTSTRAP_BROKER_JMX_PORT: 9999
+      
+      # MSK Shim Configuration
+      MSK_SHIM_ENABLED: "${MSK_SHIM_ENABLED}"
+      AWS_ACCOUNT_ID: "${AWS_ACCOUNT_ID}"
+      AWS_REGION: "${AWS_REGION}"
+      ENVIRONMENT: "${ENVIRONMENT}"
+      
+      # Features
+      ENABLE_BROKER_TOPIC_METRICS_V2: "${ENABLE_BROKER_TOPIC_METRICS_V2}"
+      CONSUMER_LAG_ENRICHMENT: "${CONSUMER_LAG_ENRICHMENT}"
+      SYSTEM_SAMPLE_CORRELATION: "${SYSTEM_SAMPLE_CORRELATION}"
+      DISK_MOUNT_REGEX: "${DISK_MOUNT_REGEX}"
+      LOG_MOUNT_REGEX: "${LOG_MOUNT_REGEX}"
+      
+      # Collection settings
+      METRICS: "true"
+      INVENTORY: "true"
+      
+    config:
+      collect_broker_topic_data: true
+      collect_topic_size: true
+      topic_mode: "all"
+      collect_topic_offset: true
+    
+    interval: 30s
+    timeout: 120s
+    
+    labels:
+      env: demo
+      msk_shim: enabled
