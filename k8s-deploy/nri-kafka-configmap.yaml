@@ -1,0 +1,32 @@
+apiVersion: v1
+kind: ConfigMap
+metadata:
+  name: nri-kafka-config
+  namespace: newrelic
+data:
+  nri-kafka-config.yml: |
+    integrations:
+      - name: nri-kafka
+        env:
+          CLUSTER_NAME: k8s-kafka-cluster
+          AUTODISCOVER_STRATEGY: zookeeper
+          ZOOKEEPER_HOSTS: '[{"host": "zookeeper.kafka.svc.cluster.local", "port": 2181}]'
+          ZOOKEEPER_PATH: "/"
+          DEFAULT_JMX_PORT: "9999"
+          DEFAULT_JMX_USER: ""
+          DEFAULT_JMX_PASSWORD: ""
+          # Collection settings
+          METRICS: "true"
+          INVENTORY: "true"
+          EVENTS: "true"
+          CONSUMER_OFFSET: "true"
+          # Topic settings
+          TOPIC_MODE: all
+          # Logging
+          NRI_LOG_LEVEL: debug
+          VERBOSE: "true"
+        interval: 30s
+        labels:
+          env: kubernetes
+          cluster: k8s-kafka
+        inventory_source: config/kafka

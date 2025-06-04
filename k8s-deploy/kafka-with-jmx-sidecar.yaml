@@ -1,0 +1,176 @@
+apiVersion: v1
+kind: Namespace
+metadata:
+  name: kafka
+---
+apiVersion: v1
+kind: Service
+metadata:
+  name: kafka-broker
+  namespace: kafka
+spec:
+  ports:
+  - port: 9092
+    name: kafka
+  - port: 9999
+    name: jmx
+  selector:
+    app: kafka
+---
+apiVersion: v1
+kind: Service
+metadata:
+  name: zookeeper
+  namespace: kafka
+spec:
+  ports:
+  - port: 2181
+    name: client
+  selector:
+    app: zookeeper
+---
+apiVersion: apps/v1
+kind: Deployment
+metadata:
+  name: kafka
+  namespace: kafka
+spec:
+  replicas: 1
+  selector:
+    matchLabels:
+      app: kafka
+  template:
+    metadata:
+      labels:
+        app: kafka
+        component: broker
+    spec:
+      containers:
+      # Kafka container
+      - name: kafka
+        image: confluentinc/cp-kafka:7.4.0
+        ports:
+        - containerPort: 9092
+          name: kafka
+        - containerPort: 9999
+          name: jmx
+        env:
+        - name: KAFKA_BROKER_ID
+          value: "1"
+        - name: KAFKA_ZOOKEEPER_CONNECT
+          value: "zookeeper:2181"
+        - name: KAFKA_ADVERTISED_LISTENERS
+          value: "PLAINTEXT://kafka-broker.kafka.svc.cluster.local:9092"
+        - name: KAFKA_LISTENERS
+          value: "PLAINTEXT://0.0.0.0:9092"
+        - name: KAFKA_OFFSETS_TOPIC_REPLICATION_FACTOR
+          value: "1"
+        - name: KAFKA_TRANSACTION_STATE_LOG_MIN_ISR
+          value: "1"
+        - name: KAFKA_TRANSACTION_STATE_LOG_REPLICATION_FACTOR
+          value: "1"
+        - name: KAFKA_AUTO_CREATE_TOPICS_ENABLE
+          value: "true"
+        # JMX Configuration - bind to all interfaces
+        - name: KAFKA_JMX_PORT
+          value: "9999"
+        - name: KAFKA_JMX_HOSTNAME
+          value: "0.0.0.0"
+        - name: KAFKA_JMX_OPTS
+          value: >-
+            -Dcom.sun.management.jmxremote=true
+            -Dcom.sun.management.jmxremote.authenticate=false
+            -Dcom.sun.management.jmxremote.ssl=false
+            -Dcom.sun.management.jmxremote.local.only=false
+            -Dcom.sun.management.jmxremote.port=9999
+            -Dcom.sun.management.jmxremote.rmi.port=9999
+            -Djava.rmi.server.hostname=127.0.0.1
+      
+      # NRI-Kafka sidecar
+      - name: nri-kafka-sidecar
+        image: newrelic/infrastructure-bundle:3.2.71
+        env:
+        - name: NRIA_LICENSE_KEY
+          value: "dfb79449d23acce4df582f2f5550abe4FFFFNRAL"
+        - name: NRIA_VERBOSE
+          value: "1"
+        - name: CLUSTER_NAME
+          value: "k8s-kafka-cluster"
+        - name: NRIA_DISPLAY_NAME
+          valueFrom:
+            fieldRef:
+              fieldPath: spec.nodeName
+        - name: NRIA_CUSTOM_ATTRIBUTES
+          value: '{"clusterName":"k8s-kafka-cluster","integration":"kafka-sidecar"}'
+        - name: NRIA_PASSTHROUGH_ENVIRONMENT
+          value: "CLUSTER_NAME"
+        volumeMounts:
+        - name: nri-kafka-config
+          mountPath: /etc/newrelic-infra/integrations.d/
+      volumes:
+      - name: nri-kafka-config
+        configMap:
+          name: nri-kafka-sidecar-config
+---
+apiVersion: v1
+kind: ConfigMap
+metadata:
+  name: nri-kafka-sidecar-config
+  namespace: kafka
+data:
+  nri-kafka-config.yml: |
+    integrations:
+      - name: nri-kafka
+        command: nri-kafka
+        arguments:
+          cluster_name: k8s-kafka-cluster
+          autodiscover_strategy: bootstrap
+          # Connect to localhost since it's a sidecar
+          bootstrap_broker_host: localhost
+          bootstrap_broker_jmx_port: "9999"
+          bootstrap_broker_kafka_port: "9092"
+          bootstrap_broker_kafka_protocol: PLAINTEXT
+          # No JMX authentication
+          default_jmx_user: ""
+          default_jmx_password: ""
+          # Collection settings
+          metrics: true
+          inventory: true
+          events: true
+          consumer_offset: true
+          # Topic settings
+          topic_mode: all
+          collect_topic_size: true
+          # Logging
+          verbose: true
+          nri_log_level: debug
+        interval: 30s
+        labels:
+          env: kubernetes
+          role: kafka-broker
+---
+apiVersion: apps/v1
+kind: Deployment
+metadata:
+  name: zookeeper
+  namespace: kafka
+spec:
+  replicas: 1
+  selector:
+    matchLabels:
+      app: zookeeper
+  template:
+    metadata:
+      labels:
+        app: zookeeper
+    spec:
+      containers:
+      - name: zookeeper
+        image: confluentinc/cp-zookeeper:7.4.0
+        ports:
+        - containerPort: 2181
+        env:
+        - name: ZOOKEEPER_CLIENT_PORT
+          value: "2181"
+        - name: ZOOKEEPER_TICK_TIME
+          value: "2000"
