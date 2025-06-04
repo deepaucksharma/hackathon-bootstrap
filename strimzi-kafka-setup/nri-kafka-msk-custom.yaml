@@ -73,7 +73,7 @@ spec:
       serviceAccountName: nri-bundle-newrelic-infrastructure
       containers:
       - name: nri-kafka
-        image: nri-kafka-msk:v2
+        image: nri-kafka-msk:v3
         imagePullPolicy: Never  # Use local image
         env:
         - name: NRIA_LICENSE_KEY
