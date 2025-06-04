@@ -1,0 +1,91 @@
+apiVersion: v1
+kind: ConfigMap
+metadata:
+  name: jmxtrans-config
+  namespace: strimzi-kafka
+data:
+  jmxtrans.json: |
+    {
+      "servers": [
+        {
+          "alias": "kafka-broker-0",
+          "host": "production-kafka-dual-role-0.production-kafka-kafka-brokers.strimzi-kafka.svc.cluster.local",
+          "port": "9999",
+          "username": "cluster-operator",
+          "password": "${JMX_PASSWORD}",
+          "queries": [
+            {
+              "obj": "kafka.server:type=BrokerTopicMetrics,name=*",
+              "attr": ["Count", "OneMinuteRate", "FiveMinuteRate"],
+              "outputWriters": [{
+                "class": "com.googlecode.jmxtrans.model.output.StdOutWriter"
+              }]
+            },
+            {
+              "obj": "kafka.server:type=ReplicaManager,name=*",
+              "attr": ["Value"],
+              "outputWriters": [{
+                "class": "com.googlecode.jmxtrans.model.output.StdOutWriter"
+              }]
+            }
+          ]
+        }
+      ]
+    }
+---
+apiVersion: apps/v1
+kind: Deployment
+metadata:
+  name: jmx-proxy
+  namespace: strimzi-kafka
+spec:
+  replicas: 1
+  selector:
+    matchLabels:
+      app: jmx-proxy
+  template:
+    metadata:
+      labels:
+        app: jmx-proxy
+    spec:
+      containers:
+      - name: jmx-proxy
+        image: sscaling/jmx-prometheus-exporter:0.20.0
+        ports:
+        - containerPort: 5555
+          name: metrics
+        command:
+        - java
+        - -jar
+        - /opt/jmx_exporter/jmx_prometheus_httpserver.jar
+        - "5555"
+        - /etc/jmx-exporter/config.yaml
+        volumeMounts:
+        - name: config
+          mountPath: /etc/jmx-exporter
+        env:
+        - name: JMX_PASSWORD
+          valueFrom:
+            secretKeyRef:
+              name: production-kafka-kafka-jmx
+              key: cluster-operator
+      volumes:
+      - name: config
+        configMap:
+          name: jmx-exporter-config
+---
+apiVersion: v1
+kind: ConfigMap
+metadata:
+  name: jmx-exporter-config
+  namespace: strimzi-kafka
+data:
+  config.yaml: |
+    hostPort: production-kafka-dual-role-0.production-kafka-kafka-brokers:9999
+    username: cluster-operator
+    password: ${JMX_PASSWORD}
+    ssl: false
+    lowercaseOutputName: true
+    lowercaseOutputLabelNames: true
+    rules:
+    - pattern: ".*"

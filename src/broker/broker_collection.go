@@ -15,6 +15,7 @@ import (
 	"github.com/newrelic/nri-kafka/src/args"
 	"github.com/newrelic/nri-kafka/src/connection"
 	"github.com/newrelic/nri-kafka/src/metrics"
+	"github.com/newrelic/nri-kafka/src/msk"
 )
 
 // StartBrokerPool starts a pool of brokerWorkers to handle collecting data for Broker entities.
@@ -145,6 +146,47 @@ func collectBrokerMetrics(b *connection.Broker, collectedTopics []string, i *int
 
 // For a given broker struct, collect and populate its entity with broker metrics
 func populateBrokerMetrics(b *connection.Broker, i *integration.Integration, conn connection.JMXConnection) {
+	// If MSK hook is enabled, transform to MSK format
+	if msk.GlobalMSKHook != nil && msk.GlobalMSKHook.IsEnabled() {
+		// Create broker data map for MSK transformation
+		brokerData := make(map[string]interface{})
+		brokerData["broker.id"] = b.ID
+		brokerData["broker.host"] = b.Host
+		
+		// Create temporary sample to collect metrics
+		entity, err := b.Entity(i)
+		if err != nil {
+			log.Error("Failed to get entity for broker: %s", err)
+			return
+		}
+		tempSample := entity.NewMetricSet("KafkaBrokerSample",
+			attribute.Attribute{Key: "displayName", Value: entity.Metadata.Name},
+			attribute.Attribute{Key: "entityName", Value: "broker:" + entity.Metadata.Name},
+			attribute.Attribute{Key: "clusterName", Value: args.GlobalArgs.ClusterName},
+		)
+		
+		// Collect metrics into temp sample
+		metrics.GetBrokerMetrics(tempSample, conn)
+		
+		// Convert metrics to map for MSK transformation
+		for name, value := range tempSample.Metrics {
+			brokerData[name] = value
+		}
+		
+		// Transform to MSK format
+		if err := msk.GlobalMSKHook.TransformBrokerData(b, brokerData); err != nil {
+			log.Error("Failed to transform broker metrics to MSK format: %s", err)
+			// Fall back to regular collection
+			populateBrokerMetricsRegular(b, i, conn)
+		}
+	} else {
+		// Regular collection without MSK transformation
+		populateBrokerMetricsRegular(b, i, conn)
+	}
+}
+
+// populateBrokerMetricsRegular handles regular broker metrics collection
+func populateBrokerMetricsRegular(b *connection.Broker, i *integration.Integration, conn connection.JMXConnection) {
 	// Create a metric set on the broker entity
 	entity, err := b.Entity(i)
 	if err != nil {
@@ -172,17 +214,56 @@ func collectBrokerTopicMetrics(b *connection.Broker, collectedTopics []string, i
 	}
 
 	for _, topicName := range collectedTopics {
-		sample := entity.NewMetricSet("KafkaBrokerSample",
-			attribute.Attribute{Key: "displayName", Value: entity.Metadata.Name},
-			attribute.Attribute{Key: "entityName", Value: "broker:" + entity.Metadata.Name},
-			attribute.Attribute{Key: "clusterName", Value: args.GlobalArgs.ClusterName},
-			attribute.Attribute{Key: "topic", Value: topicName},
-		)
+		if msk.GlobalMSKHook != nil && msk.GlobalMSKHook.IsEnabled() {
+			// Create topic data map for MSK transformation
+			topicData := make(map[string]interface{})
+			topicData["topic.name"] = topicName
+			topicData["broker.id"] = b.ID
+			topicData["broker.host"] = b.Host
+			
+			// Create temporary sample to collect metrics
+			tempSample := entity.NewMetricSet("KafkaBrokerSample",
+				attribute.Attribute{Key: "displayName", Value: entity.Metadata.Name},
+				attribute.Attribute{Key: "entityName", Value: "broker:" + entity.Metadata.Name},
+				attribute.Attribute{Key: "clusterName", Value: args.GlobalArgs.ClusterName},
+				attribute.Attribute{Key: "topic", Value: topicName},
+			)
+			
+			// Collect metrics
+			metrics.CollectMetricDefinitions(tempSample, metrics.BrokerTopicMetricDefs, metrics.ApplyTopicName(topicName), conn)
+			
+			// Convert metrics to map for MSK transformation
+			for name, value := range tempSample.Metrics {
+				topicData[name] = value
+			}
+			
+			// Transform to MSK format
+			if err := msk.GlobalMSKHook.TransformTopicData(topicName, topicData); err != nil {
+				log.Error("Failed to transform topic metrics to MSK format: %s", err)
+				// Fall back to regular collection
+				sample := entity.NewMetricSet("KafkaBrokerSample",
+					attribute.Attribute{Key: "displayName", Value: entity.Metadata.Name},
+					attribute.Attribute{Key: "entityName", Value: "broker:" + entity.Metadata.Name},
+					attribute.Attribute{Key: "clusterName", Value: args.GlobalArgs.ClusterName},
+					attribute.Attribute{Key: "topic", Value: topicName},
+				)
+				topicSampleLookup[topicName] = sample
+				metrics.CollectMetricDefinitions(sample, metrics.BrokerTopicMetricDefs, metrics.ApplyTopicName(topicName), conn)
+			}
+		} else {
+			// Regular collection
+			sample := entity.NewMetricSet("KafkaBrokerSample",
+				attribute.Attribute{Key: "displayName", Value: entity.Metadata.Name},
+				attribute.Attribute{Key: "entityName", Value: "broker:" + entity.Metadata.Name},
+				attribute.Attribute{Key: "clusterName", Value: args.GlobalArgs.ClusterName},
+				attribute.Attribute{Key: "topic", Value: topicName},
+			)
 
-		// Insert into map
-		topicSampleLookup[topicName] = sample
+			// Insert into map
+			topicSampleLookup[topicName] = sample
 
-		metrics.CollectMetricDefinitions(sample, metrics.BrokerTopicMetricDefs, metrics.ApplyTopicName(topicName), conn)
+			metrics.CollectMetricDefinitions(sample, metrics.BrokerTopicMetricDefs, metrics.ApplyTopicName(topicName), conn)
+		}
 	}
 
 	return topicSampleLookup

@@ -1,0 +1,108 @@
+apiVersion: v1
+kind: ConfigMap
+metadata:
+  name: nri-kafka-strimzi-config
+  namespace: newrelic
+data:
+  kafka-config.yml: |
+    integrations:
+      - name: nri-kafka
+        env:
+          CLUSTER_NAME: strimzi-production-kafka
+          
+          # Use bootstrap discovery for KRaft
+          AUTODISCOVER_STRATEGY: bootstrap
+          BOOTSTRAP_BROKER_HOST: production-kafka-kafka-bootstrap.strimzi-kafka.svc.cluster.local
+          BOOTSTRAP_BROKER_KAFKA_PORT: 9092
+          BOOTSTRAP_BROKER_JMX_PORT: 9999
+          
+          # JMX configuration (no auth)
+          DEFAULT_JMX_PORT: "9999"
+          
+          # Collection settings
+          METRICS: "true"
+          INVENTORY: "true"
+          EVENTS: "true"
+          
+          # Topic settings
+          TOPIC_MODE: "all"
+          COLLECT_TOPIC_SIZE: "true"
+          
+          # Verbose logging
+          VERBOSE: "true"
+          NRJMX_VERBOSE: "true"
+        interval: 30s
+---
+apiVersion: apps/v1
+kind: DaemonSet
+metadata:
+  name: nri-kafka-strimzi
+  namespace: newrelic
+spec:
+  selector:
+    matchLabels:
+      app: nri-kafka-strimzi
+  template:
+    metadata:
+      labels:
+        app: nri-kafka-strimzi
+    spec:
+      serviceAccountName: nri-bundle-newrelic-infrastructure
+      hostNetwork: true
+      dnsPolicy: ClusterFirstWithHostNet
+      containers:
+      - name: newrelic-infra
+        image: newrelic/infrastructure-bundle:latest
+        env:
+        - name: NRIA_LICENSE_KEY
+          valueFrom:
+            secretKeyRef:
+              name: nri-bundle-newrelic-infrastructure-license
+              key: licenseKey
+        - name: NRIA_VERBOSE
+          value: "1"
+        - name: NRIA_LOG_LEVEL
+          value: "debug"
+        - name: NRIA_DISPLAY_NAME
+          value: "strimzi-kafka-monitor"
+        - name: CLUSTER_NAME
+          value: "strimzi-production-kafka"
+        - name: NRIA_CUSTOM_ATTRIBUTES
+          value: |
+            {"clusterName":"strimzi-production-kafka","deployment":"strimzi","kafka":"kraft"}
+        volumeMounts:
+        - name: nri-kafka-config
+          mountPath: /etc/newrelic-infra/integrations.d/
+        - name: host-root
+          mountPath: /host
+          readOnly: true
+        - name: host-var
+          mountPath: /var
+        - name: host-etc
+          mountPath: /etc
+        resources:
+          limits:
+            memory: 500Mi
+          requests:
+            cpu: 100m
+            memory: 150Mi
+        securityContext:
+          privileged: true
+      volumes:
+      - name: nri-kafka-config
+        configMap:
+          name: nri-kafka-strimzi-config
+      - name: host-root
+        hostPath:
+          path: /
+      - name: host-var
+        hostPath:
+          path: /var
+      - name: host-etc
+        hostPath:
+          path: /etc
+      tolerations:
+      - effect: NoSchedule
+        operator: Exists
+      - effect: NoExecute
+        operator: Exists

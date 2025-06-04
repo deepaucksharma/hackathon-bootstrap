@@ -13,6 +13,7 @@ import (
 	"github.com/newrelic/infra-integrations-sdk/v3/log"
 	"github.com/newrelic/nri-kafka/src/args"
 	"github.com/newrelic/nri-kafka/src/connection"
+	"github.com/newrelic/nri-kafka/src/msk"
 )
 
 const (
@@ -104,6 +105,28 @@ func setMetrics(consumerGroup string, offsetData []*partitionOffsets, kafkaInteg
 	}
 
 	for _, offsetData := range offsetData {
+		// If MSK hook is enabled, process consumer offset data
+		if msk.GlobalMSKHook != nil && msk.GlobalMSKHook.IsEnabled() {
+			consumerOffsetData := make(map[string]interface{})
+			consumerOffsetData["consumerGroup"] = consumerGroup
+			consumerOffsetData["topic"] = offsetData.Topic
+			consumerOffsetData["partition"] = offsetData.Partition
+			if offsetData.ConsumerOffset != nil {
+				consumerOffsetData["consumerOffset"] = *offsetData.ConsumerOffset
+			}
+			if offsetData.HighWaterMark != nil {
+				consumerOffsetData["highWaterMark"] = *offsetData.HighWaterMark
+			}
+			if offsetData.ConsumerLag != nil {
+				consumerOffsetData["consumerLag"] = *offsetData.ConsumerLag
+			}
+			
+			// Process with MSK hook for lag enrichment
+			if err := msk.GlobalMSKHook.ProcessConsumerOffset(consumerOffsetData); err != nil {
+				log.Error("Failed to process consumer offset with MSK hook: %s", err)
+			}
+		}
+		
 		metricSet := groupEntity.NewMetricSet("KafkaOffsetSample",
 			attribute.Attribute{Key: "displayName", Value: groupEntity.Metadata.Name},
 			attribute.Attribute{Key: "entityName", Value: "consumerGroup:" + groupEntity.Metadata.Name},

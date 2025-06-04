@@ -15,8 +15,8 @@ type Shim struct {
 	aggregator       *MetricAggregator
 	entityCache      *EntityCache
 	systemSampler    *SystemSampleCorrelator
-	transformer      *MetricTransformer
-	lagEnricher      *ConsumerLagEnricher
+	transformer      *SimpleTransformer
+	lagEnricher      *SimpleConsumerLagEnricher
 	mu               sync.Mutex
 }
 
@@ -42,24 +42,12 @@ func NewShim(i *integration.Integration, config *Config) (*Shim, error) {
 	// Initialize system sample correlator with regex patterns
 	shim.systemSampler = NewSystemSampleCorrelator(nil, config.DiskMountRegex, config.LogMountRegex)
 
-	// Initialize transformer
-	shim.transformer = NewMetricTransformer(&Shim{
-		integration:   i,
-		config:        config,
-		aggregator:    shim.aggregator,
-		entityCache:   shim.entityCache,
-		systemSampler: nil, // V2 uses its own correlator
-		transformer:   nil, // Avoid circular reference
-	})
+	// Initialize simple transformer
+	shim.transformer = NewSimpleTransformer(shim)
 
 	// Initialize consumer lag enricher if enabled
 	if config.ConsumerLagEnrich {
-		shim.lagEnricher = NewConsumerLagEnricher(&Shim{
-			integration: i,
-			config:      config,
-			aggregator:  shim.aggregator,
-			entityCache: shim.entityCache,
-		})
+		shim.lagEnricher = NewSimpleConsumerLagEnricher(shim)
 	}
 
 	return shim, nil
@@ -82,7 +70,7 @@ func (s *Shim) TransformBrokerMetrics(brokerData map[string]interface{}) error {
 		}
 	}
 
-	return s.transformer.TransformBrokerMetrics(brokerData)
+	return s.transformer.TransformBrokerMetricsSimple(brokerData)
 }
 
 // TransformTopicMetrics transforms topic metrics to MSK format
@@ -90,7 +78,7 @@ func (s *Shim) TransformTopicMetrics(topicData map[string]interface{}) error {
 	s.mu.Lock()
 	defer s.mu.Unlock()
 
-	return s.transformer.TransformTopicMetrics(topicData)
+	return s.transformer.TransformTopicMetricsSimple(topicData)
 }
 
 // ProcessConsumerOffset processes consumer offset data for lag enrichment
@@ -102,7 +90,7 @@ func (s *Shim) ProcessConsumerOffset(offsetData map[string]interface{}) error {
 	s.mu.Lock()
 	defer s.mu.Unlock()
 
-	return s.lagEnricher.ProcessConsumerOffsetSample(offsetData)
+	return s.lagEnricher.ProcessConsumerOffsetSampleSimple(offsetData)
 }
 
 // CreateClusterEntity creates the cluster-level entity with aggregated metrics
@@ -110,7 +98,7 @@ func (s *Shim) CreateClusterEntity() error {
 	s.mu.Lock()
 	defer s.mu.Unlock()
 
-	return s.transformer.CreateClusterEntity()
+	return s.transformer.CreateClusterEntitySimple()
 }
 
 // GetOrCreateEntity gets an entity from cache or creates a new one

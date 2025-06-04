@@ -35,7 +35,7 @@ func (t *MetricTransformer) TransformBrokerMetrics(brokerData map[string]interfa
 
 	// Create MSK broker entity
 	entityName := fmt.Sprintf("%s-broker-%d", t.shim.config.ClusterName, brokerID)
-	entity, err := t.shim.GetOrCreateEntity("broker", "AwsMskBrokerSample")
+	entity, err := t.shim.GetOrCreateEntity("AwsMskBrokerSample", entityName)
 	if err != nil {
 		return fmt.Errorf("failed to create broker entity: %w", err)
 	}
@@ -44,10 +44,13 @@ func (t *MetricTransformer) TransformBrokerMetrics(brokerData map[string]interfa
 	guid := GenerateEntityGUID(EntityTypeBroker, t.shim.config.AWSAccountID, 
 		t.shim.config.ClusterName, brokerID)
 
+	// Create metric set for broker
+	ms := entity.NewMetricSet("AwsMskBrokerSample")
+	
 	// Set entity identification (P0)
-	entity.SetMetric("entity.guid", guid, metric.ATTRIBUTE)
-	entity.SetMetric("entity.type", string(EntityTypeBroker), metric.ATTRIBUTE)
-	entity.SetMetric("entityName", entityName, metric.ATTRIBUTE)
+	ms.SetMetric("entity.guid", guid, metric.ATTRIBUTE)
+	ms.SetMetric("entity.type", string(EntityTypeBroker), metric.ATTRIBUTE)
+	ms.SetMetric("entityName", entityName, metric.ATTRIBUTE)
 	entity.SetMetric("entityGuid", guid, metric.ATTRIBUTE) // Duplicate for compatibility
 	entity.SetMetric("guid", guid, metric.ATTRIBUTE)       // Another duplicate
 	entity.SetMetric("Name", entityName, metric.ATTRIBUTE)

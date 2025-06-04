@@ -21,6 +21,7 @@ import (
 	"github.com/newrelic/nri-kafka/src/client"
 	"github.com/newrelic/nri-kafka/src/connection"
 	"github.com/newrelic/nri-kafka/src/consumeroffset"
+	"github.com/newrelic/nri-kafka/src/msk"
 	"github.com/newrelic/nri-kafka/src/topic"
 	"github.com/newrelic/nri-kafka/src/zookeeper"
 )
@@ -46,6 +47,17 @@ func main() {
 	kafkaIntegration, err := integration.New(integrationName, integrationVersion, integration.Args(&argList))
 	ExitOnErr(err)
 
+	// Set default MSK environment variables if not already set
+	setDefaultMSKEnvironment()
+	
+	// Initialize MSK integration hook with default configuration (always active)
+	mskHook := msk.NewIntegrationHook(kafkaIntegration)
+	if mskHook == nil {
+		log.Error("Failed to initialize MSK integration hook")
+	} else {
+		log.Info("MSK integration hook initialized successfully")
+	}
+
 	if argList.ShowVersion {
 		fmt.Printf(
 			"New Relic %s integration Version: %s, Platform: %s, GoVersion: %s, GitCommit: %s, BuildDate: %s\n",
@@ -70,7 +82,7 @@ func main() {
 	jmxConnProvider := connection.NewJMXProviderWithLimit(context.Background(), args.GlobalArgs.MaxJMXConnections)
 
 	if !args.GlobalArgs.ConsumerOffset {
-		coreCollection(kafkaIntegration, jmxConnProvider)
+		coreCollection(kafkaIntegration, jmxConnProvider, mskHook)
 	} else {
 		brokers, err := getBrokerList(args.GlobalArgs)
 		ExitOnErr(err)
@@ -80,6 +92,13 @@ func main() {
 		if err := consumeroffset.Collect(client, kafkaIntegration); err != nil {
 			log.Error("Failed collecting consumer offset data: %s", err.Error())
 			os.Exit(1)
+		}
+	}
+
+	// Finalize MSK hook before publishing
+	if mskHook != nil {
+		if err := mskHook.Finalize(); err != nil {
+			log.Error("Failed to finalize MSK hook: %s", err)
 		}
 	}
 
@@ -171,7 +190,7 @@ func getBrokerList(arguments *args.ParsedArguments) ([]*connection.Broker, error
 }
 
 // coreCollection is the main integration collection. Does not handle consumerOffset collection
-func coreCollection(kafkaIntegration *integration.Integration, jmxConnProvider connection.JMXProvider) {
+func coreCollection(kafkaIntegration *integration.Integration, jmxConnProvider connection.JMXProvider, mskHook *msk.IntegrationHook) {
 	var wg sync.WaitGroup
 
 	if args.GlobalArgs.CollectBrokers() {
@@ -299,4 +318,34 @@ func checkJMXConnection(brokers []*connection.Broker, timeout time.Duration) []e
 	}
 
 	return errs
+}
+
+// setDefaultMSKEnvironment sets default MSK environment variables if not already set
+func setDefaultMSKEnvironment() {
+	// Always enable MSK shim
+	os.Setenv("MSK_SHIM_ENABLED", "true")
+	
+	// Set default values if environment variables are not provided
+	if os.Getenv("KAFKA_CLUSTER_NAME") == "" {
+		os.Setenv("KAFKA_CLUSTER_NAME", "default-kafka-cluster")
+	}
+
+	if os.Getenv("MSK_CLUSTER_ARN") == "" {
+		os.Setenv("MSK_CLUSTER_ARN", "arn:aws:kafka:us-east-1:123456789012:cluster/default-kafka-cluster/12345678-1234-1234-1234-123456789012-1")
+	}
+
+	if os.Getenv("AWS_ACCOUNT_ID") == "" {
+		os.Setenv("AWS_ACCOUNT_ID", "123456789012")
+	}
+
+	if os.Getenv("AWS_REGION") == "" {
+		os.Setenv("AWS_REGION", "us-east-1")
+	}
+
+	if os.Getenv("ENVIRONMENT") == "" {
+		os.Setenv("ENVIRONMENT", "production")
+	}
+
+	// Enable consumer lag enrichment by default
+	os.Setenv("CONSUMER_LAG_ENRICHMENT", "true")
 }

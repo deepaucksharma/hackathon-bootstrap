@@ -8,6 +8,9 @@ import (
 	"github.com/newrelic/nri-kafka/src/connection"
 )
 
+// GlobalMSKHook is a global instance of the MSK integration hook
+var GlobalMSKHook *IntegrationHook
+
 // IntegrationHook provides enhanced hooks into the nri-kafka integration flow
 type IntegrationHook struct {
 	shim        *Shim
@@ -32,11 +35,16 @@ func NewIntegrationHook(i *integration.Integration) *IntegrationHook {
 		return nil
 	}
 
-	return &IntegrationHook{
+	hook := &IntegrationHook{
 		shim:        shim,
 		integration: i,
 		mapper:      NewMetricMapper(),
 	}
+
+	// Set global hook for use in broker collection
+	GlobalMSKHook = hook
+
+	return hook
 }
 
 // TransformBrokerData transforms broker data after collection with V2 support

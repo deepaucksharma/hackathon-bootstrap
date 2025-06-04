@@ -1,0 +1,43 @@
+integrations:
+# Debug configuration 4: Direct JMX connection test - metrics only, no autodiscovery
+- name: nri-kafka
+  env:
+    # Enable verbose logging
+    VERBOSE: "true"
+    
+    # Basic configuration
+    CLUSTER_NAME: "debug-jmx-only"
+    KAFKA_VERSION: "2.8.0"
+    
+    # Bootstrap discovery with local only
+    AUTODISCOVER_STRATEGY: "bootstrap"
+    BOOTSTRAP_BROKER_HOST: "localhost"
+    BOOTSTRAP_BROKER_KAFKA_PORT: 9092
+    BOOTSTRAP_BROKER_KAFKA_PROTOCOL: "PLAINTEXT"
+    BOOTSTRAP_BROKER_JMX_PORT: 9999
+    BOOTSTRAP_BROKER_JMX_USER: ""
+    BOOTSTRAP_BROKER_JMX_PASSWORD: ""
+    
+    # Force local only collection
+    LOCAL_ONLY_COLLECTION: true
+    
+    # Disable topic collection entirely
+    TOPIC_MODE: "none"
+    COLLECT_TOPIC_SIZE: false
+    COLLECT_TOPIC_OFFSET: false
+    
+    # Only collect metrics, not inventory
+    METRICS: "true"
+    INVENTORY: "false"
+    
+    # Increased timeout
+    TIMEOUT: 30000
+    
+    # Force specific JMX settings
+    DEFAULT_JMX_HOST: "localhost"
+    DEFAULT_JMX_PORT: 9999
+    
+  interval: 30s
+  labels:
+    env: debug
+    test: jmx_metrics_only

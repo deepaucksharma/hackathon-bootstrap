@@ -1,0 +1,137 @@
+apiVersion: v1
+kind: ConfigMap
+metadata:
+  name: nri-kafka-msk-custom-config
+  namespace: newrelic
+data:
+  kafka-config.yml: |
+    integrations:
+      - name: nri-kafka
+        env:
+          # MSK Shim Configuration
+          MSK_SHIM_ENABLED: "true"
+          AWS_ACCOUNT_ID: "123456789012"
+          AWS_REGION: "us-east-1"
+          KAFKA_CLUSTER_NAME: "strimzi-production-kafka"
+          ENVIRONMENT: "production"
+          
+          # Enable all enhancements
+          CONSUMER_LAG_ENRICHMENT: "true"
+          SYSTEM_SAMPLE_CORRELATION: "true"
+          AUTO_DETECT_DISK_MOUNTS: "true"
+          USE_ADMIN_API: "false"  # No admin API in our setup
+          
+          # Kafka Discovery
+          CLUSTER_NAME: "strimzi-production-kafka"
+          AUTODISCOVER_STRATEGY: "bootstrap"
+          BOOTSTRAP_BROKER_HOST: "production-kafka-kafka-bootstrap.strimzi-kafka.svc.cluster.local"
+          BOOTSTRAP_BROKER_KAFKA_PORT: "9092"
+          BOOTSTRAP_BROKER_JMX_PORT: "9999"
+          
+          # JMX configuration (no auth)
+          DEFAULT_JMX_PORT: "9999"
+          
+          # Collection settings
+          METRICS: "true"
+          INVENTORY: "true"
+          EVENTS: "true"
+          
+          # Topic settings
+          TOPIC_MODE: "all"
+          TOPIC_REGEX: ".*"
+          COLLECT_TOPIC_SIZE: "true"
+          COLLECT_TOPIC_OFFSET: "true"
+          
+          # Consumer settings
+          CONSUMER_FETCH_OFFSET: "true"
+          CONSUMER_GROUP_REGEX: ".*"
+          
+          # Verbose logging
+          VERBOSE: "true"
+          NRJMX_VERBOSE: "true"
+        interval: 30s
+        labels:
+          env: kubernetes
+          cluster: strimzi-kafka
+          msk: enabled
+---
+apiVersion: apps/v1
+kind: Deployment
+metadata:
+  name: nri-kafka-msk-custom
+  namespace: newrelic
+spec:
+  replicas: 1
+  selector:
+    matchLabels:
+      app: nri-kafka-msk-custom
+  template:
+    metadata:
+      labels:
+        app: nri-kafka-msk-custom
+    spec:
+      serviceAccountName: nri-bundle-newrelic-infrastructure
+      containers:
+      - name: nri-kafka
+        image: nri-kafka-msk:v2
+        imagePullPolicy: Never  # Use local image
+        env:
+        - name: NRIA_LICENSE_KEY
+          valueFrom:
+            secretKeyRef:
+              name: nri-bundle-newrelic-infrastructure-license
+              key: licenseKey
+        - name: NRIA_VERBOSE
+          value: "1"
+        # MSK Shim Environment Variables
+        - name: MSK_SHIM_ENABLED
+          value: "true"
+        - name: AWS_ACCOUNT_ID
+          value: "123456789012"
+        - name: AWS_REGION
+          value: "us-east-1"
+        - name: KAFKA_CLUSTER_NAME
+          value: "strimzi-production-kafka"
+        - name: ENVIRONMENT
+          value: "production"
+        - name: CONSUMER_LAG_ENRICHMENT
+          value: "true"
+        - name: SYSTEM_SAMPLE_CORRELATION
+          value: "true"
+        - name: AUTO_DETECT_DISK_MOUNTS
+          value: "true"
+        # Kafka connection
+        - name: CLUSTER_NAME
+          value: "strimzi-production-kafka"
+        - name: AUTODISCOVER_STRATEGY
+          value: "bootstrap"
+        - name: BOOTSTRAP_BROKER_HOST
+          value: "production-kafka-kafka-bootstrap.strimzi-kafka.svc.cluster.local"
+        - name: BOOTSTRAP_BROKER_KAFKA_PORT
+          value: "9092"
+        - name: BOOTSTRAP_BROKER_JMX_PORT
+          value: "9999"
+        - name: DEFAULT_JMX_PORT
+          value: "9999"
+        - name: METRICS
+          value: "true"
+        - name: INVENTORY
+          value: "true"
+        - name: CONSUMER_FETCH_OFFSET
+          value: "true"
+        - name: TOPIC_MODE
+          value: "all"
+        - name: COLLECT_TOPIC_SIZE
+          value: "true"
+        - name: COLLECT_TOPIC_OFFSET
+          value: "true"
+        - name: NRJMX_VERBOSE
+          value: "true"
+        - name: VERBOSE
+          value: "true"
+        resources:
+          limits:
+            memory: 500Mi
+          requests:
+            cpu: 200m
+            memory: 256Mi
