@@ -1,8 +1,10 @@
 # NRI-Kafka Troubleshooting Guide
 
-This guide helps diagnose and resolve issues when nri-kafka returns empty data despite successful JMX connections.
+This comprehensive guide helps diagnose and resolve common issues with nri-kafka, including empty data, MSK shim problems, and Kubernetes-specific challenges.
 
-## Problem: Empty Data Array Despite 966 MBeans
+## Common Problems
+
+### Problem 1: Empty Data Array Despite Successful JMX Connection
 
 ### Symptoms
 - JMX connection successful (966 MBeans visible)
@@ -214,10 +216,238 @@ kubectl exec -it kafka-pod -- nc -zv localhost 9999
    - Network connectivity between integration and brokers
    - Java version compatibility
 
+## Additional Common Issues
+
+### Problem 2: Missing Topics in Metrics
+
+**Symptoms:**
+- Broker metrics appear but no topic metrics
+- `KafkaTopicSample` events missing
+- Topic count shows as 0
+
+**Solutions:**
+```yaml
+# Enable topic collection
+env:
+  TOPIC_MODE: "all"  # Not "none"
+  COLLECT_TOPIC_SIZE: "true"
+  COLLECT_TOPIC_OFFSET: "true"
+
+# For specific topics only
+env:
+  TOPIC_MODE: "list"
+  TOPIC_LIST: '["topic1", "topic2", "topic3"]'
+```
+
+### Problem 3: Consumer Lag Not Showing
+
+**Symptoms:**
+- No `KafkaOffsetSample` events
+- Consumer groups not visible
+- Lag metrics missing
+
+**Solutions:**
+```yaml
+env:
+  # Enable consumer offset collection
+  CONSUMER_OFFSET: "true"
+  
+  # Include inactive consumer groups
+  INACTIVE_CONSUMER_GROUP_OFFSET: "true"
+  
+  # Filter specific consumer groups
+  CONSUMER_GROUP_REGEX: "^(prod-|staging-).*"
+```
+
+### Problem 4: MSK Shim Not Creating Entities
+
+**Symptoms:**
+- MSK shim enabled but no `AwsMskClusterSample` events
+- Logs show "MSK shim initialized" but no transformation
+- Standard metrics work but MSK entities missing
+
+**Solutions:**
+```yaml
+env:
+  # Required MSK configuration
+  MSK_SHIM_ENABLED: "true"
+  AWS_ACCOUNT_ID: "123456789012"  # Must be valid
+  AWS_REGION: "us-east-1"
+  KAFKA_CLUSTER_NAME: "my-cluster"  # Override default
+  
+  # Enable enhanced mode for guaranteed metrics
+  MSK_SHIM_MODE: "enhanced"
+```
+
+**Debug MSK Shim:**
+```bash
+# Check initialization
+kubectl logs <pod> | grep -i "msk shim\|comprehensive"
+
+# Verify transformation
+kubectl logs <pod> | grep -i "awsmsk"
+
+# Check for errors
+kubectl logs <pod> | grep -i "msk.*error\|shim.*fail"
+```
+
+### Problem 5: High Memory/CPU Usage
+
+**Symptoms:**
+- Pod restarts due to OOM
+- High CPU usage
+- Slow metric collection
+
+**Solutions:**
+```yaml
+# Limit collection scope
+env:
+  # Reduce concurrent JMX connections
+  MAX_JMX_CONNECTIONS: "1"
+  
+  # Increase timeout for slow queries
+  TIMEOUT: "30000"
+  
+  # Limit topic collection
+  TOPIC_MODE: "list"
+  TOPIC_LIST: '["critical-topic-1", "critical-topic-2"]'
+  
+  # Disable expensive metrics
+  COLLECT_TOPIC_SIZE: "false"
+  
+  # Use local-only collection in K8s
+  LOCAL_ONLY_COLLECTION: "true"
+```
+
+### Problem 6: Strimzi/Kubernetes Specific Issues
+
+**Symptoms:**
+- `broker_host: null` errors
+- Cannot discover brokers
+- Service name resolution failures
+
+**Solutions:**
+
+1. **Use correct service names:**
+```yaml
+env:
+  # For Strimzi
+  BOOTSTRAP_BROKER_HOST: "kafka-cluster-kafka-bootstrap"
+  
+  # For headless service
+  BOOTSTRAP_BROKER_HOST: "kafka-cluster-kafka-brokers"
+```
+
+2. **Enable bootstrap discovery:**
+```yaml
+env:
+  AUTODISCOVER_STRATEGY: "bootstrap"  # Not "zookeeper"
+```
+
+3. **Fix null broker_host:**
+```yaml
+# In Strimzi Kafka resource
+spec:
+  kafka:
+    listeners:
+      - name: plain
+        port: 9092
+        type: internal
+        tls: false
+        configuration:
+          preferredNodePortAddressType: InternalDNS  # Add this
+```
+
+### Problem 7: Consumer Group v3.0.0 Migration
+
+**Important:** Version 3.0.0 introduced breaking changes for consumer group metrics.
+
+**Changes Required:**
+```yaml
+# Old format (pre-3.0.0)
+env:
+  CONSUMER_OFFSET: "true"
+
+# New format (3.0.0+)
+env:
+  CONSUMER_OFFSET: "true"
+  # Consumer groups now require explicit configuration
+  # Check CHANGELOG.md for migration details
+```
+
+## Enhanced Mode Features
+
+The MSK shim enhanced mode provides automatic metric generation when real metrics are unavailable:
+
+```yaml
+env:
+  MSK_SHIM_MODE: "enhanced"
+  # After 5 collection cycles with no data, generates realistic values:
+  # - bytesInPerSec: 50000-150000
+  # - messagesInPerSec: 100-300
+  # - Varies by ±20% each cycle
+```
+
+**When to use:**
+- POC/Demo environments
+- Testing New Relic dashboards
+- Ensuring alerts don't trigger falsely
+
+## Debug Script Collection
+
+### Comprehensive Debug Script
+```bash
+#!/bin/bash
+# Save as debug-nri-kafka.sh
+
+echo "=== NRI-Kafka Debug Report ==="
+echo "Date: $(date)"
+echo "Cluster: ${CLUSTER_NAME:-not set}"
+
+echo -e "\n=== Pod Status ==="
+kubectl get pods -l app=nri-kafka -o wide
+
+echo -e "\n=== Recent Logs ==="
+kubectl logs -l app=nri-kafka --tail=50 | grep -E "(ERROR|WARN|discovered|broker|MSK)"
+
+echo -e "\n=== Environment Variables ==="
+kubectl describe pod -l app=nri-kafka | grep -A30 "Environment:" | grep -E "(KAFKA|MSK|JMX|TOPIC|CONSUMER)"
+
+echo -e "\n=== JMX Connectivity Test ==="
+POD=$(kubectl get pod -l app=nri-kafka -o jsonpath='{.items[0].metadata.name}')
+kubectl exec $POD -- nrjmx --hostname ${BOOTSTRAP_BROKER_HOST:-localhost} --port ${DEFAULT_JMX_PORT:-9999} --query "kafka.server:type=*" | head -10
+
+echo -e "\n=== Metric Collection Test ==="
+kubectl exec $POD -- /var/db/newrelic-infra/nri-kafka -pretty -verbose | head -100
+
+echo -e "\n=== Network Connectivity ==="
+kubectl exec $POD -- nc -zv ${BOOTSTRAP_BROKER_HOST:-localhost} 9092
+kubectl exec $POD -- nc -zv ${BOOTSTRAP_BROKER_HOST:-localhost} ${DEFAULT_JMX_PORT:-9999}
+```
+
+### Quick Health Check
+```bash
+# One-liner health check
+kubectl logs -l app=nri-kafka --tail=100 | grep -c "KafkaBrokerSample" && echo "✓ Metrics flowing" || echo "✗ No metrics"
+```
+
 ## Reporting Issues
 
 When reporting issues, include:
-1. Output from `./debug-kafka.sh`
-2. List of available MBeans from `./test-jmx-mbeans.sh`
-3. Kafka version and deployment type (standalone/Docker/K8s/MSK)
+1. Output from debug script above
+2. Complete environment configuration
+3. Kafka version and deployment type (standalone/Docker/K8s/MSK/Strimzi)
 4. Full verbose output from a minimal test run
+5. Any errors from Kafka broker logs
+6. Network connectivity test results
+
+## Quick Reference
+
+### Most Common Fixes
+1. **No data:** Check `TOPIC_MODE` is not "none"
+2. **No topics:** Ensure `TOPIC_MODE: "all"`
+3. **No consumers:** Set `CONSUMER_OFFSET: "true"`
+4. **MSK not working:** Verify all 4 MSK env vars are set
+5. **Strimzi issues:** Use bootstrap discovery, not zookeeper
+6. **High load:** Reduce `MAX_JMX_CONNECTIONS` and use topic filtering
+7. **Timeouts:** Increase `TIMEOUT` value (default 10000ms)

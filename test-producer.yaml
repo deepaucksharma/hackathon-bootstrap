@@ -1,0 +1,22 @@
+apiVersion: batch/v1
+kind: Job
+metadata:
+  name: kafka-test-producer
+  namespace: kafka
+spec:
+  template:
+    spec:
+      containers:
+      - name: producer
+        image: confluentinc/cp-kafka:latest
+        command:
+        - bash
+        - -c
+        - |
+          for i in {1..50}; do
+            echo "Message $i - $(date)" | kafka-console-producer --broker-list kafka-0.kafka-headless.kafka.svc.cluster.local:9092 --topic events
+            echo "Message $i - $(date)" | kafka-console-producer --broker-list kafka-0.kafka-headless.kafka.svc.cluster.local:9092 --topic metrics  
+            echo "Message $i - $(date)" | kafka-console-producer --broker-list kafka-0.kafka-headless.kafka.svc.cluster.local:9092 --topic logs
+            sleep 1
+          done
+      restartPolicy: Never

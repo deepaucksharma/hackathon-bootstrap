@@ -8,148 +8,139 @@ import (
 	"github.com/newrelic/infra-integrations-sdk/v3/log"
 )
 
-// Shim provides the enhanced MSK transformation functionality with full metric coverage
-type Shim struct {
-	integration      *integration.Integration
-	config           *Config
-	aggregator       *MetricAggregator
-	entityCache      *EntityCache
-	transformer      *SimpleTransformer
-	lagEnricher      *SimpleConsumerLagEnricher
-	mu               sync.Mutex
+// MSKShim is the consolidated MSK shim implementation
+type MSKShim struct {
+	config       Config
+	integration  *integration.Integration
+	aggregator   *MetricAggregator
+	entityCache  *EntityCache
+	systemAPI    InfrastructureAPI
+	mu           sync.Mutex
 }
 
-// NewShim creates a new enhanced MSK shim instance
-func NewShim(i *integration.Integration, config *Config) (*Shim, error) {
-	if config == nil {
-		return nil, fmt.Errorf("config cannot be nil")
-	}
+// EntityCache manages entities to avoid duplicates
+type EntityCache struct {
+	mu       sync.RWMutex
+	entities map[string]*integration.Entity
+}
 
-	if !config.Enabled {
-		return nil, fmt.Errorf("MSK shim is not enabled")
-	}
-
-	shim := &Shim{
-		integration: i,
-		config:      config,
-		aggregator:  NewMetricAggregator(),
+// NewMSKShim creates a new consolidated MSK shim
+func NewMSKShim(config Config) *MSKShim {
+	shim := &MSKShim{
+		config:     config,
+		aggregator: NewMetricAggregator(),
 		entityCache: &EntityCache{
 			entities: make(map[string]*integration.Entity),
 		},
 	}
+	
+	log.Info("MSK shim initialized for cluster: %s in region: %s", 
+		config.ClusterName, config.AWSRegion)
+	
+	return shim
+}
 
-	// Initialize simple transformer
-	shim.transformer = NewSimpleTransformer(shim)
-
-	// Initialize consumer lag enricher if enabled
-	if config.ConsumerLagEnrich {
-		shim.lagEnricher = NewSimpleConsumerLagEnricher(shim)
-	}
-
-	return shim, nil
+// SetIntegration sets the integration instance
+func (s *MSKShim) SetIntegration(i *integration.Integration) {
+	s.mu.Lock()
+	defer s.mu.Unlock()
+	s.integration = i
 }
 
 // IsEnabled returns whether the MSK shim is enabled
-func (s *Shim) IsEnabled() bool {
-	return s.config != nil && s.config.Enabled
+func (s *MSKShim) IsEnabled() bool {
+	return s.config.Enabled
 }
 
-// TransformBrokerMetrics transforms broker metrics to MSK format with full V2 support
-func (s *Shim) TransformBrokerMetrics(brokerData map[string]interface{}) error {
-	s.mu.Lock()
-	defer s.mu.Unlock()
-
-	// Skip system metrics enrichment for now (simplified version)
-
-	return s.transformer.TransformBrokerMetricsSimple(brokerData)
+// TransformBrokerMetrics transforms broker metrics to MSK format
+func (s *MSKShim) TransformBrokerMetrics(brokerData map[string]interface{}) error {
+	brokerID, ok := getIntValue(brokerData, "broker.id")
+	if !ok {
+		return fmt.Errorf("broker ID not found in broker data")
+	}
+	
+	log.Debug("Transforming broker metrics for broker %d", brokerID)
+	
+	// Use simple transformer
+	return s.SimpleTransformBrokerMetrics(brokerData)
 }
 
 // TransformTopicMetrics transforms topic metrics to MSK format
-func (s *Shim) TransformTopicMetrics(topicData map[string]interface{}) error {
+func (s *MSKShim) TransformTopicMetrics(topicData map[string]interface{}) error {
+	topicName, ok := getStringValue(topicData, "topic.name")
+	if !ok {
+		return fmt.Errorf("topic name not found in topic data")
+	}
+	
+	log.Debug("Transforming topic metrics for topic %s", topicName)
+	
+	// Use simple transformer
+	return s.SimpleTransformTopicMetrics(topicData)
+}
+
+// ProcessConsumerOffset processes consumer offset data with MSK enhancements
+func (s *MSKShim) ProcessConsumerOffset(offsetData map[string]interface{}) error {
+	log.Debug("Processing consumer offset data")
+	
+	// Use simple transformer
+	return s.SimpleTransformConsumerOffset(offsetData)
+}
+
+// SetSystemSampleAPI sets the system sample API for enrichment
+func (s *MSKShim) SetSystemSampleAPI(api InfrastructureAPI) {
 	s.mu.Lock()
 	defer s.mu.Unlock()
-
-	return s.transformer.TransformTopicMetricsSimple(topicData)
+	s.systemAPI = api
 }
 
-// ProcessConsumerOffset processes consumer offset data for lag enrichment
-func (s *Shim) ProcessConsumerOffset(offsetData map[string]interface{}) error {
-	if s.lagEnricher == nil {
-		return nil
+// Flush performs final aggregations and creates cluster entity
+func (s *MSKShim) Flush() error {
+	if s.integration == nil {
+		return fmt.Errorf("integration not set")
 	}
-
-	s.mu.Lock()
-	defer s.mu.Unlock()
-
-	return s.lagEnricher.ProcessConsumerOffsetSampleSimple(offsetData)
-}
-
-// CreateClusterEntity creates the cluster-level entity with aggregated metrics
-func (s *Shim) CreateClusterEntity() error {
-	s.mu.Lock()
-	defer s.mu.Unlock()
-
-	return s.transformer.CreateClusterEntitySimple()
-}
-
-// GetOrCreateEntity gets an entity from cache or creates a new one
-func (s *Shim) GetOrCreateEntity(entityType, entityName string) (*integration.Entity, error) {
-	s.entityCache.mu.RLock()
-	cacheKey := fmt.Sprintf("%s-%s", entityType, entityName)
-	if entity, exists := s.entityCache.entities[cacheKey]; exists {
-		s.entityCache.mu.RUnlock()
-		return entity, nil
+	
+	log.Info("Flushing MSK shim data for cluster: %s", s.config.ClusterName)
+	
+	// Create cluster entity with aggregated metrics
+	if err := s.SimpleTransformClusterMetrics(); err != nil {
+		log.Error("Failed to create cluster entity: %v", err)
+		return err
 	}
-	s.entityCache.mu.RUnlock()
-
-	// Create new entity
-	s.entityCache.mu.Lock()
-	defer s.entityCache.mu.Unlock()
-
-	// Double-check after acquiring write lock
-	if entity, exists := s.entityCache.entities[cacheKey]; exists {
-		return entity, nil
-	}
-
-	entity, err := s.integration.Entity(entityName, entityType)
-	if err != nil {
-		return nil, fmt.Errorf("failed to create entity: %w", err)
-	}
-
-	s.entityCache.entities[cacheKey] = entity
-	return entity, nil
-}
-
-// SetSystemSampleAPI sets the Infrastructure API for system metric correlation
-func (s *Shim) SetSystemSampleAPI(api InfrastructureAPI) {
-	// Simplified version - system sample correlation not implemented
-}
-
-// Flush performs any final aggregations and creates cluster entity
-func (s *Shim) Flush() error {
-	if !s.IsEnabled() {
-		return nil
-	}
-
-	log.Debug("Flushing MSK shim V2 metrics")
-
-	// Create cluster entity with final aggregations
-	if err := s.CreateClusterEntity(); err != nil {
-		return fmt.Errorf("failed to create cluster entity: %w", err)
-	}
-
-	// Reset aggregator for next collection cycle
-	s.aggregator.Reset()
-
+	
+	// Log summary
+	s.logSummary()
+	
 	return nil
 }
 
-// GetConfig returns the shim configuration
-func (s *Shim) GetConfig() *Config {
-	return s.config
+// GetOrCreateEntity gets an existing entity or creates a new one
+func (s *MSKShim) GetOrCreateEntity(entityType, eventType string) (*integration.Entity, error) {
+	s.entityCache.mu.Lock()
+	defer s.entityCache.mu.Unlock()
+	
+	entityKey := fmt.Sprintf("%s:%s", entityType, eventType)
+	
+	if entity, exists := s.entityCache.entities[entityKey]; exists {
+		return entity, nil
+	}
+	
+	// Create new entity
+	entity, err := s.integration.Entity(entityKey, "aws-msk")
+	if err != nil {
+		return nil, fmt.Errorf("failed to create entity for %s: %v", entityKey, err)
+	}
+	
+	s.entityCache.entities[entityKey] = entity
+	return entity, nil
 }
 
-// GetAggregator returns the metric aggregator
-func (s *Shim) GetAggregator() *MetricAggregator {
-	return s.aggregator
+// logSummary logs a summary of the MSK shim activity
+func (s *MSKShim) logSummary() {
+	brokerCount := len(s.aggregator.GetBrokerMetrics())
+	topicCount := s.aggregator.GetTopicCount()
+	
+	log.Info("MSK shim summary - Cluster: %s, Brokers: %d, Topics: %d",
+		s.config.ClusterName, brokerCount, topicCount)
 }
+
+// Helper functions are defined in types.go

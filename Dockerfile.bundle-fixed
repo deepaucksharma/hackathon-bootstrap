@@ -1,0 +1,7 @@
+FROM newrelic/infrastructure-bundle:latest
+
+# Copy our locally built nri-kafka binary with topic fixes
+COPY bin/nri-kafka-msk /var/db/newrelic-infra/newrelic-integrations/bin/nri-kafka
+
+# Set permissions
+RUN chmod 755 /var/db/newrelic-infra/newrelic-integrations/bin/nri-kafka
