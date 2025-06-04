@@ -168,7 +168,17 @@ type EnhancedTopicMetrics struct {
 
 // GetEnhancedTopicMetrics retrieves comprehensive topic metrics
 func (a *AdminAPIHelper) GetEnhancedTopicMetrics(topicName string) (*EnhancedTopicMetrics, error) {
-	metadata, err := a.client.GetMetadata(topicName)
+	// Get controller broker
+	controller, err := a.client.Controller()
+	if err != nil {
+		return nil, fmt.Errorf("failed to get controller: %w", err)
+	}
+	
+	// Get metadata for a specific topic
+	req := &sarama.MetadataRequest{
+		Topics: []string{topicName},
+	}
+	metadata, err := controller.GetMetadata(req)
 	if err != nil {
 		return nil, fmt.Errorf("failed to get metadata: %w", err)
 	}

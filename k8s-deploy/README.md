@@ -2,6 +2,15 @@
 
 This directory contains all the necessary files to deploy the New Relic Kafka On-Host Integration (nri-kafka) in a Kubernetes cluster.
 
+## Documentation Structure
+
+- **[JMX-CONFIGURATION-GUIDE.md](JMX-CONFIGURATION-GUIDE.md)** - Complete guide for configuring JMX monitoring with Kafka
+- **[TROUBLESHOOTING-GUIDE.md](TROUBLESHOOTING-GUIDE.md)** - Comprehensive troubleshooting procedures and solutions
+- **[QUICK-REFERENCE-COMMANDS.md](QUICK-REFERENCE-COMMANDS.md)** - Essential commands for debugging and monitoring
+- **[NRI-KAFKA-TROUBLESHOOTING-RUNBOOK.md](NRI-KAFKA-TROUBLESHOOTING-RUNBOOK.md)** - Specific runbook for nri-kafka issues
+- **[WORKING-NRI-KAFKA-SETUP.md](WORKING-NRI-KAFKA-SETUP.md)** - Documentation of the working configuration
+- **[VERIFICATION-SUMMARY.md](VERIFICATION-SUMMARY.md)** - Verification steps and results
+
 ## Prerequisites
 
 - Kubernetes cluster (1.19+)

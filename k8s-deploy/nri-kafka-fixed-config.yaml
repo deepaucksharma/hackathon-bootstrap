@@ -1,0 +1,266 @@
+---
+# Fixed configuration based on debug findings
+apiVersion: v1
+kind: ConfigMap
+metadata:
+  name: nri-kafka-fixed-config
+  namespace: newrelic
+data:
+  # Configuration for regular Kafka using IP address to bypass RMI hostname issues
+  kafka-fixed.yml: |
+    integrations:
+      - name: nri-kafka
+        command: nri-kafka
+        env:
+          CLUSTER_NAME: k8s-kafka-fixed
+          
+          # Use Pod IP instead of DNS to avoid RMI hostname issues
+          # This will be populated by the pod at runtime
+          BOOTSTRAP_BROKER_HOST: "${KAFKA_POD_IP}"
+          BOOTSTRAP_BROKER_JMX_PORT: "9999"
+          BOOTSTRAP_BROKER_KAFKA_PORT: "9092"
+          
+          # Kafka version
+          KAFKA_VERSION: "3.5.0"
+          
+          # Collection settings - start minimal
+          METRICS: "true"
+          INVENTORY: "false"
+          EVENTS: "false"
+          
+          # Disable problematic collections initially
+          TOPIC_MODE: "none"
+          CONSUMER_OFFSET: "false"
+          
+          # JMX settings
+          TIMEOUT: "30000"
+          MAX_JMX_CONNECTIONS: "1"
+          
+          # Authentication
+          DEFAULT_JMX_USER: ""
+          DEFAULT_JMX_PASSWORD: ""
+          
+          # Debug
+          VERBOSE: "true"
+          
+        interval: 60s
+        labels:
+          env: kubernetes
+          kafka_deployment: regular
+---
+# DaemonSet that gets pod IPs dynamically
+apiVersion: apps/v1
+kind: DaemonSet
+metadata:
+  name: nri-kafka-fixed
+  namespace: newrelic
+spec:
+  selector:
+    matchLabels:
+      app: nri-kafka-fixed
+  template:
+    metadata:
+      labels:
+        app: nri-kafka-fixed
+    spec:
+      serviceAccountName: nri-bundle-newrelic-infrastructure
+      hostNetwork: true
+      dnsPolicy: ClusterFirstWithHostNet
+      initContainers:
+      # Init container to get Kafka pod IPs
+      - name: get-kafka-ips
+        image: bitnami/kubectl:latest
+        command: ["/bin/sh", "-c"]
+        args:
+        - |
+          # Get Kafka pod IPs
+          KAFKA_IPS=$(kubectl get pods -n kafka -l app=kafka -o jsonpath='{.items[*].status.podIP}')
+          echo "Found Kafka IPs: $KAFKA_IPS"
+          
+          # Use the first IP for bootstrap
+          KAFKA_POD_IP=$(echo $KAFKA_IPS | cut -d' ' -f1)
+          echo "Using Kafka IP: $KAFKA_POD_IP"
+          
+          # Write to shared volume
+          echo "export KAFKA_POD_IP=$KAFKA_POD_IP" > /shared/kafka-env
+        volumeMounts:
+        - name: shared-data
+          mountPath: /shared
+      containers:
+      - name: agent
+        image: newrelic/infrastructure-bundle:3.2.71
+        securityContext:
+          privileged: true
+        env:
+        - name: NRIA_LICENSE_KEY
+          value: "dfb79449d23acce4df582f2f5550abe4FFFFNRAL"
+        - name: NRIA_VERBOSE
+          value: "1"
+        - name: CLUSTER_NAME
+          value: "k8s-kafka-cluster"
+        command: ["/bin/sh", "-c"]
+        args:
+        - |
+          # Source the Kafka IP
+          . /shared/kafka-env
+          
+          # Replace placeholder in config
+          sed -i "s/\${KAFKA_POD_IP}/$KAFKA_POD_IP/g" /etc/newrelic-infra/integrations.d/kafka-fixed.yml
+          
+          # Start the agent
+          exec /usr/bin/newrelic-infra
+        volumeMounts:
+        - name: config
+          mountPath: /etc/newrelic-infra/integrations.d/
+        - name: shared-data
+          mountPath: /shared
+      volumes:
+      - name: config
+        configMap:
+          name: nri-kafka-fixed-config
+      - name: shared-data
+        emptyDir: {}
+      tolerations:
+      - operator: Exists
+        effect: NoSchedule
+      - operator: Exists
+        effect: NoExecute
+---
+# Alternative: Use JMX Exporter for Prometheus
+apiVersion: v1
+kind: ConfigMap
+metadata:
+  name: jmx-exporter-config
+  namespace: kafka
+data:
+  kafka-metrics.yml: |
+    lowercaseOutputName: true
+    lowercaseOutputLabelNames: true
+    whitelistObjectNames:
+    - kafka.server:type=BrokerTopicMetrics,*
+    - kafka.server:type=ReplicaManager,*
+    - kafka.controller:type=KafkaController,*
+    - kafka.server:type=KafkaRequestHandlerPool,*
+    - kafka.network:type=RequestMetrics,*
+    - kafka.server:type=Fetch,*
+    - kafka.server:type=Produce,*
+    - kafka.server:type=ReplicaFetcherManager,*
+    rules:
+    # Skip problematic TimeUnit attributes
+    - pattern: ".*RateUnit|.*LatencyUnit"
+      name: skip
+      help: Skip TimeUnit attributes
+      type: UNTYPED
+      valueFactor: 0.0
+    # Generic kafka metric rule
+    - pattern: kafka.(\w+)<type=(.+), name=(.+)><>(\w+)
+      name: kafka_$1_$2_$3_$4
+      type: GAUGE
+    - pattern: kafka.(\w+)<type=(.+), name=(.+), topic=(.+)><>(\w+)
+      name: kafka_$1_$2_$3_$5
+      type: GAUGE
+      labels:
+        topic: "$4"
+---
+# Deployment with JMX Exporter sidecar
+apiVersion: apps/v1
+kind: Deployment
+metadata:
+  name: kafka-with-jmx-exporter
+  namespace: kafka
+spec:
+  replicas: 1
+  selector:
+    matchLabels:
+      app: kafka-jmx-exporter
+  template:
+    metadata:
+      labels:
+        app: kafka-jmx-exporter
+    spec:
+      containers:
+      # Kafka container
+      - name: kafka
+        image: bitnami/kafka:3.5.1
+        ports:
+        - containerPort: 9092
+          name: broker
+        - containerPort: 9999
+          name: jmx
+        env:
+        - name: KAFKA_CFG_BROKER_ID
+          value: "400"
+        - name: KAFKA_CFG_LISTENERS
+          value: PLAINTEXT://:9092
+        - name: KAFKA_CFG_ADVERTISED_LISTENERS
+          value: PLAINTEXT://kafka-jmx-exporter.kafka.svc.cluster.local:9092
+        - name: KAFKA_CFG_ZOOKEEPER_CONNECT
+          value: zookeeper:2181
+        - name: JMX_PORT
+          value: "9999"
+        - name: KAFKA_JMX_OPTS
+          value: "-Dcom.sun.management.jmxremote -Dcom.sun.management.jmxremote.authenticate=false -Dcom.sun.management.jmxremote.ssl=false -Dcom.sun.management.jmxremote.port=9999 -Dcom.sun.management.jmxremote.rmi.port=9999 -Djava.rmi.server.hostname=localhost"
+      
+      # JMX Exporter sidecar
+      - name: jmx-exporter
+        image: sscaling/jmx-prometheus-exporter:0.19.0
+        ports:
+        - containerPort: 9308
+          name: metrics
+        args:
+        - "9308"
+        - "/etc/jmx-exporter/kafka-metrics.yml"
+        env:
+        - name: JMX_URL
+          value: "localhost:9999"
+        volumeMounts:
+        - name: jmx-config
+          mountPath: /etc/jmx-exporter
+      volumes:
+      - name: jmx-config
+        configMap:
+          name: jmx-exporter-config
+---
+# Service for JMX Exporter
+apiVersion: v1
+kind: Service
+metadata:
+  name: kafka-jmx-exporter
+  namespace: kafka
+  labels:
+    app: kafka-jmx-exporter
+spec:
+  ports:
+  - name: broker
+    port: 9092
+  - name: metrics
+    port: 9308
+  selector:
+    app: kafka-jmx-exporter
+---
+# Configure nri-prometheus to scrape JMX exporter
+apiVersion: v1
+kind: ConfigMap
+metadata:
+  name: nri-prometheus-kafka-config
+  namespace: newrelic
+data:
+  config.yaml: |
+    # Scrape Kafka JMX metrics via Prometheus exporter
+    scrape_configs:
+    - job_name: kafka-jmx-metrics
+      static_configs:
+      - targets:
+        - kafka-jmx-exporter.kafka.svc.cluster.local:9308
+        labels:
+          kafka_cluster: k8s-kafka
+          exporter: jmx
+    
+    # Also scrape Strimzi Kafka exporter
+    - job_name: strimzi-kafka-metrics
+      static_configs:
+      - targets:
+        - production-kafka-kafka-exporter.strimzi-kafka.svc.cluster.local:9308
+        labels:
+          kafka_cluster: strimzi-production
+          exporter: strimzi

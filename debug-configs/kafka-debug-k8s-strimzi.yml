@@ -1,0 +1,112 @@
+integrations:
+# Debug configuration for Kubernetes/Strimzi environments
+- name: nri-kafka
+  env:
+    # Enable verbose logging
+    VERBOSE: "true"
+    
+    # Basic configuration
+    CLUSTER_NAME: "strimzi-kafka-cluster"
+    KAFKA_VERSION: "2.8.0"  # Adjust based on your Strimzi Kafka version
+    
+    # Bootstrap discovery for Strimzi
+    AUTODISCOVER_STRATEGY: "bootstrap"
+    
+    # Strimzi typically uses these service names - adjust as needed
+    # For a cluster named "my-cluster", the bootstrap service is usually "my-cluster-kafka-bootstrap"
+    BOOTSTRAP_BROKER_HOST: "kafka-cluster-kafka-bootstrap"
+    BOOTSTRAP_BROKER_KAFKA_PORT: 9092
+    BOOTSTRAP_BROKER_KAFKA_PROTOCOL: "PLAINTEXT"
+    
+    # Strimzi JMX configuration
+    # JMX is usually exposed on port 9999 in Strimzi
+    BOOTSTRAP_BROKER_JMX_PORT: 9999
+    BOOTSTRAP_BROKER_JMX_USER: ""
+    BOOTSTRAP_BROKER_JMX_PASSWORD: ""
+    
+    # In K8s, often need to collect from single broker at a time
+    LOCAL_ONLY_COLLECTION: true
+    
+    # Start with minimal collection
+    TOPIC_MODE: "none"
+    COLLECT_TOPIC_SIZE: false
+    COLLECT_TOPIC_OFFSET: false
+    
+    # Enable metrics only first
+    METRICS: "true"
+    INVENTORY: "false"
+    CONSUMER_OFFSET: "false"
+    
+    # Increased timeout for K8s environments
+    TIMEOUT: 30000
+    
+    # JMX settings
+    DEFAULT_JMX_HOST: "localhost"  # When running as sidecar
+    DEFAULT_JMX_PORT: 9999
+    
+  interval: 30s
+  labels:
+    env: kubernetes
+    platform: strimzi
+    test: minimal
+
+---
+# Alternative configuration using pod IPs directly
+- name: nri-kafka
+  env:
+    VERBOSE: "true"
+    CLUSTER_NAME: "strimzi-kafka-cluster-podip"
+    KAFKA_VERSION: "2.8.0"
+    
+    # When using pod IPs directly
+    AUTODISCOVER_STRATEGY: "bootstrap"
+    BOOTSTRAP_BROKER_HOST: "${KAFKA_POD_IP}"  # Set this to actual pod IP
+    BOOTSTRAP_BROKER_KAFKA_PORT: 9092
+    BOOTSTRAP_BROKER_KAFKA_PROTOCOL: "PLAINTEXT"
+    BOOTSTRAP_BROKER_JMX_PORT: 9999
+    
+    LOCAL_ONLY_COLLECTION: true
+    TOPIC_MODE: "none"
+    
+    METRICS: "true"
+    INVENTORY: "false"
+    
+    TIMEOUT: 30000
+    
+  interval: 30s
+  labels:
+    env: kubernetes
+    platform: strimzi
+    test: pod-ip
+
+---
+# Configuration for Strimzi with Zookeeper discovery
+- name: nri-kafka
+  env:
+    VERBOSE: "true"
+    CLUSTER_NAME: "strimzi-kafka-cluster-zk"
+    KAFKA_VERSION: "2.8.0"
+    
+    # Zookeeper discovery for Strimzi
+    AUTODISCOVER_STRATEGY: "zookeeper"
+    # Strimzi Zookeeper service name pattern: <cluster-name>-zookeeper-client
+    ZOOKEEPER_HOSTS: '[{"host": "kafka-cluster-zookeeper-client", "port": 2181}]'
+    ZOOKEEPER_PATH: "/"
+    
+    DEFAULT_JMX_HOST: "localhost"
+    DEFAULT_JMX_PORT: 9999
+    DEFAULT_JMX_USER: ""
+    DEFAULT_JMX_PASSWORD: ""
+    
+    TOPIC_MODE: "none"
+    
+    METRICS: "true"
+    INVENTORY: "false"
+    
+    TIMEOUT: 30000
+    
+  interval: 30s
+  labels:
+    env: kubernetes
+    platform: strimzi
+    test: zookeeper

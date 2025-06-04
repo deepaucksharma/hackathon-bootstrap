@@ -1,0 +1,44 @@
+integrations:
+# Debug configuration 3: Bootstrap with topic collection enabled
+- name: nri-kafka
+  env:
+    # Enable verbose logging
+    VERBOSE: "true"
+    
+    # Basic configuration
+    CLUSTER_NAME: "debug-cluster-full"
+    KAFKA_VERSION: "2.8.0"
+    
+    # Bootstrap discovery
+    AUTODISCOVER_STRATEGY: "bootstrap"
+    BOOTSTRAP_BROKER_HOST: "localhost"
+    BOOTSTRAP_BROKER_KAFKA_PORT: 9092
+    BOOTSTRAP_BROKER_KAFKA_PROTOCOL: "PLAINTEXT"
+    BOOTSTRAP_BROKER_JMX_PORT: 9999
+    BOOTSTRAP_BROKER_JMX_USER: ""
+    BOOTSTRAP_BROKER_JMX_PASSWORD: ""
+    
+    # JMX Settings
+    DEFAULT_JMX_HOST: "localhost"
+    DEFAULT_JMX_PORT: 9999
+    DEFAULT_JMX_USER: ""
+    DEFAULT_JMX_PASSWORD: ""
+    
+    # Collection settings - enable topics
+    LOCAL_ONLY_COLLECTION: false
+    TOPIC_MODE: "all"
+    COLLECT_TOPIC_SIZE: true
+    COLLECT_TOPIC_OFFSET: true
+    
+    # Enable all collection types
+    METRICS: "true"
+    INVENTORY: "true"
+    
+    # Increased timeout
+    TIMEOUT: 30000
+    
+  interval: 30s
+  labels:
+    env: debug
+    strategy: bootstrap
+    test: full_collection
