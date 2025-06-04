@@ -51,9 +51,9 @@ func (t *SimpleTransformer) TransformBrokerMetricsSimple(brokerData map[string]i
 		attribute.Attribute{Key: "entityGuid", Value: guid},
 		attribute.Attribute{Key: "guid", Value: guid},
 		attribute.Attribute{Key: "Name", Value: entityName},
-		attribute.Attribute{Key: "BrokerId", Value: brokerID},
+		attribute.Attribute{Key: "BrokerId", Value: fmt.Sprintf("%d", brokerID)},
 		attribute.Attribute{Key: "provider.clusterName", Value: t.shim.config.ClusterName},
-		attribute.Attribute{Key: "provider.brokerId", Value: brokerID},
+		attribute.Attribute{Key: "provider.brokerId", Value: fmt.Sprintf("%d", brokerID)},
 		attribute.Attribute{Key: "provider.accountId", Value: t.shim.config.AWSAccountID},
 		attribute.Attribute{Key: "provider.region", Value: t.shim.config.AWSRegion},
 		attribute.Attribute{Key: "provider.clusterArn", Value: t.shim.config.ClusterARN},
@@ -88,24 +88,24 @@ func (t *SimpleTransformer) TransformBrokerMetricsSimple(brokerData map[string]i
 			}
 			
 			// Also aggregate for cluster level
-			t.shim.aggregator.AddBrokerMetric(mskMetric, value)
+			t.shim.aggregator.AddSimpleBrokerMetric(mskMetric, value)
 		}
 	}
 
 	// Add system metrics if available
 	if cpuPercent, ok := getFloatValue(brokerData, "system.cpuPercent"); ok {
 		ms.SetMetric("aws.msk.broker.CpuUser", cpuPercent, metric.GAUGE)
-		t.shim.aggregator.AddBrokerMetric("aws.msk.broker.CpuUser", cpuPercent)
+		t.shim.aggregator.AddSimpleBrokerMetric("aws.msk.broker.CpuUser", cpuPercent)
 	}
 
 	if memUsed, ok := getFloatValue(brokerData, "system.memoryUsedPercent"); ok {
 		ms.SetMetric("aws.msk.broker.MemoryUsed", memUsed, metric.GAUGE)
-		t.shim.aggregator.AddBrokerMetric("aws.msk.broker.MemoryUsed", memUsed)
+		t.shim.aggregator.AddSimpleBrokerMetric("aws.msk.broker.MemoryUsed", memUsed)
 	}
 
 	if diskUsed, ok := getFloatValue(brokerData, "system.diskUsedPercent"); ok {
 		ms.SetMetric("aws.msk.broker.RootDiskUsed", diskUsed, metric.GAUGE)
-		t.shim.aggregator.AddBrokerMetric("aws.msk.broker.RootDiskUsed", diskUsed)
+		t.shim.aggregator.AddSimpleBrokerMetric("aws.msk.broker.RootDiskUsed", diskUsed)
 	}
 
 	return nil
@@ -170,7 +170,7 @@ func (t *SimpleTransformer) TransformTopicMetricsSimple(topicData map[string]int
 			}
 			
 			// Also aggregate for cluster level
-			t.shim.aggregator.AddTopicMetric(topicName, mskMetric, value)
+			t.shim.aggregator.AddSimpleTopicMetric(topicName, mskMetric, value)
 		}
 	}
 

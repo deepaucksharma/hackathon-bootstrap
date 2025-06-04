@@ -1,7 +1,6 @@
 package msk
 
 import (
-	"context"
 	"fmt"
 	"sync"
 	"time"
@@ -183,8 +182,15 @@ func (a *AdminAPIHelper) GetEnhancedTopicMetrics(topicName string) (*EnhancedTop
 		return nil, fmt.Errorf("failed to get metadata: %w", err)
 	}
 
-	topic, exists := metadata.Topics[topicName]
-	if !exists {
+	// Find the topic in the metadata
+	var topic *sarama.TopicMetadata
+	for _, t := range metadata.Topics {
+		if t.Name == topicName {
+			topic = t
+			break
+		}
+	}
+	if topic == nil {
 		return nil, fmt.Errorf("topic %s not found", topicName)
 	}
 
