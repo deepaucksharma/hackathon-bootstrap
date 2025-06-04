@@ -1,0 +1,40 @@
+integrations:
+# Debug configuration 2: Zookeeper discovery with debugging
+- name: nri-kafka
+  env:
+    # Enable verbose logging
+    VERBOSE: "true"
+    
+    # Basic configuration
+    CLUSTER_NAME: "debug-cluster-zookeeper"
+    KAFKA_VERSION: "2.8.0"
+    
+    # Zookeeper discovery
+    AUTODISCOVER_STRATEGY: "zookeeper"
+    ZOOKEEPER_HOSTS: '[{"host": "localhost", "port": 2181}]'
+    ZOOKEEPER_PATH: "/"
+    
+    # JMX Settings
+    DEFAULT_JMX_HOST: "localhost"
+    DEFAULT_JMX_PORT: 9999
+    DEFAULT_JMX_USER: ""
+    DEFAULT_JMX_PASSWORD: ""
+    
+    # Collection settings
+    LOCAL_ONLY_COLLECTION: false
+    TOPIC_MODE: "none"
+    COLLECT_TOPIC_SIZE: false
+    COLLECT_TOPIC_OFFSET: false
+    
+    # Enable all collection types
+    METRICS: "true"
+    INVENTORY: "true"
+    
+    # Increased timeout
+    TIMEOUT: 30000
+    
+  interval: 30s
+  labels:
+    env: debug
+    strategy: zookeeper
+    test: minimal

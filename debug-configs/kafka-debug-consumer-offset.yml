@@ -1,0 +1,34 @@
+integrations:
+# Debug configuration 5: Consumer offset collection only
+- name: nri-kafka
+  env:
+    # Enable verbose logging
+    VERBOSE: "true"
+    
+    # Basic configuration
+    CLUSTER_NAME: "debug-consumer-offset"
+    KAFKA_VERSION: "2.8.0"
+    
+    # Bootstrap discovery
+    AUTODISCOVER_STRATEGY: "bootstrap"
+    BOOTSTRAP_BROKER_HOST: "localhost"
+    BOOTSTRAP_BROKER_KAFKA_PORT: 9092
+    BOOTSTRAP_BROKER_KAFKA_PROTOCOL: "PLAINTEXT"
+    
+    # Disable regular metrics/inventory
+    METRICS: "false"
+    INVENTORY: "false"
+    
+    # Enable consumer offset collection
+    CONSUMER_OFFSET: "true"
+    CONSUMER_GROUP_REGEX: '.*'
+    CONSUMER_GROUP_OFFSET_BY_TOPIC: true
+    INACTIVE_CONSUMER_GROUP_OFFSET: true
+    
+    # Timeout
+    TIMEOUT: 30000
+    
+  interval: 30s
+  labels:
+    env: debug
+    test: consumer_offset_only

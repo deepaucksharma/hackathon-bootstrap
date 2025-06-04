@@ -1,0 +1,97 @@
+{
+  "timestamp": "2025-06-04T10:51:26.027Z",
+  "accountId": 3630072,
+  "queries": [
+    {
+      "name": "Check KafkaBrokerSample for strimzi-production-kafka",
+      "query": "SELECT count(*) FROM KafkaBrokerSample WHERE clusterName = 'strimzi-production-kafka' SINCE 1 hour ago",
+      "results": {
+        "error": "Cannot read properties of undefined (reading 'query')"
+      }
+    },
+    {
+      "name": "List all clusterNames in KafkaBrokerSample",
+      "query": "SELECT uniqueCount(clusterName) FROM KafkaBrokerSample FACET clusterName SINCE 1 hour ago LIMIT 50",
+      "results": {
+        "error": "Cannot read properties of undefined (reading 'query')"
+      }
+    },
+    {
+      "name": "Available metrics in KafkaBrokerSample",
+      "query": "SELECT keyset() FROM KafkaBrokerSample WHERE clusterName LIKE '%strimzi%' SINCE 1 hour ago LIMIT 1",
+      "results": {
+        "error": "Cannot read properties of undefined (reading 'query')"
+      }
+    },
+    {
+      "name": "Check for consumer metrics",
+      "query": "SELECT count(*) FROM KafkaConsumerSample WHERE clusterName LIKE '%strimzi%' SINCE 1 hour ago",
+      "results": {
+        "error": "Cannot read properties of undefined (reading 'query')"
+      }
+    },
+    {
+      "name": "Check for producer metrics",
+      "query": "SELECT count(*) FROM KafkaProducerSample WHERE clusterName LIKE '%strimzi%' SINCE 1 hour ago",
+      "results": {
+        "error": "Cannot read properties of undefined (reading 'query')"
+      }
+    },
+    {
+      "name": "Check for topic metrics",
+      "query": "SELECT count(*), uniqueCount(topic) FROM KafkaTopicSample WHERE clusterName LIKE '%strimzi%' SINCE 1 hour ago",
+      "results": {
+        "error": "Cannot read properties of undefined (reading 'query')"
+      }
+    },
+    {
+      "name": "Check for consumer offset/lag metrics",
+      "query": "SELECT count(*), uniqueCount(consumerGroup), average(consumer.lag) FROM KafkaOffsetSample WHERE clusterName LIKE '%strimzi%' SINCE 1 hour ago",
+      "results": {
+        "error": "Cannot read properties of undefined (reading 'query')"
+      }
+    },
+    {
+      "name": "Check MSK entity types - AwsMskClusterSample",
+      "query": "SELECT count(*) FROM AwsMskClusterSample SINCE 1 hour ago",
+      "results": {
+        "error": "Cannot read properties of undefined (reading 'query')"
+      }
+    },
+    {
+      "name": "Check MSK entity types - AwsMskBrokerSample",
+      "query": "SELECT count(*) FROM AwsMskBrokerSample SINCE 1 hour ago",
+      "results": {
+        "error": "Cannot read properties of undefined (reading 'query')"
+      }
+    },
+    {
+      "name": "Check MSK entity types - AwsMskTopicSample",
+      "query": "SELECT count(*) FROM AwsMskTopicSample SINCE 1 hour ago",
+      "results": {
+        "error": "Cannot read properties of undefined (reading 'query')"
+      }
+    },
+    {
+      "name": "Broker health metrics",
+      "query": "SELECT \n        average(broker.messagesInPerSecond) AS 'Messages/sec',\n        average(broker.IOInPerSecond) AS 'IO In/sec',\n        average(broker.IOOutPerSecond) AS 'IO Out/sec',\n        average(replication.unreplicatedPartitions) AS 'Unreplicated Partitions',\n        average(request.handlerIdle) AS 'Handler Idle %'\n      FROM KafkaBrokerSample \n      WHERE clusterName LIKE '%strimzi%' \n      SINCE 30 minutes ago",
+      "results": {
+        "error": "Cannot read properties of undefined (reading 'query')"
+      }
+    },
+    {
+      "name": "Request performance metrics",
+      "query": "SELECT \n        average(request.avgTimeFetch) AS 'Avg Fetch Time',\n        average(request.avgTimeProduceRequest) AS 'Avg Produce Time',\n        average(request.avgTimeMetadata) AS 'Avg Metadata Time',\n        average(request.fetchTime99Percentile) AS 'Fetch p99',\n        average(request.produceTime99Percentile) AS 'Produce p99'\n      FROM KafkaBrokerSample \n      WHERE clusterName LIKE '%strimzi%' \n      SINCE 30 minutes ago",
+      "results": {
+        "error": "Cannot read properties of undefined (reading 'query')"
+      }
+    },
+    {
+      "name": "Replication metrics",
+      "query": "SELECT \n        average(replication.isrExpandsPerSecond) AS 'ISR Expands/sec',\n        average(replication.isrShrinksPerSecond) AS 'ISR Shrinks/sec',\n        average(replication.leaderElectionPerSecond) AS 'Leader Elections/sec',\n        sum(replication.unreplicatedPartitions) AS 'Total Unreplicated'\n      FROM KafkaBrokerSample \n      WHERE clusterName LIKE '%strimzi%' \n      SINCE 30 minutes ago",
+      "results": {
+        "error": "Cannot read properties of undefined (reading 'query')"
+      }
+    }
+  ]
+}
