@@ -163,6 +163,7 @@ func populateBrokerMetrics(b *connection.Broker, i *integration.Integration, con
 			attribute.Attribute{Key: "displayName", Value: entity.Metadata.Name},
 			attribute.Attribute{Key: "entityName", Value: "broker:" + entity.Metadata.Name},
 			attribute.Attribute{Key: "clusterName", Value: args.GlobalArgs.ClusterName},
+			attribute.Attribute{Key: "broker_host", Value: b.Host},
 		)
 		
 		// Collect metrics into temp sample
@@ -197,6 +198,7 @@ func populateBrokerMetricsRegular(b *connection.Broker, i *integration.Integrati
 		attribute.Attribute{Key: "displayName", Value: entity.Metadata.Name},
 		attribute.Attribute{Key: "entityName", Value: "broker:" + entity.Metadata.Name},
 		attribute.Attribute{Key: "clusterName", Value: args.GlobalArgs.ClusterName},
+		attribute.Attribute{Key: "broker_host", Value: b.Host},
 	)
 
 	// Populate metrics set with broker metrics
@@ -227,6 +229,7 @@ func collectBrokerTopicMetrics(b *connection.Broker, collectedTopics []string, i
 				attribute.Attribute{Key: "entityName", Value: "broker:" + entity.Metadata.Name},
 				attribute.Attribute{Key: "clusterName", Value: args.GlobalArgs.ClusterName},
 				attribute.Attribute{Key: "topic", Value: topicName},
+				attribute.Attribute{Key: "broker_host", Value: b.Host},
 			)
 			
 			// Collect metrics
@@ -246,6 +249,7 @@ func collectBrokerTopicMetrics(b *connection.Broker, collectedTopics []string, i
 					attribute.Attribute{Key: "entityName", Value: "broker:" + entity.Metadata.Name},
 					attribute.Attribute{Key: "clusterName", Value: args.GlobalArgs.ClusterName},
 					attribute.Attribute{Key: "topic", Value: topicName},
+					attribute.Attribute{Key: "broker_host", Value: b.Host},
 				)
 				topicSampleLookup[topicName] = sample
 				metrics.CollectMetricDefinitions(sample, metrics.BrokerTopicMetricDefs, metrics.ApplyTopicName(topicName), conn)
@@ -257,6 +261,7 @@ func collectBrokerTopicMetrics(b *connection.Broker, collectedTopics []string, i
 				attribute.Attribute{Key: "entityName", Value: "broker:" + entity.Metadata.Name},
 				attribute.Attribute{Key: "clusterName", Value: args.GlobalArgs.ClusterName},
 				attribute.Attribute{Key: "topic", Value: topicName},
+				attribute.Attribute{Key: "broker_host", Value: b.Host},
 			)
 
 			// Insert into map

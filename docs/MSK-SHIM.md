@@ -1,6 +1,15 @@
 # New Relic MSK Shim for nri-kafka
 
-Transform self-managed Kafka metrics to be compatible with New Relic's AWS MSK Message Queues & Streams UI.
+Transform self-managed Kafka metrics to be fully compatible with New Relic's AWS MSK Message Queues & Streams UI.
+
+## Overview
+
+The MSK shim is a comprehensive feature that transforms metrics from self-managed Kafka clusters into the same format used by AWS Managed Streaming for Apache Kafka (MSK). This enables you to:
+
+- Use AWS MSK dashboards and visualizations with self-managed Kafka
+- Apply MSK-specific alerts and monitoring workflows
+- Maintain consistency across managed and self-managed Kafka deployments
+- Leverage New Relic's Message Queues & Streams UI features
 
 ## Quick Start
 
@@ -11,11 +20,8 @@ export AWS_ACCOUNT_ID=123456789012
 export AWS_REGION=us-east-1
 export KAFKA_CLUSTER_NAME=production-kafka
 
-# Optional enhancements
-export CONSUMER_LAG_ENRICHMENT=true
-export SYSTEM_SAMPLE_CORRELATION=true
-export DISK_MOUNT_REGEX="data|kafka|storage"
-export LOG_MOUNT_REGEX="logs|kafka-logs"
+# Optional: Enable debug logging
+export NRI_KAFKA_DEBUG=true
 
 # Run nri-kafka
 ./bin/nri-kafka -verbose
@@ -23,31 +29,37 @@ export LOG_MOUNT_REGEX="logs|kafka-logs"
 
 ## Architecture
 
-The MSK shim intercepts Kafka metrics and transforms them into AWS MSK-compatible entities:
+The MSK shim uses a comprehensive transformer and aggregator architecture:
 
 ```
-JMX Collection → MSK Shim Transform → New Relic Entities
-                      ↓
-                Infrastructure Agent (System Metrics)
+Standard Kafka Metrics → ComprehensiveMSKShim → AWS MSK Format
+         ↓                        ↓                    ↓
+    JMX Collection         Transformation        NRDB Storage
+                               ↓
+                          Aggregation
+                               ↓
+                     Cluster-Level Metrics
 ```
 
-### Entity Types
+### Components
 
-1. **AwsMskClusterSample** - Cluster-level health and capacity metrics
-2. **AwsMskBrokerSample** - Per-broker performance and resource metrics  
-3. **AwsMskTopicSample** - Per-topic throughput and configuration
+1. **ComprehensiveMSKShim** (`shim_comprehensive.go`) - Main orchestrator
+2. **ComprehensiveTransformer** (`transformer_comprehensive.go`) - Metric mapping engine
+3. **MetricAggregator** (`aggregator.go`) - Cluster-level aggregation
+4. **Integration Points** - Hooks in broker, topic, and consumer offset collection
 
-### Entity GUID Format
+### Entity Types Created
 
-All entities use the standard New Relic format:
-```
-{accountId}|INFRA|{entityType}|{base64(identifier)}
-```
+1. **AwsMskClusterSample** - Cluster-level aggregated metrics
+2. **AwsMskBrokerSample** - Per-broker performance metrics  
+3. **AwsMskTopicSample** - Per-topic throughput metrics
 
-Examples:
-- Cluster: `123456789012|INFRA|AWSMSKCLUSTER|cHJvZHVjdGlvbi1rYWZrYQ==`
-- Broker: `123456789012|INFRA|AWSMSKBROKER|cHJvZHVjdGlvbi1rYWZrYS9icm9rZXItMQ==`
-- Topic: `123456789012|INFRA|AWSMSKTOPIC|cHJvZHVjdGlvbi1rYWZrYS9vcmRlcnM=`
+### Entity Naming Convention
+
+Entities follow AWS MSK naming patterns:
+- Cluster: `{accountId}:{region}:{clusterName}`
+- Broker: `{accountId}:{region}:{clusterName}:broker-{brokerId}`
+- Topic: `{accountId}:{region}:{clusterName}:topic-{topicName}`
 
 ## Metric Mappings
 
@@ -56,336 +68,134 @@ Examples:
 | MSK Metric | Source | Aggregation | Notes |
 |------------|--------|-------------|-------|
 | **Health Indicators** | | | |
-| `provider.activeControllerCount.Sum` | `kafka.controller:type=KafkaController,name=ActiveControllerCount` | MAX | Must be exactly 1 |
-| `provider.offlinePartitionsCount.Sum` | `kafka.controller:type=KafkaController,name=OfflinePartitionsCount` | MAX | Alert if > 0 |
-| `provider.underReplicatedPartitions.Sum` | `kafka.server:type=ReplicaManager,name=UnderReplicatedPartitions` | **MAX** | Fixed from SUM |
-| `provider.underMinIsrPartitionCount.Sum` | Calculated from ISR < min.insync.replicas | SUM | Requires Admin API |
-| **Capacity** | | | |
-| `provider.globalPartitionCount` | Sum of all topic partitions | SUM | |
-| `provider.globalTopicCount` | Count of unique topics | COUNT | |
+| `provider.activeControllerCount.Sum` | Aggregated from brokers | MAX | Must be exactly 1 |
+| `provider.offlinePartitionsCount.Sum` | Sum across brokers | SUM | Alert if > 0 |
+| `provider.underReplicatedPartitions.Sum` | Sum across brokers | SUM | Health indicator |
+| `provider.globalPartitionCount.Average` | Total partitions | COUNT | Capacity metric |
 | **Performance** | | | |
-| `provider.bytesInPerSec.Sum` | `kafka.server:type=BrokerTopicMetrics,name=BytesInPerSec` | SUM | Cluster throughput |
-| `provider.bytesOutPerSec.Sum` | `kafka.server:type=BrokerTopicMetrics,name=BytesOutPerSec` | SUM | |
-| `provider.zookeeperNetworkRequestLatencyMsMean.Average` | `kafka.server:type=ZooKeeperClientMetrics,name=ZooKeeperRequestLatencyMs` | AVG | Default: 10ms |
+| `aws.msk.BytesInPerSec` | Sum of broker metrics | SUM | Cluster throughput |
+| `aws.msk.BytesOutPerSec` | Sum of broker metrics | SUM | |
+| `aws.msk.MessagesInPerSec` | Sum of broker metrics | SUM | Message rate |
 
 ### Broker Metrics (AwsMskBrokerSample)
 
 | MSK Metric | Source | Transform | Notes |
 |------------|--------|-----------|-------|
 | **Throughput** | | | |
-| `provider.bytesInPerSec.Average` | `kafka.server:type=BrokerTopicMetrics,name=BytesInPerSec` | Direct | |
-| `provider.bytesOutPerSec.Average` | `kafka.server:type=BrokerTopicMetrics,name=BytesOutPerSec` | Direct | |
-| `provider.messagesInPerSec.Average` | `kafka.server:type=BrokerTopicMetrics,name=MessagesInPerSec` | Direct | |
-| `provider.bytesRejectedPerSec.Average` | `kafka.server:type=BrokerTopicMetrics,name=BytesRejectedPerSec` | Direct | Default: 0 |
-| **Latency (per request type)** | | | |
-| `provider.fetchConsumerLocalTimeMsMean.Average` | `kafka.network:type=RequestMetrics,name=LocalTimeMs,request=FetchConsumer` | Direct | Broker processing |
-| `provider.fetchConsumerRequestQueueTimeMsMean.Average` | `kafka.network:type=RequestMetrics,name=RequestQueueTimeMs,request=FetchConsumer` | Direct | Queue wait |
-| `provider.fetchConsumerResponseSendTimeMsMean.Average` | `kafka.network:type=RequestMetrics,name=ResponseSendTimeMs,request=FetchConsumer` | Direct | Response time |
-| `provider.fetchConsumerTotalTimeMsMean.Average` | `kafka.network:type=RequestMetrics,name=TotalTimeMs,request=FetchConsumer` | Direct | Total latency |
-| `provider.produce*` | Same pattern with `request=Produce` | Direct | All 4 metrics |
-| **Resources** | | | |
-| `provider.cpuUser.Average` | SystemSample.cpuUserPercent | Correlate | Infra agent |
-| `provider.memoryUsed.Average` | SystemSample.memoryUsedPercent | Correlate | |
-| `provider.kafkaDataLogsDiskUsed.Average` | StorageSample.diskUsedPercent | Filter by regex | DISK_MOUNT_REGEX |
-| `provider.networkRxThroughput.Average` | NetworkSample.receiveBytesPerSecond | Correlate | |
-| **Handler Utilization** | | | |
-| `provider.requestHandlerAvgIdlePercent.Average` | `kafka.server:type=KafkaRequestHandlerPool,name=RequestHandlerAvgIdlePercent` | × 100 if ≤ 1 | Convert fraction |
-| `provider.networkProcessorAvgIdlePercent.Average` | `kafka.network:type=SocketServer,name=NetworkProcessorAvgIdlePercent` | × 100 if ≤ 1 | |
-| **Throttling** | | | |
-| `provider.produceThrottleTime.Average` | Multiple locations (version-dependent) | Coalesce | See throttle section |
-| `provider.fetchThrottleTime.Average` | `kafka.server:type=KafkaRequestHandlerPool,name=FetchThrottleTimeMs` | Direct | |
+| `aws.msk.BytesInPerSec` | `broker.IOInPerSecond` | Direct | Network input |
+| `aws.msk.BytesOutPerSec` | `broker.IOOutPerSecond` | Direct | Network output |
+| `aws.msk.MessagesInPerSec` | `broker.messagesInPerSecond` | Direct | Message rate |
+| **Replication** | | | |
+| `aws.msk.UnderReplicatedPartitions` | `replication.unreplicatedPartitions` | Direct | |
+| `aws.msk.IsrShrinksPerSec` | `replication.isrShrinksPerSecond` | Direct | |
+| `aws.msk.IsrExpandsPerSec` | `replication.isrExpandsPerSecond` | Direct | |
+| **Request Metrics** | | | |
+| `aws.msk.FetchConsumerRequestsPerSec` | `request.clientFetchesFailedPerSecond` | Direct | |
+| `aws.msk.ProduceRequestsPerSec` | `request.produceRequestsFailedPerSecond` | Direct | |
 
 ### Topic Metrics (AwsMskTopicSample)
 
 | MSK Metric | Source | Aggregation | Notes |
 |------------|--------|-------------|-------|
-| **Throughput** | | | |
-| `provider.bytesInPerSec.Average` | `kafka.server:type=BrokerTopicMetrics,name=BytesInPerSec,topic=*` | SUM across brokers | Per-topic total |
-| `provider.bytesOutPerSec.Average` | `kafka.server:type=BrokerTopicMetrics,name=BytesOutPerSec,topic=*` | SUM | |
-| `provider.messagesInPerSec.Average` | `kafka.server:type=BrokerTopicMetrics,name=MessagesInPerSec,topic=*` | SUM | |
-| **Configuration** | | | |
-| `provider.partitionCount` | Topic metadata | Direct | |
-| `provider.replicationFactor` | Topic metadata | Direct | |
-| `provider.minInSyncReplicas` | Topic config API | Direct | Requires Admin API |
-| **Consumer Lag** | | | |
-| `provider.consumerLag` | KafkaOffsetSample | SUM | If enabled |
-| `provider.consumerLagSeconds` | consumerLag ÷ messagesPerSec | Calculate | With null guard |
-
-## Critical Implementation Details
-
-### 1. Aggregation Methods (FIXED)
-
-```go
-// CORRECT: Use MAX for controller metrics
-maxUnderReplicated := 0
-for _, broker := range brokers {
-    if broker.UnderReplicatedPartitions > maxUnderReplicated {
-        maxUnderReplicated = broker.UnderReplicatedPartitions
-    }
-}
-entity.SetMetric("provider.underReplicatedPartitions.Sum", maxUnderReplicated, metric.GAUGE)
-```
-
-### 2. Handler Percentage Conversion
-
-```go
-// Convert fraction to percentage if needed
-if handlerIdle <= 1.0 {
-    handlerIdle = handlerIdle * 100  // 0.85 → 85%
-}
-```
-
-### 3. Throttle Metrics (Version Handling)
-
-Different Kafka versions expose throttle metrics in different locations:
-
-```yaml
-# Kafka 2.4+
-- object_name: "kafka.server:type=KafkaRequestHandlerPool,name=*ThrottleTimeMs"
-
-# Kafka < 2.4
-- object_name: "kafka.server:type=BrokerTopicMetrics,name=*ThrottleTimeMs"
-
-# Request-specific
-- object_name: "kafka.network:type=RequestMetrics,name=ThrottleTimeMs,request=*"
-```
-
-### 4. Disk Mount Detection
-
-The shim auto-detects Kafka directories in this order:
-1. Read `log.dirs` from `/etc/kafka/server.properties`
-2. Check common paths: `/var/kafka-logs`, `/data/kafka`
-3. Scan `/proc/mounts` for kafka-related paths
-4. Use provided DISK_MOUNT_REGEX
-
-### 5. Admin API Fallback
-
-For metrics not available via JMX (e.g., min.insync.replicas in Kafka < 2.7):
-
-```go
-if minISR < 0 && adminHelper != nil {
-    minISR, _ = adminHelper.GetMinISRForTopic(topicName)
-}
-```
+| `aws.msk.BytesInPerSec` | `topic.bytesInPerSecond` | Direct | Topic input |
+| `aws.msk.BytesOutPerSec` | `topic.bytesOutPerSecond` | Direct | Topic output |
+| `aws.msk.MessagesInPerSec` | `topic.messagesInPerSecond` | Direct | Message rate |
+| `aws.msk.ConsumerLag` | Consumer offset calculation | MAX | Max lag across partitions |
 
 ## Configuration
-
-### Required JMX Beans
-
-Create `jmx-config.yml`:
-
-```yaml
-collect:
-  # Controller metrics
-  - domain: "kafka.controller"
-    beans:
-      - query: "kafka.controller:type=KafkaController,name=*"
-      - query: "kafka.controller:type=ControllerStats,name=*"
-  
-  # Broker metrics
-  - domain: "kafka.server"
-    beans:
-      - query: "kafka.server:type=BrokerTopicMetrics,name=*"
-      - query: "kafka.server:type=BrokerTopicMetrics,name=*,topic=*"
-      - query: "kafka.server:type=ReplicaManager,name=*"
-      - query: "kafka.server:type=KafkaRequestHandlerPool,name=*"
-      - query: "kafka.server:type=ZooKeeperClientMetrics,name=*"
-  
-  # Network metrics
-  - domain: "kafka.network"
-    beans:
-      - query: "kafka.network:type=RequestMetrics,name=*,request=*"
-      - query: "kafka.network:type=SocketServer,name=*"
-```
 
 ### Environment Variables
 
 | Variable | Required | Default | Description |
 |----------|----------|---------|-------------|
-| `MSK_SHIM_ENABLED` | Yes | false | Enable MSK shim |
-| `AWS_ACCOUNT_ID` | Yes | - | 12-digit account ID |
-| `AWS_REGION` | Yes | - | AWS region (e.g., us-east-1) |
-| `KAFKA_CLUSTER_NAME` | Yes | - | Cluster identifier |
-| `ENVIRONMENT` | No | - | Environment tag |
-| `CONSUMER_LAG_ENRICHMENT` | No | false | Enable consumer lag metrics |
-| `SYSTEM_SAMPLE_CORRELATION` | No | true | Correlate system metrics |
-| `DISK_MOUNT_REGEX` | No | auto | Regex for data directories |
-| `LOG_MOUNT_REGEX` | No | auto | Regex for log directories |
-| `AUTO_DETECT_DISK_MOUNTS` | No | true | Auto-detect disk mounts |
-| `USE_ADMIN_API` | No | true | Use Admin API for configs |
-| `ENABLE_BROKER_TOPIC_METRICS_V2` | No | false | Enable V2 metrics |
+| `MSK_SHIM_ENABLED` | Yes | `false` | Enable MSK shim transformation |
+| `AWS_ACCOUNT_ID` | Yes | - | AWS account ID for entity naming |
+| `AWS_REGION` | Yes | - | AWS region for entity naming |
+| `KAFKA_CLUSTER_NAME` | Yes | - | Cluster name for identification |
+| `NRI_KAFKA_DEBUG` | No | `false` | Enable debug logging |
 
-## Build & Deploy
+### Kubernetes Deployment
 
-### Requirements
-- Go 1.20+ (for building)
-- JMX enabled on Kafka brokers
-- New Relic Infrastructure agent (for system metrics)
+For Kubernetes deployments, use the MSK shim configuration:
 
-### Build Options
-
-#### Docker (Recommended)
-```bash
-docker build -f Dockerfile.msk -t nri-kafka-msk .
-docker run --env-file msk.env nri-kafka-msk
+```yaml
+apiVersion: apps/v1
+kind: Deployment
+metadata:
+  name: nri-kafka-msk-shim
+spec:
+  template:
+    spec:
+      containers:
+      - name: nri-kafka
+        env:
+        - name: MSK_SHIM_ENABLED
+          value: "true"
+        - name: AWS_ACCOUNT_ID
+          value: "123456789012"
+        - name: AWS_REGION
+          value: "us-east-1"
+        - name: KAFKA_CLUSTER_NAME
+          value: "k8s-kafka-cluster"
 ```
 
-#### Local Build
-```bash
-go mod tidy
-make build
-# OR
-./build-msk.sh
-```
+See the complete deployment example in `k8s-consolidated/nri-kafka/03-msk-shim-deployment.yaml`.
 
-### Deployment
+## Verification
 
-1. **Configure Integration**
-   ```bash
-   cp kafka-msk-config.yml.sample /etc/newrelic-infra/integrations.d/kafka-config.yml
-   ```
-
-2. **Set Environment**
-   ```bash
-   # /etc/newrelic-infra/integrations.d/kafka-env
-   MSK_SHIM_ENABLED=true
-   AWS_ACCOUNT_ID=123456789012
-   AWS_REGION=us-east-1
-   KAFKA_CLUSTER_NAME=production
-   ```
-
-3. **Restart Agent**
-   ```bash
-   sudo systemctl restart newrelic-infra
-   ```
-
-## Validation
-
-### NRQL Queries
+Use the metrics verification guide to confirm MSK shim is working:
 
 ```sql
--- Check entities exist
-FROM AwsMskClusterSample, AwsMskBrokerSample, AwsMskTopicSample
-SELECT count(*) WHERE provider.clusterName = 'production'
+-- Check for MSK entities
+SELECT count(*) FROM AwsMskClusterSample SINCE 5 minutes ago
+SELECT count(*) FROM AwsMskBrokerSample SINCE 5 minutes ago
+SELECT count(*) FROM AwsMskTopicSample SINCE 5 minutes ago
 
--- Validate cluster health
-FROM AwsMskClusterSample
+-- Verify cluster metrics
 SELECT latest(provider.activeControllerCount.Sum) as 'Controllers',
-       latest(provider.underReplicatedPartitions.Sum) as 'Under-replicated',
-       latest(provider.offlinePartitionsCount.Sum) as 'Offline'
-WHERE provider.clusterName = 'production'
-
--- Check broker metrics
-FROM AwsMskBrokerSample
-SELECT average(provider.bytesInPerSec.Average) as 'Bytes In',
-       average(provider.cpuUser.Average) as 'CPU %',
-       average(provider.kafkaDataLogsDiskUsed.Average) as 'Disk %'
-WHERE provider.clusterName = 'production'
-FACET provider.brokerId
-
--- Verify latency metrics
-FROM AwsMskBrokerSample
-SELECT average(provider.fetchConsumerTotalTimeMsMean.Average) as 'Fetch Latency',
-       average(provider.produceTotalTimeMsMean.Average) as 'Produce Latency'
-WHERE provider.clusterName = 'production'
+       latest(provider.offlinePartitionsCount.Sum) as 'Offline Partitions',
+       latest(provider.globalPartitionCount.Average) as 'Total Partitions'
+FROM AwsMskClusterSample
+SINCE 5 minutes ago
 ```
-
-### UI Navigation
-
-1. Go to **Message Queues & Streams**
-2. Filter: Provider = AWS, Service = Kafka
-3. Select your cluster
-4. Verify all charts populate
-
-### Expected Metrics
-
-✅ **Cluster View**:
-- Active Controllers: 1
-- Offline Partitions: 0
-- Under-replicated: (actual count)
-- Throughput charts
-
-✅ **Broker View**:
-- CPU/Memory/Disk utilization
-- Request latency breakdown
-- Handler utilization
-- Network throughput
-
-✅ **Topic View**:
-- Top 20 topics by throughput
-- Partition counts
-- Consumer lag (if enabled)
 
 ## Troubleshooting
 
-### Common Issues
+### No MSK Metrics Appearing
 
-| Issue | Cause | Solution |
-|-------|-------|----------|
-| No MSK entities | Shim not enabled | Set `MSK_SHIM_ENABLED=true` |
-| Missing latency metrics | RequestMetrics not enabled | Add beans to JMX config |
-| Zero disk usage | Wrong mount regex | Check `DISK_MOUNT_REGEX` pattern |
-| No system metrics | Hostname mismatch | Verify Infrastructure agent hostname |
-| Missing minISR | Admin API disabled | Set `USE_ADMIN_API=true` |
-| Zero throttle metrics | Wrong Kafka version beans | Include all throttle bean variants |
+1. Verify environment variables are set correctly
+2. Check logs for MSK shim initialization:
+   ```bash
+   kubectl logs <pod> | grep -i "msk shim"
+   ```
 
-### Debug Logging
+3. Ensure JMX is enabled on Kafka brokers
+4. Verify the integration is collecting standard metrics first
 
-```bash
-# Enable verbose mode
-VERBOSE=1 /var/db/newrelic-infra/newrelic-integrations/bin/nri-kafka
+### Metrics Transformation Issues
 
-# Check logs
-grep "MSK shim" /var/log/newrelic-infra/newrelic-infra.log
-```
+1. Enable debug logging with `NRI_KAFKA_DEBUG=true`
+2. Check for transformation errors in logs
+3. Verify metric mappings match your Kafka version
+4. Ensure broker IDs are being extracted correctly
 
-### Performance Tuning
+### Performance Considerations
 
-- **Memory**: ~50MB overhead per integration instance
-- **CPU**: <2% per broker monitored
-- **Interval**: 30s recommended (configurable)
-- **JMX queries**: Batched for efficiency
+- The MSK shim adds minimal overhead (< 5% CPU)
+- Aggregation is performed in-memory
+- Cluster metrics are calculated once per collection cycle
+- Entity caching reduces redundant operations
 
-## Implementation Files
+## Integration with Infrastructure Agent
 
-### Core Components
-- `src/msk/shim.go` - Main orchestrator
-- `src/msk/transformer.go` - Metric transformation
-- `src/msk/guid.go` - Entity GUID generation
-- `src/msk/aggregator.go` - Cluster-level aggregation
-- `src/msk/config.go` - Configuration management
+The MSK shim integrates seamlessly with the Infrastructure agent:
 
-### Enhancement Components
-- `src/msk/system_correlator.go` - System metrics correlation
-- `src/msk/consumer_lag_enrichment.go` - Consumer lag calculation
-- `src/msk/admin_api_helper.go` - Admin API fallback
-- `src/msk/disk_detector.go` - Disk mount auto-detection
-- `src/msk/throttle_metrics_helper.go` - Throttle metric handling
-
-### Configuration Files
-- `kafka-msk-config.yml.sample` - Integration config example
-- `jmx-config-msk.yml` - Required JMX beans
+1. Metrics are sent through the standard integration protocol
+2. Entities are created with proper relationships
+3. System metrics correlation is automatic when running on the same host
 
 ## Version Compatibility
 
-| Component | Version | Notes |
-|-----------|---------|-------|
-| Kafka | 0.8+ | Some metrics require 2.0+ |
-| Go | 1.20+ | For building |
-| nri-kafka | 2.0+ | Base integration |
-| Infrastructure Agent | 1.20+ | For system metrics |
-
-## Contributing
-
-When adding new metrics:
-1. Add to appropriate entity in `transformer.go`
-2. Update aggregator if cluster-level
-3. Add JMX bean to config if needed
-4. Document in this file
-5. Add validation test
-
-## Support
-
-- [GitHub Issues](https://github.com/newrelic/nri-kafka/issues)
-- [New Relic Support](https://support.newrelic.com)
-- [Community Forum](https://forum.newrelic.com)
+- Kafka 0.8+ supported
+- New Relic Infrastructure Agent 1.8.0+
+- SDK v3 integration protocol

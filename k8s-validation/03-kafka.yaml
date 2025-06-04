@@ -1,0 +1,125 @@
+apiVersion: v1
+kind: ConfigMap
+metadata:
+  name: kafka-jmx-config
+  namespace: kafka-validation
+data:
+  jmxremote.access: |
+    monitorRole readonly
+    controlRole readwrite
+  jmxremote.password: |
+    monitorRole password
+    controlRole password
+---
+apiVersion: v1
+kind: Service
+metadata:
+  name: kafka-headless
+  namespace: kafka-validation
+  labels:
+    app.kubernetes.io/name: kafka
+    app.kubernetes.io/component: kafka
+spec:
+  type: ClusterIP
+  clusterIP: None
+  ports:
+  - port: 9092
+    name: tcp-kafka
+  - port: 1099
+    name: jmx
+  selector:
+    app.kubernetes.io/name: kafka
+    app.kubernetes.io/component: kafka
+---
+apiVersion: v1
+kind: Service
+metadata:
+  name: kafka
+  namespace: kafka-validation
+  labels:
+    app.kubernetes.io/name: kafka
+    app.kubernetes.io/component: kafka
+spec:
+  type: NodePort
+  ports:
+  - port: 9092
+    targetPort: 9092
+    nodePort: 30092
+    name: tcp-kafka
+  - port: 1099
+    targetPort: 1099
+    nodePort: 30099
+    name: jmx
+  selector:
+    app.kubernetes.io/name: kafka
+    app.kubernetes.io/component: kafka
+---
+apiVersion: apps/v1
+kind: StatefulSet
+metadata:
+  name: kafka
+  namespace: kafka-validation
+  labels:
+    app.kubernetes.io/name: kafka
+    app.kubernetes.io/component: kafka
+spec:
+  serviceName: kafka-headless
+  replicas: 3
+  selector:
+    matchLabels:
+      app.kubernetes.io/name: kafka
+      app.kubernetes.io/component: kafka
+  template:
+    metadata:
+      labels:
+        app.kubernetes.io/name: kafka
+        app.kubernetes.io/component: kafka
+    spec:
+      containers:
+      - name: kafka
+        image: wurstmeister/kafka:latest
+        ports:
+        - containerPort: 9092
+          name: tcp-kafka
+        - containerPort: 1099
+          name: jmx
+        env:
+        - name: HOSTNAME_COMMAND
+          value: "echo $HOSTNAME.kafka-headless.kafka-validation.svc.cluster.local"
+        - name: KAFKA_ADVERTISED_PORT
+          value: "9092"
+        - name: KAFKA_PORT
+          value: "9092"
+        - name: KAFKA_ZOOKEEPER_CONNECT
+          value: "zookeeper.kafka-validation.svc.cluster.local:2181"
+        - name: KAFKA_LOG_DIRS
+          value: "/kafka/logs"
+        - name: KAFKA_OFFSETS_TOPIC_REPLICATION_FACTOR
+          value: "3"
+        - name: KAFKA_NUM_PARTITIONS
+          value: "3"
+        - name: KAFKA_CREATE_TOPICS
+          value: "test-topic:3:3,metrics-topic:3:3"
+        - name: KAFKA_JMX_OPTS
+          value: "-Dcom.sun.management.jmxremote -Dcom.sun.management.jmxremote.authenticate=true -Dcom.sun.management.jmxremote.access.file=/etc/jmxremote/jmxremote.access -Dcom.sun.management.jmxremote.password.file=/etc/jmxremote/jmxremote.password -Dcom.sun.management.jmxremote.ssl=false -Djava.rmi.server.hostname=localhost -Dcom.sun.management.jmxremote.rmi.port=1099"
+        - name: JMX_PORT
+          value: "1099"
+        volumeMounts:
+        - name: jmx-config
+          mountPath: /etc/jmxremote
+          readOnly: true
+        - name: kafka-storage
+          mountPath: /kafka
+      volumes:
+      - name: jmx-config
+        configMap:
+          name: kafka-jmx-config
+          defaultMode: 0600
+  volumeClaimTemplates:
+  - metadata:
+      name: kafka-storage
+    spec:
+      accessModes: ["ReadWriteOnce"]
+      resources:
+        requests:
+          storage: 1Gi

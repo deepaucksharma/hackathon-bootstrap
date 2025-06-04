@@ -58,3 +58,16 @@ tests/integration/jmxremote/jmxremote.password
 
 # Release toolkit
 CHANGELOG.partial.md
+
+# API Keys and Secrets
+**/NRAK-*
+**/*NRAK-*
+*.key
+*.pem
+*.secret
+*_key.txt
+*_secret.txt
+.env*
+*.env
+config.local.yml
+config.local.yaml

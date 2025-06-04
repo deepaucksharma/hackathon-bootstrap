@@ -1,0 +1,113 @@
+apiVersion: apps/v1
+kind: Deployment
+metadata:
+  name: nri-kafka-msk-shim
+  namespace: strimzi-kafka  # Update this to your namespace
+  labels:
+    app: nri-kafka-msk-shim
+spec:
+  replicas: 1
+  selector:
+    matchLabels:
+      app: nri-kafka-msk-shim
+  template:
+    metadata:
+      labels:
+        app: nri-kafka-msk-shim
+    spec:
+      serviceAccountName: newrelic
+      containers:
+      - name: nri-kafka
+        image: newrelic/nri-kafka:latest
+        env:
+        # MSK Shim Configuration
+        - name: MSK_SHIM_ENABLED
+          value: "true"
+        - name: AWS_ACCOUNT_ID
+          value: "123456789012"
+        - name: AWS_REGION
+          value: "us-east-1"
+        - name: KAFKA_CLUSTER_NAME
+          value: "kafka-k8s-monitoring"
+        
+        # New Relic License Key
+        - name: NRIA_LICENSE_KEY
+          value: "dfb79449d23acce4df582f2f5550abe4FFFFNRAL"
+        
+        # Infrastructure Agent Settings
+        - name: NRIA_OVERRIDE_HOSTNAME_SHORT
+          valueFrom:
+            fieldRef:
+              apiVersion: v1
+              fieldPath: spec.nodeName
+        
+        - name: NRIA_CUSTOM_ATTRIBUTES
+          value: '{"clusterName":"kafka-k8s-monitoring","environment":"kubernetes","integration":"msk-shim","pipeline":"msk"}'
+        
+        # Logging
+        - name: NRIA_LOG_LEVEL
+          value: "debug"
+        - name: NRIA_LOG_FILE
+          value: "/var/log/newrelic-infra/newrelic-infra.log"
+        
+        # Integration configuration path
+        - name: NRIA_PASSTHROUGH_ENVIRONMENT
+          value: "KUBERNETES_SERVICE_HOST,KUBERNETES_SERVICE_PORT,MSK_SHIM_ENABLED,AWS_ACCOUNT_ID,AWS_REGION,KAFKA_CLUSTER_NAME"
+        
+        volumeMounts:
+        - name: config
+          mountPath: /etc/newrelic-infra/integrations.d/
+          readOnly: true
+        - name: log
+          mountPath: /var/log/newrelic-infra
+        
+        resources:
+          requests:
+            memory: "256Mi"
+            cpu: "100m"
+          limits:
+            memory: "512Mi"
+            cpu: "500m"
+            
+      volumes:
+      - name: config
+        configMap:
+          name: nri-kafka-config
+      - name: log
+        emptyDir: {}
+---
+apiVersion: v1
+kind: ServiceAccount
+metadata:
+  name: newrelic
+  namespace: strimzi-kafka  # Update this to your namespace
+---
+apiVersion: rbac.authorization.k8s.io/v1
+kind: ClusterRole
+metadata:
+  name: newrelic
+rules:
+- apiGroups: [""]
+  resources:
+    - nodes
+    - nodes/metrics
+    - nodes/stats
+    - nodes/proxy
+    - pods
+    - services
+  verbs: ["get", "list"]
+- nonResourceURLs: ["/metrics"]
+  verbs: ["get"]
+---
+apiVersion: rbac.authorization.k8s.io/v1
+kind: ClusterRoleBinding
+metadata:
+  name: newrelic
+roleRef:
+  apiGroup: rbac.authorization.k8s.io
+  kind: ClusterRole
+  name: newrelic
+subjects:
+- kind: ServiceAccount
+  name: newrelic
+  namespace: strimzi-kafka  # Update this to your namespace

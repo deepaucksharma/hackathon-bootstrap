@@ -1,0 +1,144 @@
+apiVersion: apps/v1
+kind: Deployment
+metadata:
+  name: nri-kafka-msk-enhanced
+  namespace: strimzi-kafka
+  labels:
+    app: nri-kafka-msk-enhanced
+spec:
+  replicas: 1
+  selector:
+    matchLabels:
+      app: nri-kafka-msk-enhanced
+  template:
+    metadata:
+      labels:
+        app: nri-kafka-msk-enhanced
+    spec:
+      serviceAccountName: newrelic
+      containers:
+      - name: nri-kafka
+        image: newrelic/nri-kafka:latest
+        imagePullPolicy: Always
+        env:
+        # MSK Shim Configuration
+        - name: MSK_SHIM_ENABLED
+          value: "true"
+        - name: MSK_ENHANCED_MODE
+          value: "true"  # Enable enhanced mode with metric generation
+        - name: MSK_GENERATE_METRICS
+          value: "true"  # Generate realistic metrics for testing
+        - name: AWS_ACCOUNT_ID
+          value: "123456789012"
+        - name: AWS_REGION
+          value: "us-east-1"
+        - name: KAFKA_CLUSTER_NAME
+          value: "strimzi-production-kafka"
+        - name: ENVIRONMENT
+          value: "production"
+        
+        # New Relic License Key
+        - name: NRIA_LICENSE_KEY
+          value: "dfb79449d23acce4df582f2f5550abe4FFFFNRAL"
+        
+        # Infrastructure Agent Settings
+        - name: NRIA_OVERRIDE_HOSTNAME_SHORT
+          valueFrom:
+            fieldRef:
+              apiVersion: v1
+              fieldPath: spec.nodeName
+        
+        - name: NRIA_CUSTOM_ATTRIBUTES
+          value: '{"clusterName":"strimzi-production-kafka","environment":"kubernetes","integration":"msk-shim-enhanced","pipeline":"msk","msk":"true","enhanced":"true"}'
+        
+        # Enhanced logging
+        - name: NRIA_LOG_LEVEL
+          value: "debug"
+        - name: NRIA_VERBOSE
+          value: "1"
+        
+        # Pass through environment variables
+        - name: NRIA_PASSTHROUGH_ENVIRONMENT
+          value: "KUBERNETES_SERVICE_HOST,KUBERNETES_SERVICE_PORT,MSK_SHIM_ENABLED,MSK_ENHANCED_MODE,MSK_GENERATE_METRICS,AWS_ACCOUNT_ID,AWS_REGION,KAFKA_CLUSTER_NAME,ENVIRONMENT"
+        
+        volumeMounts:
+        - name: config
+          mountPath: /etc/newrelic-infra/integrations.d/
+          readOnly: true
+        
+        resources:
+          requests:
+            memory: "256Mi"
+            cpu: "100m"
+          limits:
+            memory: "512Mi"
+            cpu: "500m"
+            
+      volumes:
+      - name: config
+        configMap:
+          name: nri-kafka-config-fixed
+---
+# ConfigMap with all collection enabled
+apiVersion: v1
+kind: ConfigMap
+metadata:
+  name: nri-kafka-config-enhanced
+  namespace: strimzi-kafka
+data:
+  kafka-config.yml: |
+    ---
+    integrations:
+      - name: nri-kafka
+        env:
+          # Cluster identification
+          CLUSTER_NAME: strimzi-production-kafka
+          
+          # Discovery strategy
+          AUTODISCOVER_STRATEGY: bootstrap
+          
+          # Bootstrap broker
+          BOOTSTRAP_BROKER_HOST: production-kafka-kafka-bootstrap.strimzi-kafka.svc.cluster.local
+          BOOTSTRAP_BROKER_KAFKA_PORT: 9092
+          BOOTSTRAP_BROKER_JMX_PORT: 9999
+          
+          # JMX Configuration
+          DEFAULT_JMX_USER: ""
+          DEFAULT_JMX_PASSWORD: ""
+          
+          # CRITICAL: Enable ALL collections
+          TOPIC_MODE: all
+          COLLECT_TOPIC_SIZE: "true"
+          COLLECT_TOPIC_OFFSET: "true"
+          COLLECT_BROKER_TOPIC_DATA: "true"
+          FORCE_TOPIC_SAMPLE_COLLECTION: "true"
+          
+          # Consumer monitoring
+          CONSUMER_OFFSET: "true"
+          INACTIVE_CONSUMER_GROUP_OFFSET: "true"
+          CONSUMER_GROUP_OFFSET_BY_TOPIC: "true"
+          CONSUMER_GROUP_REGEX: ".*"
+          
+          # Data types
+          METRICS: "true"
+          INVENTORY: "true"
+          EVENTS: "true"
+          
+          # Connection settings
+          TIMEOUT: "30000"
+          MAX_JMX_CONNECTIONS: "10"
+          
+          # Verbose logging
+          VERBOSE: "true"
+          
+          # Enhanced mode flags
+          ENABLE_ENHANCED_METRICS: "true"
+          GENERATE_SAMPLE_DATA: "true"
+          
+        interval: 30s
+        timeout: 30s
+        inventory_source: config/kafka
+        labels:
+          env: kubernetes
+          cluster: strimzi-production-kafka
+          integration: nri-kafka-enhanced
