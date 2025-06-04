@@ -169,6 +169,25 @@ func (a *MetricAggregator) AddSimpleTopicMetric(topicName, metricName string, va
 	// For now, we just track that metrics are being added
 }
 
+// GetBrokerMetrics returns all broker metrics
+func (a *MetricAggregator) GetBrokerMetrics() map[string]map[string]interface{} {
+	a.mu.RLock()
+	defer a.mu.RUnlock()
+	
+	// Convert to map[string]interface{} for compatibility
+	result := make(map[string]map[string]interface{})
+	for brokerID, metrics := range a.brokerMetrics {
+		brokerData := make(map[string]interface{})
+		brokerData["broker.id"] = brokerID
+		brokerData["broker.IOInPerSecond"] = metrics.BytesInPerSec
+		brokerData["broker.IOOutPerSecond"] = metrics.BytesOutPerSec
+		brokerData["broker.messagesInPerSecond"] = metrics.MessagesInPerSec
+		brokerData["replication.unreplicatedPartitions"] = float64(metrics.UnderReplicatedPartitions)
+		result[brokerID] = brokerData
+	}
+	return result
+}
+
 // GetBrokerCount returns the number of brokers
 func (a *MetricAggregator) GetBrokerCount() int {
 	a.mu.RLock()
@@ -190,4 +209,78 @@ func (a *MetricAggregator) GetAggregatedMetrics() map[string]interface{} {
 	
 	// Return empty map for now - in production this would calculate aggregates
 	return make(map[string]interface{})
+}
+
+// AddBrokerMetrics adds broker metrics from a data map (for transformer)
+func (a *MetricAggregator) AddBrokerMetrics(brokerID string, brokerData map[string]interface{}) {
+	a.mu.Lock()
+	defer a.mu.Unlock()
+	
+	// Convert to BrokerMetrics struct
+	metric := &BrokerMetrics{
+		LastUpdated: time.Now(),
+	}
+	
+	// Extract metrics from brokerData
+	if idInt, ok := getIntValue(brokerData, "broker.id"); ok {
+		metric.BrokerID = idInt
+	}
+	
+	if bytesIn, ok := getFloatValue(brokerData, "broker.IOInPerSecond"); ok {
+		metric.BytesInPerSec = bytesIn
+	}
+	
+	if bytesOut, ok := getFloatValue(brokerData, "broker.IOOutPerSecond"); ok {
+		metric.BytesOutPerSec = bytesOut
+	}
+	
+	if messagesIn, ok := getFloatValue(brokerData, "broker.messagesInPerSecond"); ok {
+		metric.MessagesInPerSec = messagesIn
+	}
+	
+	if underReplicated, ok := getFloatValue(brokerData, "replication.unreplicatedPartitions"); ok {
+		metric.UnderReplicatedPartitions = int(underReplicated)
+	}
+	
+	a.brokerMetrics[brokerID] = metric
+}
+
+// AddTopicMetrics adds topic metrics from a data map (for transformer)
+func (a *MetricAggregator) AddTopicMetrics(topicName string, topicData map[string]interface{}) {
+	a.mu.Lock()
+	defer a.mu.Unlock()
+	
+	// Convert to TopicMetrics struct
+	metric := &TopicMetrics{
+		Name: topicName,
+	}
+	
+	// Extract metrics from topicData
+	if bytesIn, ok := getFloatValue(topicData, "topic.bytesInPerSecond"); ok {
+		metric.BytesInPerSec = bytesIn
+	}
+	
+	if bytesOut, ok := getFloatValue(topicData, "topic.bytesOutPerSecond"); ok {
+		metric.BytesOutPerSec = bytesOut
+	}
+	
+	if messagesIn, ok := getFloatValue(topicData, "topic.messagesInPerSecond"); ok {
+		metric.MessagesInPerSec = messagesIn
+	}
+	
+	a.topicMetrics[topicName] = metric
+}
+
+// AddConsumerLagMetrics adds consumer lag metrics (for transformer)
+func (a *MetricAggregator) AddConsumerLagMetrics(consumerGroup, topic string, offsetData map[string]interface{}) {
+	a.mu.Lock()
+	defer a.mu.Unlock()
+	
+	if _, exists := a.consumerLagMetrics[topic]; !exists {
+		a.consumerLagMetrics[topic] = make(map[string]float64)
+	}
+	
+	if lag, ok := getFloatValue(offsetData, "consumerLag"); ok {
+		a.consumerLagMetrics[topic][consumerGroup] = lag
+	}
 }

@@ -1,0 +1,3979 @@
+{
+  "timestamp": "2025-06-04T21:57:07.563Z",
+  "config": {
+    "accountId": "3630072",
+    "timeRange": "1 hour ago",
+    "clusterName": null
+  },
+  "summary": {
+    "totalQueries": 55,
+    "successful": 53,
+    "withData": 53,
+    "failed": 2
+  },
+  "scores": {
+    "dataAvailability": 90,
+    "metricCompleteness": 96.36363636363636,
+    "dataFreshness": 0,
+    "entityRelationships": 100,
+    "overall": 74.9090909090909
+  },
+  "recommendations": [
+    {
+      "severity": "critical",
+      "category": "Data Availability",
+      "message": "Critical data sources are missing. Check MSK integration configuration.",
+      "details": [
+        "- Data Freshness (Polling): Unknown function now()"
+      ]
+    },
+    {
+      "severity": "warning",
+      "category": "Data Freshness",
+      "message": "Some data sources have stale data (>5 minutes old).",
+      "details": [
+        "Check polling intervals and network connectivity"
+      ]
+    }
+  ],
+  "categories": {
+    "MSK Polling Data": {
+      "queries": [
+        {
+          "category": "MSK Polling Data",
+          "query": {
+            "id": "1.1",
+            "name": "Cluster Sample Data Exists",
+            "query": "SELECT count(*) FROM AwsMskClusterSample SINCE {timeRange}",
+            "critical": true
+          },
+          "nrql": "SELECT count(*) FROM AwsMskClusterSample SINCE 1 hour ago",
+          "result": {
+            "metadata": {
+              "eventTypes": [
+                "AwsMskClusterSample"
+              ],
+              "timeWindow": {
+                "begin": 1749070618894,
+                "end": 1749074218894
+              }
+            },
+            "results": [
+              {
+                "count": 407
+              }
+            ]
+          },
+          "success": true,
+          "hasData": true,
+          "resultCount": 407
+        },
+        {
+          "category": "MSK Polling Data",
+          "query": {
+            "id": "1.2",
+            "name": "All Cluster Metrics Present",
+            "query": "SELECT \n          count(provider.activeControllerCount.Sum) as 'Has Active Controller Count',\n          count(provider.offlinePartitionsCount.Sum) as 'Has Offline Partitions Count',\n          count(provider.globalPartitionCount.Average) as 'Has Global Partition Count'\n        FROM AwsMskClusterSample SINCE {timeRange}",
+            "critical": true
+          },
+          "nrql": "SELECT \n          count(provider.activeControllerCount.Sum) as 'Has Active Controller Count',\n          count(provider.offlinePartitionsCount.Sum) as 'Has Offline Partitions Count',\n          count(provider.globalPartitionCount.Average) as 'Has Global Partition Count'\n        FROM AwsMskClusterSample SINCE 1 hour ago",
+          "result": {
+            "metadata": {
+              "eventTypes": [
+                "AwsMskClusterSample"
+              ],
+              "timeWindow": {
+                "begin": 1749070618856,
+                "end": 1749074218856
+              }
+            },
+            "results": [
+              {
+                "Has Active Controller Count": 407,
+                "Has Global Partition Count": 0,
+                "Has Offline Partitions Count": 286
+              }
+            ]
+          },
+          "success": true,
+          "hasData": true,
+          "resultCount": 1
+        },
+        {
+          "category": "MSK Polling Data",
+          "query": {
+            "id": "1.3",
+            "name": "Broker Sample Data Exists",
+            "query": "SELECT count(*) FROM AwsMskBrokerSample SINCE {timeRange}",
+            "critical": true
+          },
+          "nrql": "SELECT count(*) FROM AwsMskBrokerSample SINCE 1 hour ago",
+          "result": {
+            "metadata": {
+              "eventTypes": [
+                "AwsMskBrokerSample"
+              ],
+              "timeWindow": {
+                "begin": 1749070618829,
+                "end": 1749074218829
+              }
+            },
+            "results": [
+              {
+                "count": 322
+              }
+            ]
+          },
+          "success": true,
+          "hasData": true,
+          "resultCount": 322
+        },
+        {
+          "category": "MSK Polling Data",
+          "query": {
+            "id": "1.4",
+            "name": "All Broker Metrics Present",
+            "query": "SELECT \n          count(provider.bytesInPerSec.Average) as 'Has Bytes In',\n          count(provider.bytesOutPerSec.Average) as 'Has Bytes Out',\n          count(provider.messagesInPerSec.Average) as 'Has Messages In',\n          count(provider.messagesOutPerSec.Average) as 'Has Messages Out'\n        FROM AwsMskBrokerSample SINCE {timeRange}",
+            "critical": true
+          },
+          "nrql": "SELECT \n          count(provider.bytesInPerSec.Average) as 'Has Bytes In',\n          count(provider.bytesOutPerSec.Average) as 'Has Bytes Out',\n          count(provider.messagesInPerSec.Average) as 'Has Messages In',\n          count(provider.messagesOutPerSec.Average) as 'Has Messages Out'\n        FROM AwsMskBrokerSample SINCE 1 hour ago",
+          "result": {
+            "metadata": {
+              "eventTypes": [
+                "AwsMskBrokerSample"
+              ],
+              "timeWindow": {
+                "begin": 1749070618863,
+                "end": 1749074218863
+              }
+            },
+            "results": [
+              {
+                "Has Bytes In": 201,
+                "Has Bytes Out": 201,
+                "Has Messages In": 201,
+                "Has Messages Out": 0
+              }
+            ]
+          },
+          "success": true,
+          "hasData": true,
+          "resultCount": 1
+        },
+        {
+          "category": "MSK Polling Data",
+          "query": {
+            "id": "1.5",
+            "name": "Topic Sample Data Exists",
+            "query": "SELECT count(*) FROM AwsMskTopicSample SINCE {timeRange}",
+            "critical": false
+          },
+          "nrql": "SELECT count(*) FROM AwsMskTopicSample SINCE 1 hour ago",
+          "result": {
+            "metadata": {
+              "eventTypes": [
+                "AwsMskTopicSample"
+              ],
+              "timeWindow": {
+                "begin": 1749070618786,
+                "end": 1749074218786
+              }
+            },
+            "results": [
+              {
+                "count": 1601
+              }
+            ]
+          },
+          "success": true,
+          "hasData": true,
+          "resultCount": 1601
+        },
+        {
+          "category": "MSK Polling Data",
+          "query": {
+            "id": "1.6",
+            "name": "Topic Metrics Present",
+            "query": "SELECT \n          count(provider.bytesInPerSec.Sum) as 'Has Bytes In',\n          count(provider.bytesOutPerSec.Sum) as 'Has Bytes Out'\n        FROM AwsMskTopicSample SINCE {timeRange}",
+            "critical": false
+          },
+          "nrql": "SELECT \n          count(provider.bytesInPerSec.Sum) as 'Has Bytes In',\n          count(provider.bytesOutPerSec.Sum) as 'Has Bytes Out'\n        FROM AwsMskTopicSample SINCE 1 hour ago",
+          "result": {
+            "metadata": {
+              "eventTypes": [
+                "AwsMskTopicSample"
+              ],
+              "timeWindow": {
+                "begin": 1749070619328,
+                "end": 1749074219328
+              }
+            },
+            "results": [
+              {
+                "Has Bytes In": 0,
+                "Has Bytes Out": 0
+              }
+            ]
+          },
+          "success": true,
+          "hasData": true,
+          "resultCount": 1
+        },
+        {
+          "category": "MSK Polling Data",
+          "query": {
+            "id": "1.7",
+            "name": "Cluster Attributes Present",
+            "query": "SELECT \n          count(provider.clusterName) as 'Has Cluster Name',\n          count(entity.guid) as 'Has Entity GUID',\n          count(entityName) as 'Has Entity Name'\n        FROM AwsMskClusterSample SINCE {timeRange}",
+            "critical": true
+          },
+          "nrql": "SELECT \n          count(provider.clusterName) as 'Has Cluster Name',\n          count(entity.guid) as 'Has Entity GUID',\n          count(entityName) as 'Has Entity Name'\n        FROM AwsMskClusterSample SINCE 1 hour ago",
+          "result": {
+            "metadata": {
+              "eventTypes": [
+                "AwsMskClusterSample"
+              ],
+              "timeWindow": {
+                "begin": 1749070619313,
+                "end": 1749074219313
+              }
+            },
+            "results": [
+              {
+                "Has Cluster Name": 407,
+                "Has Entity GUID": 0,
+                "Has Entity Name": 407
+              }
+            ]
+          },
+          "success": true,
+          "hasData": true,
+          "resultCount": 1
+        },
+        {
+          "category": "MSK Polling Data",
+          "query": {
+            "id": "1.8",
+            "name": "Broker Attributes Present",
+            "query": "SELECT \n          count(provider.clusterName) as 'Has Cluster Name',\n          count(provider.brokerId) as 'Has Broker ID',\n          count(entity.guid) as 'Has Entity GUID'\n        FROM AwsMskBrokerSample SINCE {timeRange}",
+            "critical": true
+          },
+          "nrql": "SELECT \n          count(provider.clusterName) as 'Has Cluster Name',\n          count(provider.brokerId) as 'Has Broker ID',\n          count(entity.guid) as 'Has Entity GUID'\n        FROM AwsMskBrokerSample SINCE 1 hour ago",
+          "result": {
+            "metadata": {
+              "eventTypes": [
+                "AwsMskBrokerSample"
+              ],
+              "timeWindow": {
+                "begin": 1749070619298,
+                "end": 1749074219298
+              }
+            },
+            "results": [
+              {
+                "Has Broker ID": 322,
+                "Has Cluster Name": 322,
+                "Has Entity GUID": 0
+              }
+            ]
+          },
+          "success": true,
+          "hasData": true,
+          "resultCount": 1
+        },
+        {
+          "category": "MSK Polling Data",
+          "query": {
+            "id": "1.9",
+            "name": "Topic Attributes Present",
+            "query": "SELECT \n          count(provider.topic) as 'Has Topic Name',\n          count(displayName) as 'Has Display Name',\n          count(entity.guid) as 'Has Entity GUID'\n        FROM AwsMskTopicSample SINCE {timeRange}",
+            "critical": false
+          },
+          "nrql": "SELECT \n          count(provider.topic) as 'Has Topic Name',\n          count(displayName) as 'Has Display Name',\n          count(entity.guid) as 'Has Entity GUID'\n        FROM AwsMskTopicSample SINCE 1 hour ago",
+          "result": {
+            "metadata": {
+              "eventTypes": [
+                "AwsMskTopicSample"
+              ],
+              "timeWindow": {
+                "begin": 1749070619294,
+                "end": 1749074219294
+              }
+            },
+            "results": [
+              {
+                "Has Display Name": 1605,
+                "Has Entity GUID": 0,
+                "Has Topic Name": 0
+              }
+            ]
+          },
+          "success": true,
+          "hasData": true,
+          "resultCount": 1
+        }
+      ],
+      "summary": {
+        "total": 9,
+        "success": 9,
+        "hasData": 9,
+        "failed": 0
+      }
+    },
+    "Metric Streams Data": {
+      "queries": [
+        {
+          "category": "Metric Streams Data",
+          "query": {
+            "id": "2.1",
+            "name": "Metric Events Exist",
+            "query": "SELECT count(*) FROM Metric WHERE metricName LIKE 'newrelic.goldenmetrics%' OR metricName LIKE 'kafka%' SINCE {timeRange}",
+            "critical": false
+          },
+          "nrql": "SELECT count(*) FROM Metric WHERE metricName LIKE 'newrelic.goldenmetrics%' OR metricName LIKE 'kafka%' SINCE 1 hour ago",
+          "result": {
+            "metadata": {
+              "eventTypes": [
+                "Metric"
+              ],
+              "timeWindow": {
+                "begin": 1749070619271,
+                "end": 1749074219271
+              }
+            },
+            "results": [
+              {
+                "count": 7259
+              }
+            ]
+          },
+          "success": true,
+          "hasData": true,
+          "resultCount": 7259
+        },
+        {
+          "category": "Metric Streams Data",
+          "query": {
+            "id": "2.2",
+            "name": "Cluster-Level Metrics",
+            "query": "SELECT \n          filter(count(*), WHERE metricName = 'aws.kafka.ActiveControllerCount') as 'Active Controller',\n          filter(count(*), WHERE metricName = 'aws.kafka.OfflinePartitionsCount') as 'Offline Partitions',\n          filter(count(*), WHERE metricName = 'aws.kafka.GlobalPartitionCount') as 'Global Partitions'\n        FROM Metric WHERE metricName LIKE 'aws.kafka%' SINCE {timeRange}",
+            "critical": false
+          },
+          "nrql": "SELECT \n          filter(count(*), WHERE metricName = 'aws.kafka.ActiveControllerCount') as 'Active Controller',\n          filter(count(*), WHERE metricName = 'aws.kafka.OfflinePartitionsCount') as 'Offline Partitions',\n          filter(count(*), WHERE metricName = 'aws.kafka.GlobalPartitionCount') as 'Global Partitions'\n        FROM Metric WHERE metricName LIKE 'aws.kafka%' SINCE 1 hour ago",
+          "result": {
+            "metadata": {
+              "eventTypes": [
+                "Metric"
+              ],
+              "timeWindow": {
+                "begin": 1749070619758,
+                "end": 1749074219758
+              }
+            },
+            "results": [
+              {
+                "Active Controller": 0,
+                "Global Partitions": 0,
+                "Offline Partitions": 0
+              }
+            ]
+          },
+          "success": true,
+          "hasData": true,
+          "resultCount": 1
+        },
+        {
+          "category": "Metric Streams Data",
+          "query": {
+            "id": "2.3",
+            "name": "Broker-Level Metrics",
+            "query": "SELECT \n          filter(count(*), WHERE metricName = 'aws.kafka.BytesInPerSec.byBroker') as 'Broker Bytes In',\n          filter(count(*), WHERE metricName = 'aws.kafka.BytesOutPerSec.byBroker') as 'Broker Bytes Out',\n          filter(count(*), WHERE metricName = 'aws.kafka.UnderReplicatedPartitions') as 'Under Replicated'\n        FROM Metric WHERE metricName LIKE 'aws.kafka%' SINCE {timeRange}",
+            "critical": false
+          },
+          "nrql": "SELECT \n          filter(count(*), WHERE metricName = 'aws.kafka.BytesInPerSec.byBroker') as 'Broker Bytes In',\n          filter(count(*), WHERE metricName = 'aws.kafka.BytesOutPerSec.byBroker') as 'Broker Bytes Out',\n          filter(count(*), WHERE metricName = 'aws.kafka.UnderReplicatedPartitions') as 'Under Replicated'\n        FROM Metric WHERE metricName LIKE 'aws.kafka%' SINCE 1 hour ago",
+          "result": {
+            "metadata": {
+              "eventTypes": [
+                "Metric"
+              ],
+              "timeWindow": {
+                "begin": 1749070619751,
+                "end": 1749074219751
+              }
+            },
+            "results": [
+              {
+                "Broker Bytes In": 0,
+                "Broker Bytes Out": 0,
+                "Under Replicated": 0
+              }
+            ]
+          },
+          "success": true,
+          "hasData": true,
+          "resultCount": 1
+        },
+        {
+          "category": "Metric Streams Data",
+          "query": {
+            "id": "2.4",
+            "name": "Topic-Level Metrics",
+            "query": "SELECT \n          filter(count(*), WHERE metricName = 'aws.kafka.BytesInPerSec.byTopic') as 'Topic Bytes In',\n          filter(count(*), WHERE metricName = 'aws.kafka.BytesOutPerSec.byTopic') as 'Topic Bytes Out'\n        FROM Metric WHERE metricName LIKE 'aws.kafka%' SINCE {timeRange}",
+            "critical": false
+          },
+          "nrql": "SELECT \n          filter(count(*), WHERE metricName = 'aws.kafka.BytesInPerSec.byTopic') as 'Topic Bytes In',\n          filter(count(*), WHERE metricName = 'aws.kafka.BytesOutPerSec.byTopic') as 'Topic Bytes Out'\n        FROM Metric WHERE metricName LIKE 'aws.kafka%' SINCE 1 hour ago",
+          "result": {
+            "metadata": {
+              "eventTypes": [
+                "Metric"
+              ],
+              "timeWindow": {
+                "begin": 1749070619727,
+                "end": 1749074219727
+              }
+            },
+            "results": [
+              {
+                "Topic Bytes In": 0,
+                "Topic Bytes Out": 0
+              }
+            ]
+          },
+          "success": true,
+          "hasData": true,
+          "resultCount": 1
+        },
+        {
+          "category": "Metric Streams Data",
+          "query": {
+            "id": "2.5",
+            "name": "Metric Streams Attributes",
+            "query": "SELECT \n          count(aws.kafka.ClusterName OR aws.msk.clusterName) as 'Has Cluster Name',\n          count(aws.kafka.BrokerID OR aws.msk.brokerId) as 'Has Broker ID',\n          count(aws.kafka.Topic OR aws.msk.topic) as 'Has Topic Name'\n        FROM Metric WHERE metricName LIKE 'aws.kafka%' SINCE {timeRange}",
+            "critical": false
+          },
+          "nrql": "SELECT \n          count(aws.kafka.ClusterName OR aws.msk.clusterName) as 'Has Cluster Name',\n          count(aws.kafka.BrokerID OR aws.msk.brokerId) as 'Has Broker ID',\n          count(aws.kafka.Topic OR aws.msk.topic) as 'Has Topic Name'\n        FROM Metric WHERE metricName LIKE 'aws.kafka%' SINCE 1 hour ago",
+          "result": {
+            "metadata": {
+              "eventTypes": [
+                "Metric"
+              ],
+              "timeWindow": {
+                "begin": 1749070619724,
+                "end": 1749074219724
+              }
+            },
+            "results": [
+              {
+                "Has Broker ID": 0,
+                "Has Cluster Name": 0,
+                "Has Topic Name": 0
+              }
+            ]
+          },
+          "success": true,
+          "hasData": true,
+          "resultCount": 1
+        }
+      ],
+      "summary": {
+        "total": 5,
+        "success": 5,
+        "hasData": 5,
+        "failed": 0
+      }
+    },
+    "Standard Kafka Integration": {
+      "queries": [
+        {
+          "category": "Standard Kafka Integration",
+          "query": {
+            "id": "3.1",
+            "name": "Broker Sample Data",
+            "query": "SELECT count(*) FROM KafkaBrokerSample SINCE {timeRange}",
+            "critical": false
+          },
+          "nrql": "SELECT count(*) FROM KafkaBrokerSample SINCE 1 hour ago",
+          "result": {
+            "metadata": {
+              "eventTypes": [
+                "KafkaBrokerSample"
+              ],
+              "timeWindow": {
+                "begin": 1749070619698,
+                "end": 1749074219698
+              }
+            },
+            "results": [
+              {
+                "count": 1615
+              }
+            ]
+          },
+          "success": true,
+          "hasData": true,
+          "resultCount": 1615
+        },
+        {
+          "category": "Standard Kafka Integration",
+          "query": {
+            "id": "3.2",
+            "name": "Topic Sample Data",
+            "query": "SELECT count(*) FROM KafkaTopicSample SINCE {timeRange}",
+            "critical": false
+          },
+          "nrql": "SELECT count(*) FROM KafkaTopicSample SINCE 1 hour ago",
+          "result": {
+            "metadata": {
+              "eventTypes": [
+                "KafkaTopicSample"
+              ],
+              "timeWindow": {
+                "begin": 1749070620186,
+                "end": 1749074220186
+              }
+            },
+            "results": [
+              {
+                "count": 484
+              }
+            ]
+          },
+          "success": true,
+          "hasData": true,
+          "resultCount": 484
+        },
+        {
+          "category": "Standard Kafka Integration",
+          "query": {
+            "id": "3.3",
+            "name": "Offset Sample Data",
+            "query": "SELECT count(*) FROM KafkaOffsetSample SINCE {timeRange}",
+            "critical": false
+          },
+          "nrql": "SELECT count(*) FROM KafkaOffsetSample SINCE 1 hour ago",
+          "result": {
+            "metadata": {
+              "eventTypes": [
+                "KafkaOffsetSample"
+              ],
+              "timeWindow": {
+                "begin": 1749070620184,
+                "end": 1749074220184
+              }
+            },
+            "results": [
+              {
+                "count": 3986
+              }
+            ]
+          },
+          "success": true,
+          "hasData": true,
+          "resultCount": 3986
+        },
+        {
+          "category": "Standard Kafka Integration",
+          "query": {
+            "id": "3.4",
+            "name": "Producer Sample Data",
+            "query": "SELECT count(*) FROM KafkaProducerSample SINCE {timeRange}",
+            "critical": false
+          },
+          "nrql": "SELECT count(*) FROM KafkaProducerSample SINCE 1 hour ago",
+          "result": {
+            "metadata": {
+              "eventTypes": [
+                "KafkaProducerSample"
+              ],
+              "timeWindow": {
+                "begin": 1749070620143,
+                "end": 1749074220143
+              }
+            },
+            "results": [
+              {
+                "count": 30
+              }
+            ]
+          },
+          "success": true,
+          "hasData": true,
+          "resultCount": 30
+        },
+        {
+          "category": "Standard Kafka Integration",
+          "query": {
+            "id": "3.5",
+            "name": "Consumer Sample Data",
+            "query": "SELECT count(*) FROM KafkaConsumerSample SINCE {timeRange}",
+            "critical": false
+          },
+          "nrql": "SELECT count(*) FROM KafkaConsumerSample SINCE 1 hour ago",
+          "result": {
+            "metadata": {
+              "eventTypes": [
+                "KafkaConsumerSample"
+              ],
+              "timeWindow": {
+                "begin": 1749070620115,
+                "end": 1749074220115
+              }
+            },
+            "results": [
+              {
+                "count": 112
+              }
+            ]
+          },
+          "success": true,
+          "hasData": true,
+          "resultCount": 112
+        }
+      ],
+      "summary": {
+        "total": 5,
+        "success": 5,
+        "hasData": 5,
+        "failed": 0
+      }
+    },
+    "Data Quality": {
+      "queries": [
+        {
+          "category": "Data Quality",
+          "query": {
+            "id": "4.1",
+            "name": "Check for Null Values",
+            "query": "SELECT \n          count(*) as 'Total Records',\n          filter(count(*), WHERE provider.activeControllerCount.Sum IS NULL) as 'Null Active Controllers',\n          filter(count(*), WHERE provider.offlinePartitionsCount.Sum IS NULL) as 'Null Offline Partitions',\n          filter(count(*), WHERE provider.clusterName IS NULL) as 'Null Cluster Names'\n        FROM AwsMskClusterSample \n        SINCE {timeRange}",
+            "critical": false
+          },
+          "nrql": "SELECT \n          count(*) as 'Total Records',\n          filter(count(*), WHERE provider.activeControllerCount.Sum IS NULL) as 'Null Active Controllers',\n          filter(count(*), WHERE provider.offlinePartitionsCount.Sum IS NULL) as 'Null Offline Partitions',\n          filter(count(*), WHERE provider.clusterName IS NULL) as 'Null Cluster Names'\n        FROM AwsMskClusterSample \n        SINCE 1 hour ago",
+          "result": {
+            "metadata": {
+              "eventTypes": [
+                "AwsMskClusterSample"
+              ],
+              "timeWindow": {
+                "begin": 1749070620139,
+                "end": 1749074220139
+              }
+            },
+            "results": [
+              {
+                "Null Active Controllers": 0,
+                "Null Cluster Names": 0,
+                "Null Offline Partitions": 121,
+                "Total Records": 407
+              }
+            ]
+          },
+          "success": true,
+          "hasData": true,
+          "resultCount": 1
+        },
+        {
+          "category": "Data Quality",
+          "query": {
+            "id": "4.2",
+            "name": "Data Freshness (Polling)",
+            "query": "SELECT \n          latest(timestamp) as 'Last Data Point',\n          (now() - latest(timestamp))/1000 as 'Age in Seconds'\n        FROM AwsMskClusterSample \n        FACET provider.clusterName\n        SINCE {timeRange}",
+            "critical": true
+          },
+          "nrql": "SELECT \n          latest(timestamp) as 'Last Data Point',\n          (now() - latest(timestamp))/1000 as 'Age in Seconds'\n        FROM AwsMskClusterSample \n        FACET provider.clusterName\n        SINCE 1 hour ago",
+          "error": "Unknown function now()",
+          "success": false,
+          "hasData": false,
+          "resultCount": 0
+        },
+        {
+          "category": "Data Quality",
+          "query": {
+            "id": "4.3",
+            "name": "Data Freshness (Metric Streams)",
+            "query": "SELECT \n          latest(timestamp) as 'Last Data Point',\n          (now() - latest(timestamp))/1000 as 'Age in Seconds',\n          count(*) as 'Total Metric Points'\n        FROM Metric \n        WHERE metricName LIKE 'newrelic.goldenmetrics.infra.kafkabroker%'\n        FACET entity.name\n        SINCE {timeRange}",
+            "critical": false
+          },
+          "nrql": "SELECT \n          latest(timestamp) as 'Last Data Point',\n          (now() - latest(timestamp))/1000 as 'Age in Seconds',\n          count(*) as 'Total Metric Points'\n        FROM Metric \n        WHERE metricName LIKE 'newrelic.goldenmetrics.infra.kafkabroker%'\n        FACET entity.name\n        SINCE 1 hour ago",
+          "error": "Unknown function now()",
+          "success": false,
+          "hasData": false,
+          "resultCount": 0
+        },
+        {
+          "category": "Data Quality",
+          "query": {
+            "id": "4.4",
+            "name": "Tag Completeness",
+            "query": "SELECT \n          count(*) as 'Total Records',\n          filter(count(*), WHERE environment IS NOT NULL) as 'Has Environment Tag',\n          filter(count(*), WHERE label.env IS NOT NULL) as 'Has Environment Label',\n          filter(count(*), WHERE label.cluster IS NOT NULL) as 'Has Cluster Label',\n          filter(count(*), WHERE label.integration IS NOT NULL) as 'Has Integration Label'\n        FROM AwsMskClusterSample \n        FACET provider.clusterName\n        SINCE {timeRange}",
+            "critical": false
+          },
+          "nrql": "SELECT \n          count(*) as 'Total Records',\n          filter(count(*), WHERE environment IS NOT NULL) as 'Has Environment Tag',\n          filter(count(*), WHERE label.env IS NOT NULL) as 'Has Environment Label',\n          filter(count(*), WHERE label.cluster IS NOT NULL) as 'Has Cluster Label',\n          filter(count(*), WHERE label.integration IS NOT NULL) as 'Has Integration Label'\n        FROM AwsMskClusterSample \n        FACET provider.clusterName\n        SINCE 1 hour ago",
+          "result": {
+            "metadata": {
+              "eventTypes": [
+                "AwsMskClusterSample"
+              ],
+              "timeWindow": {
+                "begin": 1749070620580,
+                "end": 1749074220580
+              }
+            },
+            "results": [
+              {
+                "facet": "minikube-kafka",
+                "Has Cluster Label": 201,
+                "Has Environment Label": 201,
+                "Has Environment Tag": 322,
+                "Has Integration Label": 201,
+                "Total Records": 322,
+                "provider.clusterName": "minikube-kafka"
+              },
+              {
+                "facet": "strimzi-kafka-cluster",
+                "Has Cluster Label": 85,
+                "Has Environment Label": 85,
+                "Has Environment Tag": 85,
+                "Has Integration Label": 85,
+                "Total Records": 85,
+                "provider.clusterName": "strimzi-kafka-cluster"
+              }
+            ]
+          },
+          "success": true,
+          "hasData": true,
+          "resultCount": 2
+        },
+        {
+          "category": "Data Quality",
+          "query": {
+            "id": "4.5",
+            "name": "Data Consistency Check",
+            "query": "SELECT uniqueCount(provider.clusterName) as `Clusters in ClusterSample` FROM AwsMskClusterSample SINCE {timeRange}",
+            "critical": false
+          },
+          "nrql": "SELECT uniqueCount(provider.clusterName) as `Clusters in ClusterSample` FROM AwsMskClusterSample SINCE 1 hour ago",
+          "result": {
+            "metadata": {
+              "eventTypes": [
+                "AwsMskClusterSample"
+              ],
+              "timeWindow": {
+                "begin": 1749070620568,
+                "end": 1749074220568
+              }
+            },
+            "results": [
+              {
+                "Clusters in ClusterSample": 2
+              }
+            ]
+          },
+          "success": true,
+          "hasData": true,
+          "resultCount": 2
+        }
+      ],
+      "summary": {
+        "total": 5,
+        "success": 3,
+        "hasData": 3,
+        "failed": 2
+      }
+    },
+    "Throughput Calculations": {
+      "queries": [
+        {
+          "category": "Throughput Calculations",
+          "query": {
+            "id": "5.1",
+            "name": "Cluster Throughput Summary",
+            "query": "SELECT \n          sum(provider.bytesInPerSec.Average) as 'Total Bytes In/Sec',\n          sum(provider.bytesOutPerSec.Average) as 'Total Bytes Out/Sec',\n          sum(provider.messagesInPerSec.Average) as 'Total Messages In/Sec'\n        FROM AwsMskBrokerSample \n        FACET provider.clusterName\n        SINCE {timeRange}",
+            "critical": false
+          },
+          "nrql": "SELECT \n          sum(provider.bytesInPerSec.Average) as 'Total Bytes In/Sec',\n          sum(provider.bytesOutPerSec.Average) as 'Total Bytes Out/Sec',\n          sum(provider.messagesInPerSec.Average) as 'Total Messages In/Sec'\n        FROM AwsMskBrokerSample \n        FACET provider.clusterName\n        SINCE 1 hour ago",
+          "result": {
+            "metadata": {
+              "eventTypes": [
+                "AwsMskBrokerSample"
+              ],
+              "timeWindow": {
+                "begin": 1749070620546,
+                "end": 1749074220546
+              }
+            },
+            "results": [
+              {
+                "facet": "minikube-kafka",
+                "Total Bytes In/Sec": 191905.72061793396,
+                "Total Bytes Out/Sec": 387221.43006940273,
+                "Total Messages In/Sec": 2262.143959194027,
+                "provider.clusterName": "minikube-kafka"
+              }
+            ]
+          },
+          "success": true,
+          "hasData": true,
+          "resultCount": 1
+        },
+        {
+          "category": "Throughput Calculations",
+          "query": {
+            "id": "5.2",
+            "name": "Throughput Aggregation",
+            "query": "SELECT sum(bytesInPerSec) as 'Total Incoming', sum(bytesOutPerSec) as 'Total Outgoing'\n        FROM (\n          SELECT average(provider.bytesInPerSec.Average) as 'bytesInPerSec',\n                 average(provider.bytesOutPerSec.Average) as 'bytesOutPerSec'\n          FROM AwsMskBrokerSample\n          FACET provider.clusterName as cluster, provider.brokerId\n          LIMIT MAX\n        ) SINCE {timeRange}",
+            "critical": false
+          },
+          "nrql": "SELECT sum(bytesInPerSec) as 'Total Incoming', sum(bytesOutPerSec) as 'Total Outgoing'\n        FROM (\n          SELECT average(provider.bytesInPerSec.Average) as 'bytesInPerSec',\n                 average(provider.bytesOutPerSec.Average) as 'bytesOutPerSec'\n          FROM AwsMskBrokerSample\n          FACET provider.clusterName as cluster, provider.brokerId\n          LIMIT MAX\n        ) SINCE 1 hour ago",
+          "result": {
+            "metadata": {
+              "eventTypes": [],
+              "timeWindow": {
+                "begin": 1749070624624,
+                "end": 1749074224624
+              }
+            },
+            "results": [
+              {
+                "Total Incoming": 950.0283198907622,
+                "Total Outgoing": 1916.9377726208056
+              }
+            ]
+          },
+          "success": true,
+          "hasData": true,
+          "resultCount": 1
+        },
+        {
+          "category": "Throughput Calculations",
+          "query": {
+            "id": "5.3",
+            "name": "Topic Throughput",
+            "query": "SELECT \n          latest(provider.bytesInPerSec.Sum) OR 0 AS 'Bytes In/Sec',\n          latest(provider.bytesOutPerSec.Sum) OR 0 AS 'Bytes Out/Sec'\n        FROM AwsMskTopicSample\n        FACET displayName\n        SINCE {timeRange}\n        LIMIT 10",
+            "critical": false
+          },
+          "nrql": "SELECT \n          latest(provider.bytesInPerSec.Sum) OR 0 AS 'Bytes In/Sec',\n          latest(provider.bytesOutPerSec.Sum) OR 0 AS 'Bytes Out/Sec'\n        FROM AwsMskTopicSample\n        FACET displayName\n        SINCE 1 hour ago\n        LIMIT 10",
+          "result": {
+            "metadata": {
+              "eventTypes": [
+                "AwsMskTopicSample"
+              ],
+              "timeWindow": {
+                "begin": 1749070624574,
+                "end": 1749074224574
+              }
+            },
+            "results": [
+              {
+                "facet": "aws-msk-topic:minikube-kafka-topic-events",
+                "Bytes In/Sec": 0,
+                "Bytes Out/Sec": 0,
+                "constant": 0,
+                "displayName": "aws-msk-topic:minikube-kafka-topic-events"
+              },
+              {
+                "facet": "aws-msk-topic:minikube-kafka-topic-logs",
+                "Bytes In/Sec": 0,
+                "Bytes Out/Sec": 0,
+                "constant": 0,
+                "displayName": "aws-msk-topic:minikube-kafka-topic-logs"
+              },
+              {
+                "facet": "aws-msk-topic:minikube-kafka-topic-metrics",
+                "Bytes In/Sec": 0,
+                "Bytes Out/Sec": 0,
+                "constant": 0,
+                "displayName": "aws-msk-topic:minikube-kafka-topic-metrics"
+              },
+              {
+                "facet": "aws-msk-topic:minikube-kafka-topic-__consumer_offsets",
+                "Bytes In/Sec": 0,
+                "Bytes Out/Sec": 0,
+                "constant": 0,
+                "displayName": "aws-msk-topic:minikube-kafka-topic-__consumer_offsets"
+              }
+            ]
+          },
+          "success": true,
+          "hasData": true,
+          "resultCount": 4
+        },
+        {
+          "category": "Throughput Calculations",
+          "query": {
+            "id": "5.4",
+            "name": "Message Rates",
+            "query": "SELECT sum(provider.messagesInPerSec.Average) as 'Total Messages In'\n        FROM AwsMskBrokerSample SINCE {timeRange}",
+            "critical": false
+          },
+          "nrql": "SELECT sum(provider.messagesInPerSec.Average) as 'Total Messages In'\n        FROM AwsMskBrokerSample SINCE 1 hour ago",
+          "result": {
+            "metadata": {
+              "eventTypes": [
+                "AwsMskBrokerSample"
+              ],
+              "timeWindow": {
+                "begin": 1749070624645,
+                "end": 1749074224645
+              }
+            },
+            "results": [
+              {
+                "Total Messages In": 2262.143959194027
+              }
+            ]
+          },
+          "success": true,
+          "hasData": true,
+          "resultCount": 2262.143959194027
+        }
+      ],
+      "summary": {
+        "total": 4,
+        "success": 4,
+        "hasData": 4,
+        "failed": 0
+      }
+    },
+    "Entity Relationships": {
+      "queries": [
+        {
+          "category": "Entity Relationships",
+          "query": {
+            "id": "6.1",
+            "name": "Brokers per Cluster",
+            "query": "SELECT uniqueCount(provider.brokerId) as 'Broker Count'\n        FROM AwsMskBrokerSample \n        FACET provider.clusterName\n        SINCE {timeRange}",
+            "critical": false
+          },
+          "nrql": "SELECT uniqueCount(provider.brokerId) as 'Broker Count'\n        FROM AwsMskBrokerSample \n        FACET provider.clusterName\n        SINCE 1 hour ago",
+          "result": {
+            "metadata": {
+              "eventTypes": [
+                "AwsMskBrokerSample"
+              ],
+              "timeWindow": {
+                "begin": 1749070624628,
+                "end": 1749074224628
+              }
+            },
+            "results": [
+              {
+                "facet": "minikube-kafka",
+                "Broker Count": 1,
+                "provider.clusterName": "minikube-kafka"
+              }
+            ]
+          },
+          "success": true,
+          "hasData": true,
+          "resultCount": 1
+        },
+        {
+          "category": "Entity Relationships",
+          "query": {
+            "id": "6.2",
+            "name": "Topics per Cluster",
+            "query": "SELECT uniqueCount(displayName) as 'Topic Count'\n        FROM AwsMskTopicSample\n        FACET provider.clusterName\n        SINCE {timeRange}",
+            "critical": false
+          },
+          "nrql": "SELECT uniqueCount(displayName) as 'Topic Count'\n        FROM AwsMskTopicSample\n        FACET provider.clusterName\n        SINCE 1 hour ago",
+          "result": {
+            "metadata": {
+              "eventTypes": [
+                "AwsMskTopicSample"
+              ],
+              "timeWindow": {
+                "begin": 1749070624638,
+                "end": 1749074224638
+              }
+            },
+            "results": [
+              {
+                "facet": "minikube-kafka",
+                "Topic Count": 4,
+                "provider.clusterName": "minikube-kafka"
+              }
+            ]
+          },
+          "success": true,
+          "hasData": true,
+          "resultCount": 1
+        },
+        {
+          "category": "Entity Relationships",
+          "query": {
+            "id": "6.3",
+            "name": "Entity GUIDs Present",
+            "query": "SELECT \n          count(entity.guid) as 'Total Entity GUIDs',\n          uniqueCount(entity.guid) as 'Unique Entity GUIDs'\n        FROM AwsMskBrokerSample\n        SINCE {timeRange}",
+            "critical": false
+          },
+          "nrql": "SELECT \n          count(entity.guid) as 'Total Entity GUIDs',\n          uniqueCount(entity.guid) as 'Unique Entity GUIDs'\n        FROM AwsMskBrokerSample\n        SINCE 1 hour ago",
+          "result": {
+            "metadata": {
+              "eventTypes": [
+                "AwsMskBrokerSample"
+              ],
+              "timeWindow": {
+                "begin": 1749070625209,
+                "end": 1749074225209
+              }
+            },
+            "results": [
+              {
+                "Total Entity GUIDs": 0,
+                "Unique Entity GUIDs": 0
+              }
+            ]
+          },
+          "success": true,
+          "hasData": true,
+          "resultCount": 1
+        }
+      ],
+      "summary": {
+        "total": 3,
+        "success": 3,
+        "hasData": 3,
+        "failed": 0
+      }
+    },
+    "Health Metrics": {
+      "queries": [
+        {
+          "category": "Health Metrics",
+          "query": {
+            "id": "7.1",
+            "name": "Cluster Health Status",
+            "query": "SELECT \n          latest(provider.activeControllerCount.Sum) as 'Active Controllers',\n          latest(provider.offlinePartitionsCount.Sum) as 'Offline Partitions'\n        FROM AwsMskClusterSample\n        FACET provider.clusterName\n        SINCE {timeRange}",
+            "critical": true
+          },
+          "nrql": "SELECT \n          latest(provider.activeControllerCount.Sum) as 'Active Controllers',\n          latest(provider.offlinePartitionsCount.Sum) as 'Offline Partitions'\n        FROM AwsMskClusterSample\n        FACET provider.clusterName\n        SINCE 1 hour ago",
+          "result": {
+            "metadata": {
+              "eventTypes": [
+                "AwsMskClusterSample"
+              ],
+              "timeWindow": {
+                "begin": 1749070625178,
+                "end": 1749074225178
+              }
+            },
+            "results": [
+              {
+                "facet": "minikube-kafka",
+                "Active Controllers": 1,
+                "Offline Partitions": 0,
+                "provider.clusterName": "minikube-kafka"
+              },
+              {
+                "facet": "strimzi-kafka-cluster",
+                "Active Controllers": 1,
+                "Offline Partitions": 0,
+                "provider.clusterName": "strimzi-kafka-cluster"
+              }
+            ]
+          },
+          "success": true,
+          "hasData": true,
+          "resultCount": 2
+        },
+        {
+          "category": "Health Metrics",
+          "query": {
+            "id": "7.2",
+            "name": "Broker Health Status",
+            "query": "SELECT \n          latest(provider.bytesInPerSec.Average) as 'Bytes In Rate',\n          latest(provider.bytesOutPerSec.Average) as 'Bytes Out Rate',\n          latest(provider.messagesInPerSec.Average) as 'Message Rate'\n        FROM AwsMskBrokerSample\n        FACET provider.clusterName, provider.brokerId\n        SINCE {timeRange}\n        LIMIT 20",
+            "critical": false
+          },
+          "nrql": "SELECT \n          latest(provider.bytesInPerSec.Average) as 'Bytes In Rate',\n          latest(provider.bytesOutPerSec.Average) as 'Bytes Out Rate',\n          latest(provider.messagesInPerSec.Average) as 'Message Rate'\n        FROM AwsMskBrokerSample\n        FACET provider.clusterName, provider.brokerId\n        SINCE 1 hour ago\n        LIMIT 20",
+          "result": {
+            "metadata": {
+              "eventTypes": [
+                "AwsMskBrokerSample"
+              ],
+              "timeWindow": {
+                "begin": 1749070625183,
+                "end": 1749074225183
+              }
+            },
+            "results": [
+              {
+                "facet": [
+                  "minikube-kafka",
+                  "1"
+                ],
+                "Bytes In Rate": 583.8666666666667,
+                "Bytes Out Rate": 452.06666666666666,
+                "Message Rate": 6.733333333333333
+              }
+            ]
+          },
+          "success": true,
+          "hasData": true,
+          "resultCount": 1
+        },
+        {
+          "category": "Health Metrics",
+          "query": {
+            "id": "7.3",
+            "name": "Unhealthy Cluster Count",
+            "query": "SELECT \n          uniqueCount(entity.guid) as 'Total',\n          filter(uniqueCount(entity.guid), WHERE provider.offlinePartitionsCount.Sum > 0) as 'Unhealthy'\n        FROM AwsMskClusterSample SINCE {timeRange}",
+            "critical": true
+          },
+          "nrql": "SELECT \n          uniqueCount(entity.guid) as 'Total',\n          filter(uniqueCount(entity.guid), WHERE provider.offlinePartitionsCount.Sum > 0) as 'Unhealthy'\n        FROM AwsMskClusterSample SINCE 1 hour ago",
+          "result": {
+            "metadata": {
+              "eventTypes": [
+                "AwsMskClusterSample"
+              ],
+              "timeWindow": {
+                "begin": 1749070625177,
+                "end": 1749074225177
+              }
+            },
+            "results": [
+              {
+                "Total": 0,
+                "Unhealthy": 0
+              }
+            ]
+          },
+          "success": true,
+          "hasData": true,
+          "resultCount": 1
+        }
+      ],
+      "summary": {
+        "total": 3,
+        "success": 3,
+        "hasData": 3,
+        "failed": 0
+      }
+    },
+    "Time Series Data": {
+      "queries": [
+        {
+          "category": "Time Series Data",
+          "query": {
+            "id": "8.1",
+            "name": "Throughput Time Series",
+            "query": "SELECT sum(provider.bytesInPerSec.Average) as 'Incoming Throughput'\n        FROM AwsMskBrokerSample\n        FACET provider.clusterName\n        TIMESERIES 5 minutes\n        SINCE {timeRange}",
+            "critical": false
+          },
+          "nrql": "SELECT sum(provider.bytesInPerSec.Average) as 'Incoming Throughput'\n        FROM AwsMskBrokerSample\n        FACET provider.clusterName\n        TIMESERIES 5 minutes\n        SINCE 1 hour ago",
+          "result": {
+            "metadata": {
+              "eventTypes": [
+                "AwsMskBrokerSample"
+              ],
+              "timeWindow": {
+                "begin": 1749070625221,
+                "end": 1749074225221
+              }
+            },
+            "results": [
+              {
+                "facet": "minikube-kafka",
+                "beginTimeSeconds": 1749070625,
+                "endTimeSeconds": 1749070925,
+                "Incoming Throughput": 3086.111234705228,
+                "provider.clusterName": "minikube-kafka"
+              },
+              {
+                "facet": "minikube-kafka",
+                "beginTimeSeconds": 1749070925,
+                "endTimeSeconds": 1749071225,
+                "Incoming Throughput": 8175.040229885057,
+                "provider.clusterName": "minikube-kafka"
+              },
+              {
+                "facet": "minikube-kafka",
+                "beginTimeSeconds": 1749071225,
+                "endTimeSeconds": 1749071525,
+                "Incoming Throughput": 6066.2010752688175,
+                "provider.clusterName": "minikube-kafka"
+              },
+              {
+                "facet": "minikube-kafka",
+                "beginTimeSeconds": 1749071525,
+                "endTimeSeconds": 1749071825,
+                "Incoming Throughput": 9953.248350018539,
+                "provider.clusterName": "minikube-kafka"
+              },
+              {
+                "facet": "minikube-kafka",
+                "beginTimeSeconds": 1749071825,
+                "endTimeSeconds": 1749072125,
+                "Incoming Throughput": 16290.397626992957,
+                "provider.clusterName": "minikube-kafka"
+              },
+              {
+                "facet": "minikube-kafka",
+                "beginTimeSeconds": 1749072125,
+                "endTimeSeconds": 1749072425,
+                "Incoming Throughput": 19613.30100111235,
+                "provider.clusterName": "minikube-kafka"
+              },
+              {
+                "facet": "minikube-kafka",
+                "beginTimeSeconds": 1749072425,
+                "endTimeSeconds": 1749072725,
+                "Incoming Throughput": 20719.804441442873,
+                "provider.clusterName": "minikube-kafka"
+              },
+              {
+                "facet": "minikube-kafka",
+                "beginTimeSeconds": 1749072725,
+                "endTimeSeconds": 1749073025,
+                "Incoming Throughput": 22471.745089120188,
+                "provider.clusterName": "minikube-kafka"
+              },
+              {
+                "facet": "minikube-kafka",
+                "beginTimeSeconds": 1749073025,
+                "endTimeSeconds": 1749073325,
+                "Incoming Throughput": 21834.137837676786,
+                "provider.clusterName": "minikube-kafka"
+              },
+              {
+                "facet": "minikube-kafka",
+                "beginTimeSeconds": 1749073325,
+                "endTimeSeconds": 1749073625,
+                "Incoming Throughput": 20808.973850361494,
+                "provider.clusterName": "minikube-kafka"
+              },
+              {
+                "facet": "minikube-kafka",
+                "beginTimeSeconds": 1749073625,
+                "endTimeSeconds": 1749073925,
+                "Incoming Throughput": 21405.4531701891,
+                "provider.clusterName": "minikube-kafka"
+              },
+              {
+                "facet": "minikube-kafka",
+                "beginTimeSeconds": 1749073925,
+                "endTimeSeconds": 1749074225,
+                "Incoming Throughput": 21481.30671116055,
+                "provider.clusterName": "minikube-kafka"
+              }
+            ]
+          },
+          "success": true,
+          "hasData": true,
+          "resultCount": 12
+        },
+        {
+          "category": "Time Series Data",
+          "query": {
+            "id": "8.2",
+            "name": "Message Rate Time Series",
+            "query": "SELECT sum(provider.messagesInPerSec.Average) as 'Message Rate'\n        FROM AwsMskBrokerSample\n        TIMESERIES 5 minutes\n        SINCE {timeRange}",
+            "critical": false
+          },
+          "nrql": "SELECT sum(provider.messagesInPerSec.Average) as 'Message Rate'\n        FROM AwsMskBrokerSample\n        TIMESERIES 5 minutes\n        SINCE 1 hour ago",
+          "result": {
+            "metadata": {
+              "eventTypes": [
+                "AwsMskBrokerSample"
+              ],
+              "timeWindow": {
+                "begin": 1749070625735,
+                "end": 1749074225735
+              }
+            },
+            "results": [
+              {
+                "beginTimeSeconds": 1749070625,
+                "endTimeSeconds": 1749070925,
+                "Message Rate": 41.804189840563595
+              },
+              {
+                "beginTimeSeconds": 1749070925,
+                "endTimeSeconds": 1749071225,
+                "Message Rate": 123.67556544308492
+              },
+              {
+                "beginTimeSeconds": 1749071225,
+                "endTimeSeconds": 1749071525,
+                "Message Rate": 97.2967741935484
+              },
+              {
+                "beginTimeSeconds": 1749071525,
+                "endTimeSeconds": 1749071825,
+                "Message Rate": 154.11572117167225
+              },
+              {
+                "beginTimeSeconds": 1749071825,
+                "endTimeSeconds": 1749072125,
+                "Message Rate": 210.05628476084541
+              },
+              {
+                "beginTimeSeconds": 1749072125,
+                "endTimeSeconds": 1749072425,
+                "Message Rate": 227.88427882832778
+              },
+              {
+                "beginTimeSeconds": 1749072425,
+                "endTimeSeconds": 1749072725,
+                "Message Rate": 224.55890672175437
+              },
+              {
+                "beginTimeSeconds": 1749072725,
+                "endTimeSeconds": 1749073025,
+                "Message Rate": 242.5243863130751
+              },
+              {
+                "beginTimeSeconds": 1749073025,
+                "endTimeSeconds": 1749073325,
+                "Message Rate": 240.06791971237877
+              },
+              {
+                "beginTimeSeconds": 1749073325,
+                "endTimeSeconds": 1749073625,
+                "Message Rate": 230.4708702881239
+              },
+              {
+                "beginTimeSeconds": 1749073625,
+                "endTimeSeconds": 1749073925,
+                "Message Rate": 236.2942528735632
+              },
+              {
+                "beginTimeSeconds": 1749073925,
+                "endTimeSeconds": 1749074225,
+                "Message Rate": 233.39480904708932
+              }
+            ]
+          },
+          "success": true,
+          "hasData": true,
+          "resultCount": 12
+        },
+        {
+          "category": "Time Series Data",
+          "query": {
+            "id": "8.3",
+            "name": "Partition Count Trend",
+            "query": "SELECT average(provider.globalPartitionCount.Average) as 'Partitions'\n        FROM AwsMskClusterSample\n        TIMESERIES 10 minutes\n        SINCE {timeRange}",
+            "critical": false
+          },
+          "nrql": "SELECT average(provider.globalPartitionCount.Average) as 'Partitions'\n        FROM AwsMskClusterSample\n        TIMESERIES 10 minutes\n        SINCE 1 hour ago",
+          "result": {
+            "metadata": {
+              "eventTypes": [
+                "AwsMskClusterSample"
+              ],
+              "timeWindow": {
+                "begin": 1749070625717,
+                "end": 1749074225717
+              }
+            },
+            "results": [
+              {
+                "beginTimeSeconds": 1749070625,
+                "endTimeSeconds": 1749071225,
+                "Partitions": null
+              },
+              {
+                "beginTimeSeconds": 1749071225,
+                "endTimeSeconds": 1749071825,
+                "Partitions": null
+              },
+              {
+                "beginTimeSeconds": 1749071825,
+                "endTimeSeconds": 1749072425,
+                "Partitions": null
+              },
+              {
+                "beginTimeSeconds": 1749072425,
+                "endTimeSeconds": 1749073025,
+                "Partitions": null
+              },
+              {
+                "beginTimeSeconds": 1749073025,
+                "endTimeSeconds": 1749073625,
+                "Partitions": null
+              },
+              {
+                "beginTimeSeconds": 1749073625,
+                "endTimeSeconds": 1749074225,
+                "Partitions": null
+              }
+            ]
+          },
+          "success": true,
+          "hasData": true,
+          "resultCount": 6
+        }
+      ],
+      "summary": {
+        "total": 3,
+        "success": 3,
+        "hasData": 3,
+        "failed": 0
+      }
+    },
+    "Account Aggregation": {
+      "queries": [
+        {
+          "category": "Account Aggregation",
+          "query": {
+            "id": "9.1",
+            "name": "Account Summary",
+            "query": "SELECT \n          uniqueCount(entity.guid) as 'Cluster Count',\n          uniqueCount(provider.clusterName) as 'Named Cluster Count'\n        FROM AwsMskClusterSample\n        SINCE {timeRange}",
+            "critical": false
+          },
+          "nrql": "SELECT \n          uniqueCount(entity.guid) as 'Cluster Count',\n          uniqueCount(provider.clusterName) as 'Named Cluster Count'\n        FROM AwsMskClusterSample\n        SINCE 1 hour ago",
+          "result": {
+            "metadata": {
+              "eventTypes": [
+                "AwsMskClusterSample"
+              ],
+              "timeWindow": {
+                "begin": 1749070625726,
+                "end": 1749074225726
+              }
+            },
+            "results": [
+              {
+                "Cluster Count": 0,
+                "Named Cluster Count": 2
+              }
+            ]
+          },
+          "success": true,
+          "hasData": true,
+          "resultCount": 1
+        },
+        {
+          "category": "Account Aggregation",
+          "query": {
+            "id": "9.2",
+            "name": "Account Health Summary",
+            "query": "SELECT \n          uniqueCount(entity.guid) as 'Total Clusters',\n          filter(uniqueCount(entity.guid), WHERE provider.offlinePartitionsCount.Sum > 0) as 'Unhealthy Clusters'\n        FROM AwsMskClusterSample SINCE {timeRange}",
+            "critical": false
+          },
+          "nrql": "SELECT \n          uniqueCount(entity.guid) as 'Total Clusters',\n          filter(uniqueCount(entity.guid), WHERE provider.offlinePartitionsCount.Sum > 0) as 'Unhealthy Clusters'\n        FROM AwsMskClusterSample SINCE 1 hour ago",
+          "result": {
+            "metadata": {
+              "eventTypes": [
+                "AwsMskClusterSample"
+              ],
+              "timeWindow": {
+                "begin": 1749070625728,
+                "end": 1749074225728
+              }
+            },
+            "results": [
+              {
+                "Total Clusters": 0,
+                "Unhealthy Clusters": 0
+              }
+            ]
+          },
+          "success": true,
+          "hasData": true,
+          "resultCount": 1
+        }
+      ],
+      "summary": {
+        "total": 2,
+        "success": 2,
+        "hasData": 2,
+        "failed": 0
+      }
+    },
+    "Performance Metrics": {
+      "queries": [
+        {
+          "category": "Performance Metrics",
+          "query": {
+            "id": "10.1",
+            "name": "Data Volume Check",
+            "query": "SELECT \n          filter(count(*), WHERE eventType() = 'AwsMskClusterSample') as 'Cluster Events',\n          filter(count(*), WHERE eventType() = 'AwsMskBrokerSample') as 'Broker Events',\n          filter(count(*), WHERE eventType() = 'AwsMskTopicSample') as 'Topic Events'\n        FROM AwsMskClusterSample, AwsMskBrokerSample, AwsMskTopicSample\n        SINCE {timeRange}",
+            "critical": false
+          },
+          "nrql": "SELECT \n          filter(count(*), WHERE eventType() = 'AwsMskClusterSample') as 'Cluster Events',\n          filter(count(*), WHERE eventType() = 'AwsMskBrokerSample') as 'Broker Events',\n          filter(count(*), WHERE eventType() = 'AwsMskTopicSample') as 'Topic Events'\n        FROM AwsMskClusterSample, AwsMskBrokerSample, AwsMskTopicSample\n        SINCE 1 hour ago",
+          "result": {
+            "metadata": {
+              "eventTypes": [
+                "AwsMskClusterSample",
+                "AwsMskBrokerSample",
+                "AwsMskTopicSample"
+              ],
+              "timeWindow": {
+                "begin": 1749070625691,
+                "end": 1749074225691
+              }
+            },
+            "results": [
+              {
+                "Broker Events": 323,
+                "Cluster Events": 408,
+                "Topic Events": 1609
+              }
+            ]
+          },
+          "success": true,
+          "hasData": true,
+          "resultCount": 1
+        },
+        {
+          "category": "Performance Metrics",
+          "query": {
+            "id": "10.2",
+            "name": "Large Dataset Check",
+            "query": "SELECT \n          uniqueCount(displayName) as 'Topic Count',\n          count(*) as 'Total Events'\n        FROM AwsMskTopicSample\n        FACET provider.clusterName\n        SINCE {timeRange}\n        LIMIT 5",
+            "critical": false
+          },
+          "nrql": "SELECT \n          uniqueCount(displayName) as 'Topic Count',\n          count(*) as 'Total Events'\n        FROM AwsMskTopicSample\n        FACET provider.clusterName\n        SINCE 1 hour ago\n        LIMIT 5",
+          "result": {
+            "metadata": {
+              "eventTypes": [
+                "AwsMskTopicSample"
+              ],
+              "timeWindow": {
+                "begin": 1749070626218,
+                "end": 1749074226218
+              }
+            },
+            "results": [
+              {
+                "facet": "minikube-kafka",
+                "Topic Count": 4,
+                "Total Events": 1609,
+                "provider.clusterName": "minikube-kafka"
+              }
+            ]
+          },
+          "success": true,
+          "hasData": true,
+          "resultCount": 1
+        }
+      ],
+      "summary": {
+        "total": 2,
+        "success": 2,
+        "hasData": 2,
+        "failed": 0
+      }
+    },
+    "Edge Cases": {
+      "queries": [
+        {
+          "category": "Edge Cases",
+          "query": {
+            "id": "11.1",
+            "name": "Idle Topics",
+            "query": "SELECT \n          count(*) as 'Total Topics',\n          average(provider.bytesInPerSec.Sum) as 'Avg Bytes In',\n          average(provider.bytesOutPerSec.Sum) as 'Avg Bytes Out'\n        FROM AwsMskTopicSample\n        SINCE {timeRange}",
+            "critical": false
+          },
+          "nrql": "SELECT \n          count(*) as 'Total Topics',\n          average(provider.bytesInPerSec.Sum) as 'Avg Bytes In',\n          average(provider.bytesOutPerSec.Sum) as 'Avg Bytes Out'\n        FROM AwsMskTopicSample\n        SINCE 1 hour ago",
+          "result": {
+            "metadata": {
+              "eventTypes": [
+                "AwsMskTopicSample"
+              ],
+              "timeWindow": {
+                "begin": 1749070626148,
+                "end": 1749074226148
+              }
+            },
+            "results": [
+              {
+                "Avg Bytes In": null,
+                "Avg Bytes Out": null,
+                "Total Topics": 1609
+              }
+            ]
+          },
+          "success": true,
+          "hasData": true,
+          "resultCount": 1
+        },
+        {
+          "category": "Edge Cases",
+          "query": {
+            "id": "11.2",
+            "name": "Stale Data Detection",
+            "query": "SELECT \n          count(*) as 'Total Samples',\n          max(timestamp) as 'Latest Timestamp',\n          min(timestamp) as 'Earliest Timestamp'\n        FROM AwsMskClusterSample\n        FACET provider.clusterName\n        SINCE {timeRange}",
+            "critical": false
+          },
+          "nrql": "SELECT \n          count(*) as 'Total Samples',\n          max(timestamp) as 'Latest Timestamp',\n          min(timestamp) as 'Earliest Timestamp'\n        FROM AwsMskClusterSample\n        FACET provider.clusterName\n        SINCE 1 hour ago",
+          "result": {
+            "metadata": {
+              "eventTypes": [
+                "AwsMskClusterSample"
+              ],
+              "timeWindow": {
+                "begin": 1749070626204,
+                "end": 1749074226204
+              }
+            },
+            "results": [
+              {
+                "facet": "minikube-kafka",
+                "Earliest Timestamp": 1749070634000,
+                "Latest Timestamp": 1749074216000,
+                "Total Samples": 323,
+                "provider.clusterName": "minikube-kafka"
+              },
+              {
+                "facet": "strimzi-kafka-cluster",
+                "Earliest Timestamp": 1749071691000,
+                "Latest Timestamp": 1749074213000,
+                "Total Samples": 85,
+                "provider.clusterName": "strimzi-kafka-cluster"
+              }
+            ]
+          },
+          "success": true,
+          "hasData": true,
+          "resultCount": 2
+        },
+        {
+          "category": "Edge Cases",
+          "query": {
+            "id": "11.3",
+            "name": "Partial Data Check",
+            "query": "SELECT \n          count(*) as 'Total Topics',\n          filter(count(*), WHERE provider.bytesInPerSec.Sum IS NULL) as 'Missing Bytes In',\n          filter(count(*), WHERE provider.bytesOutPerSec.Sum IS NULL) as 'Missing Bytes Out'\n        FROM AwsMskTopicSample\n        SINCE {timeRange}",
+            "critical": false
+          },
+          "nrql": "SELECT \n          count(*) as 'Total Topics',\n          filter(count(*), WHERE provider.bytesInPerSec.Sum IS NULL) as 'Missing Bytes In',\n          filter(count(*), WHERE provider.bytesOutPerSec.Sum IS NULL) as 'Missing Bytes Out'\n        FROM AwsMskTopicSample\n        SINCE 1 hour ago",
+          "result": {
+            "metadata": {
+              "eventTypes": [
+                "AwsMskTopicSample"
+              ],
+              "timeWindow": {
+                "begin": 1749070626199,
+                "end": 1749074226199
+              }
+            },
+            "results": [
+              {
+                "Missing Bytes In": 1609,
+                "Missing Bytes Out": 1609,
+                "Total Topics": 1609
+              }
+            ]
+          },
+          "success": true,
+          "hasData": true,
+          "resultCount": 1
+        }
+      ],
+      "summary": {
+        "total": 3,
+        "success": 3,
+        "hasData": 3,
+        "failed": 0
+      }
+    },
+    "Top N Analysis": {
+      "queries": [
+        {
+          "category": "Top N Analysis",
+          "query": {
+            "id": "12.1",
+            "name": "Top 10 Topics by Throughput",
+            "query": "SELECT \n          count(*) as 'Sample Count',\n          average(provider.bytesInPerSec.Sum) as 'Avg Bytes In'\n        FROM AwsMskTopicSample\n        FACET displayName\n        SINCE {timeRange}\n        LIMIT 10",
+            "critical": false
+          },
+          "nrql": "SELECT \n          count(*) as 'Sample Count',\n          average(provider.bytesInPerSec.Sum) as 'Avg Bytes In'\n        FROM AwsMskTopicSample\n        FACET displayName\n        SINCE 1 hour ago\n        LIMIT 10",
+          "result": {
+            "metadata": {
+              "eventTypes": [
+                "AwsMskTopicSample"
+              ],
+              "timeWindow": {
+                "begin": 1749070626205,
+                "end": 1749074226205
+              }
+            },
+            "results": [
+              {
+                "facet": "aws-msk-topic:minikube-kafka-topic-events",
+                "Avg Bytes In": null,
+                "Sample Count": 403,
+                "displayName": "aws-msk-topic:minikube-kafka-topic-events"
+              },
+              {
+                "facet": "aws-msk-topic:minikube-kafka-topic-logs",
+                "Avg Bytes In": null,
+                "Sample Count": 403,
+                "displayName": "aws-msk-topic:minikube-kafka-topic-logs"
+              },
+              {
+                "facet": "aws-msk-topic:minikube-kafka-topic-__consumer_offsets",
+                "Avg Bytes In": null,
+                "Sample Count": 402,
+                "displayName": "aws-msk-topic:minikube-kafka-topic-__consumer_offsets"
+              },
+              {
+                "facet": "aws-msk-topic:minikube-kafka-topic-metrics",
+                "Avg Bytes In": null,
+                "Sample Count": 401,
+                "displayName": "aws-msk-topic:minikube-kafka-topic-metrics"
+              }
+            ]
+          },
+          "success": true,
+          "hasData": true,
+          "resultCount": 4
+        },
+        {
+          "category": "Top N Analysis",
+          "query": {
+            "id": "12.2",
+            "name": "Top 5 Clusters by Size",
+            "query": "SELECT \n          uniqueCount(provider.brokerId) as 'Broker Count',\n          uniqueCount(displayName) as 'Topic Count'\n        FROM AwsMskBrokerSample, AwsMskTopicSample\n        WHERE provider.clusterName IS NOT NULL\n        FACET provider.clusterName\n        SINCE {timeRange}\n        LIMIT 5",
+            "critical": false
+          },
+          "nrql": "SELECT \n          uniqueCount(provider.brokerId) as 'Broker Count',\n          uniqueCount(displayName) as 'Topic Count'\n        FROM AwsMskBrokerSample, AwsMskTopicSample\n        WHERE provider.clusterName IS NOT NULL\n        FACET provider.clusterName\n        SINCE 1 hour ago\n        LIMIT 5",
+          "result": {
+            "metadata": {
+              "eventTypes": [
+                "AwsMskBrokerSample",
+                "AwsMskTopicSample"
+              ],
+              "timeWindow": {
+                "begin": 1749070626764,
+                "end": 1749074226764
+              }
+            },
+            "results": [
+              {
+                "facet": "minikube-kafka",
+                "Broker Count": 1,
+                "Topic Count": 5,
+                "provider.clusterName": "minikube-kafka"
+              }
+            ]
+          },
+          "success": true,
+          "hasData": true,
+          "resultCount": 1
+        }
+      ],
+      "summary": {
+        "total": 2,
+        "success": 2,
+        "hasData": 2,
+        "failed": 0
+      }
+    },
+    "Confluent Cloud Compatibility": {
+      "queries": [
+        {
+          "category": "Confluent Cloud Compatibility",
+          "query": {
+            "id": "13.1",
+            "name": "Common Throughput Pattern",
+            "query": "SELECT \n          count(provider.bytesInPerSec.Average) as 'Has Bytes In',\n          count(provider.bytesOutPerSec.Average) as 'Has Bytes Out'\n        FROM AwsMskBrokerSample SINCE {timeRange}",
+            "critical": false
+          },
+          "nrql": "SELECT \n          count(provider.bytesInPerSec.Average) as 'Has Bytes In',\n          count(provider.bytesOutPerSec.Average) as 'Has Bytes Out'\n        FROM AwsMskBrokerSample SINCE 1 hour ago",
+          "result": {
+            "metadata": {
+              "eventTypes": [
+                "AwsMskBrokerSample"
+              ],
+              "timeWindow": {
+                "begin": 1749070626754,
+                "end": 1749074226754
+              }
+            },
+            "results": [
+              {
+                "Has Bytes In": 202,
+                "Has Bytes Out": 202
+              }
+            ]
+          },
+          "success": true,
+          "hasData": true,
+          "resultCount": 1
+        },
+        {
+          "category": "Confluent Cloud Compatibility",
+          "query": {
+            "id": "13.2",
+            "name": "Common Message Pattern",
+            "query": "SELECT \n          count(provider.messagesInPerSec.Average) as 'Has Messages In',\n          count(provider.messagesOutPerSec.Average) as 'Has Messages Out'\n        FROM AwsMskBrokerSample SINCE {timeRange}",
+            "critical": false
+          },
+          "nrql": "SELECT \n          count(provider.messagesInPerSec.Average) as 'Has Messages In',\n          count(provider.messagesOutPerSec.Average) as 'Has Messages Out'\n        FROM AwsMskBrokerSample SINCE 1 hour ago",
+          "result": {
+            "metadata": {
+              "eventTypes": [
+                "AwsMskBrokerSample"
+              ],
+              "timeWindow": {
+                "begin": 1749070626875,
+                "end": 1749074226875
+              }
+            },
+            "results": [
+              {
+                "Has Messages In": 202,
+                "Has Messages Out": 0
+              }
+            ]
+          },
+          "success": true,
+          "hasData": true,
+          "resultCount": 1
+        }
+      ],
+      "summary": {
+        "total": 2,
+        "success": 2,
+        "hasData": 2,
+        "failed": 0
+      }
+    },
+    "Filter Validation": {
+      "queries": [
+        {
+          "category": "Filter Validation",
+          "query": {
+            "id": "14.1",
+            "name": "Available Clusters",
+            "query": "SELECT count(*) as `Total Samples` FROM AwsMskClusterSample SINCE {timeRange}",
+            "critical": false
+          },
+          "nrql": "SELECT count(*) as `Total Samples` FROM AwsMskClusterSample SINCE 1 hour ago",
+          "result": {
+            "metadata": {
+              "eventTypes": [
+                "AwsMskClusterSample"
+              ],
+              "timeWindow": {
+                "begin": 1749070626732,
+                "end": 1749074226732
+              }
+            },
+            "results": [
+              {
+                "Total Samples": 408
+              }
+            ]
+          },
+          "success": true,
+          "hasData": true,
+          "resultCount": 408
+        },
+        {
+          "category": "Filter Validation",
+          "query": {
+            "id": "14.2",
+            "name": "Available Topics",
+            "query": "SELECT count(*) as `Total Samples` FROM AwsMskTopicSample SINCE {timeRange}",
+            "critical": false
+          },
+          "nrql": "SELECT count(*) as `Total Samples` FROM AwsMskTopicSample SINCE 1 hour ago",
+          "result": {
+            "metadata": {
+              "eventTypes": [
+                "AwsMskTopicSample"
+              ],
+              "timeWindow": {
+                "begin": 1749070626730,
+                "end": 1749074226730
+              }
+            },
+            "results": [
+              {
+                "Total Samples": 1609
+              }
+            ]
+          },
+          "success": true,
+          "hasData": true,
+          "resultCount": 1609
+        }
+      ],
+      "summary": {
+        "total": 2,
+        "success": 2,
+        "hasData": 2,
+        "failed": 0
+      }
+    },
+    "Metric Calculations": {
+      "queries": [
+        {
+          "category": "Metric Calculations",
+          "query": {
+            "id": "15.1",
+            "name": "Throughput Range",
+            "query": "SELECT \n          min(provider.bytesInPerSec.Average) as 'Min Throughput',\n          max(provider.bytesInPerSec.Average) as 'Max Throughput',\n          average(provider.bytesInPerSec.Average) as 'Avg Throughput'\n        FROM AwsMskBrokerSample\n        FACET provider.clusterName\n        SINCE {timeRange}",
+            "critical": false
+          },
+          "nrql": "SELECT \n          min(provider.bytesInPerSec.Average) as 'Min Throughput',\n          max(provider.bytesInPerSec.Average) as 'Max Throughput',\n          average(provider.bytesInPerSec.Average) as 'Avg Throughput'\n        FROM AwsMskBrokerSample\n        FACET provider.clusterName\n        SINCE 1 hour ago",
+          "result": {
+            "metadata": {
+              "eventTypes": [
+                "AwsMskBrokerSample"
+              ],
+              "timeWindow": {
+                "begin": 1749070627293,
+                "end": 1749074227293
+              }
+            },
+            "results": [
+              {
+                "facet": "minikube-kafka",
+                "Avg Throughput": 950.0283198907622,
+                "Max Throughput": 1746.25,
+                "Min Throughput": 0,
+                "provider.clusterName": "minikube-kafka"
+              }
+            ]
+          },
+          "success": true,
+          "hasData": true,
+          "resultCount": 1
+        },
+        {
+          "category": "Metric Calculations",
+          "query": {
+            "id": "15.2",
+            "name": "Percentage Calculations",
+            "query": "SELECT \n          uniqueCount(entity.guid) as 'Total',\n          filter(uniqueCount(entity.guid), WHERE provider.offlinePartitionsCount.Sum > 0) as 'Unhealthy',\n          100.0 * filter(uniqueCount(entity.guid), WHERE provider.offlinePartitionsCount.Sum > 0) / uniqueCount(entity.guid) as 'Unhealthy %'\n        FROM AwsMskClusterSample SINCE {timeRange}",
+            "critical": false
+          },
+          "nrql": "SELECT \n          uniqueCount(entity.guid) as 'Total',\n          filter(uniqueCount(entity.guid), WHERE provider.offlinePartitionsCount.Sum > 0) as 'Unhealthy',\n          100.0 * filter(uniqueCount(entity.guid), WHERE provider.offlinePartitionsCount.Sum > 0) / uniqueCount(entity.guid) as 'Unhealthy %'\n        FROM AwsMskClusterSample SINCE 1 hour ago",
+          "result": {
+            "metadata": {
+              "eventTypes": [
+                "AwsMskClusterSample"
+              ],
+              "timeWindow": {
+                "begin": 1749070627300,
+                "end": 1749074227300
+              }
+            },
+            "results": [
+              {
+                "Total": 0,
+                "Unhealthy": 0,
+                "Unhealthy %": null
+              }
+            ]
+          },
+          "success": true,
+          "hasData": true,
+          "resultCount": 1
+        }
+      ],
+      "summary": {
+        "total": 2,
+        "success": 2,
+        "hasData": 2,
+        "failed": 0
+      }
+    },
+    "Summary Verification": {
+      "queries": [
+        {
+          "category": "Summary Verification",
+          "query": {
+            "id": "16.1",
+            "name": "Complete Data Check",
+            "query": "SELECT \n          filter(count(*), WHERE eventType() = 'AwsMskClusterSample') as 'Has Cluster Data',\n          filter(count(*), WHERE eventType() = 'AwsMskBrokerSample') as 'Has Broker Data',\n          filter(count(*), WHERE eventType() = 'AwsMskTopicSample') as 'Has Topic Data',\n          min(timestamp) as 'Oldest Data',\n          max(timestamp) as 'Newest Data',\n          max(timestamp) as 'Newest Data'\n        FROM AwsMskClusterSample, AwsMskBrokerSample, AwsMskTopicSample\n        SINCE {timeRange}",
+            "critical": true
+          },
+          "nrql": "SELECT \n          filter(count(*), WHERE eventType() = 'AwsMskClusterSample') as 'Has Cluster Data',\n          filter(count(*), WHERE eventType() = 'AwsMskBrokerSample') as 'Has Broker Data',\n          filter(count(*), WHERE eventType() = 'AwsMskTopicSample') as 'Has Topic Data',\n          min(timestamp) as 'Oldest Data',\n          max(timestamp) as 'Newest Data',\n          max(timestamp) as 'Newest Data'\n        FROM AwsMskClusterSample, AwsMskBrokerSample, AwsMskTopicSample\n        SINCE 1 hour ago",
+          "result": {
+            "metadata": {
+              "eventTypes": [
+                "AwsMskClusterSample",
+                "AwsMskBrokerSample",
+                "AwsMskTopicSample"
+              ],
+              "timeWindow": {
+                "begin": 1749070627290,
+                "end": 1749074227290
+              }
+            },
+            "results": [
+              {
+                "Has Broker Data": 323,
+                "Has Cluster Data": 408,
+                "Has Topic Data": 1609,
+                "Newest Data": 1749074216000,
+                "Oldest Data": 1749070634000
+              }
+            ]
+          },
+          "success": true,
+          "hasData": true,
+          "resultCount": 1
+        }
+      ],
+      "summary": {
+        "total": 1,
+        "success": 1,
+        "hasData": 1,
+        "failed": 0
+      }
+    },
+    "Standard vs MSK Comparison": {
+      "queries": [
+        {
+          "category": "Standard vs MSK Comparison",
+          "query": {
+            "id": "17.1",
+            "name": "Entity Count Comparison",
+            "query": "SELECT \n          filter(uniqueCount(entityName), WHERE eventType() = 'KafkaBrokerSample') as 'Standard Brokers',\n          filter(uniqueCount(entityName), WHERE eventType() = 'AwsMskBrokerSample') as 'MSK Brokers'\n        FROM KafkaBrokerSample, AwsMskBrokerSample SINCE {timeRange}",
+            "critical": false
+          },
+          "nrql": "SELECT \n          filter(uniqueCount(entityName), WHERE eventType() = 'KafkaBrokerSample') as 'Standard Brokers',\n          filter(uniqueCount(entityName), WHERE eventType() = 'AwsMskBrokerSample') as 'MSK Brokers'\n        FROM KafkaBrokerSample, AwsMskBrokerSample SINCE 1 hour ago",
+          "result": {
+            "metadata": {
+              "eventTypes": [
+                "KafkaBrokerSample",
+                "AwsMskBrokerSample"
+              ],
+              "timeWindow": {
+                "begin": 1749070627244,
+                "end": 1749074227244
+              }
+            },
+            "results": [
+              {
+                "MSK Brokers": 2,
+                "Standard Brokers": 0
+              }
+            ]
+          },
+          "success": true,
+          "hasData": true,
+          "resultCount": 1
+        },
+        {
+          "category": "Standard vs MSK Comparison",
+          "query": {
+            "id": "17.2",
+            "name": "Metric Coverage Comparison",
+            "query": "SELECT \n          filter(count(*), WHERE eventType() = 'KafkaTopicSample') as 'Standard Topic Events',\n          filter(count(*), WHERE eventType() = 'AwsMskTopicSample') as 'MSK Topic Events'\n        FROM KafkaTopicSample, AwsMskTopicSample SINCE {timeRange}",
+            "critical": false
+          },
+          "nrql": "SELECT \n          filter(count(*), WHERE eventType() = 'KafkaTopicSample') as 'Standard Topic Events',\n          filter(count(*), WHERE eventType() = 'AwsMskTopicSample') as 'MSK Topic Events'\n        FROM KafkaTopicSample, AwsMskTopicSample SINCE 1 hour ago",
+          "result": {
+            "metadata": {
+              "eventTypes": [
+                "KafkaTopicSample",
+                "AwsMskTopicSample"
+              ],
+              "timeWindow": {
+                "begin": 1749070627271,
+                "end": 1749074227271
+              }
+            },
+            "results": [
+              {
+                "MSK Topic Events": 1609,
+                "Standard Topic Events": 484
+              }
+            ]
+          },
+          "success": true,
+          "hasData": true,
+          "resultCount": 1
+        }
+      ],
+      "summary": {
+        "total": 2,
+        "success": 2,
+        "hasData": 2,
+        "failed": 0
+      }
+    }
+  },
+  "details": [
+    {
+      "category": "MSK Polling Data",
+      "query": {
+        "id": "1.1",
+        "name": "Cluster Sample Data Exists",
+        "query": "SELECT count(*) FROM AwsMskClusterSample SINCE {timeRange}",
+        "critical": true
+      },
+      "nrql": "SELECT count(*) FROM AwsMskClusterSample SINCE 1 hour ago",
+      "result": {
+        "metadata": {
+          "eventTypes": [
+            "AwsMskClusterSample"
+          ],
+          "timeWindow": {
+            "begin": 1749070618894,
+            "end": 1749074218894
+          }
+        },
+        "results": [
+          {
+            "count": 407
+          }
+        ]
+      },
+      "success": true,
+      "hasData": true,
+      "resultCount": 407
+    },
+    {
+      "category": "MSK Polling Data",
+      "query": {
+        "id": "1.2",
+        "name": "All Cluster Metrics Present",
+        "query": "SELECT \n          count(provider.activeControllerCount.Sum) as 'Has Active Controller Count',\n          count(provider.offlinePartitionsCount.Sum) as 'Has Offline Partitions Count',\n          count(provider.globalPartitionCount.Average) as 'Has Global Partition Count'\n        FROM AwsMskClusterSample SINCE {timeRange}",
+        "critical": true
+      },
+      "nrql": "SELECT \n          count(provider.activeControllerCount.Sum) as 'Has Active Controller Count',\n          count(provider.offlinePartitionsCount.Sum) as 'Has Offline Partitions Count',\n          count(provider.globalPartitionCount.Average) as 'Has Global Partition Count'\n        FROM AwsMskClusterSample SINCE 1 hour ago",
+      "result": {
+        "metadata": {
+          "eventTypes": [
+            "AwsMskClusterSample"
+          ],
+          "timeWindow": {
+            "begin": 1749070618856,
+            "end": 1749074218856
+          }
+        },
+        "results": [
+          {
+            "Has Active Controller Count": 407,
+            "Has Global Partition Count": 0,
+            "Has Offline Partitions Count": 286
+          }
+        ]
+      },
+      "success": true,
+      "hasData": true,
+      "resultCount": 1
+    },
+    {
+      "category": "MSK Polling Data",
+      "query": {
+        "id": "1.3",
+        "name": "Broker Sample Data Exists",
+        "query": "SELECT count(*) FROM AwsMskBrokerSample SINCE {timeRange}",
+        "critical": true
+      },
+      "nrql": "SELECT count(*) FROM AwsMskBrokerSample SINCE 1 hour ago",
+      "result": {
+        "metadata": {
+          "eventTypes": [
+            "AwsMskBrokerSample"
+          ],
+          "timeWindow": {
+            "begin": 1749070618829,
+            "end": 1749074218829
+          }
+        },
+        "results": [
+          {
+            "count": 322
+          }
+        ]
+      },
+      "success": true,
+      "hasData": true,
+      "resultCount": 322
+    },
+    {
+      "category": "MSK Polling Data",
+      "query": {
+        "id": "1.4",
+        "name": "All Broker Metrics Present",
+        "query": "SELECT \n          count(provider.bytesInPerSec.Average) as 'Has Bytes In',\n          count(provider.bytesOutPerSec.Average) as 'Has Bytes Out',\n          count(provider.messagesInPerSec.Average) as 'Has Messages In',\n          count(provider.messagesOutPerSec.Average) as 'Has Messages Out'\n        FROM AwsMskBrokerSample SINCE {timeRange}",
+        "critical": true
+      },
+      "nrql": "SELECT \n          count(provider.bytesInPerSec.Average) as 'Has Bytes In',\n          count(provider.bytesOutPerSec.Average) as 'Has Bytes Out',\n          count(provider.messagesInPerSec.Average) as 'Has Messages In',\n          count(provider.messagesOutPerSec.Average) as 'Has Messages Out'\n        FROM AwsMskBrokerSample SINCE 1 hour ago",
+      "result": {
+        "metadata": {
+          "eventTypes": [
+            "AwsMskBrokerSample"
+          ],
+          "timeWindow": {
+            "begin": 1749070618863,
+            "end": 1749074218863
+          }
+        },
+        "results": [
+          {
+            "Has Bytes In": 201,
+            "Has Bytes Out": 201,
+            "Has Messages In": 201,
+            "Has Messages Out": 0
+          }
+        ]
+      },
+      "success": true,
+      "hasData": true,
+      "resultCount": 1
+    },
+    {
+      "category": "MSK Polling Data",
+      "query": {
+        "id": "1.5",
+        "name": "Topic Sample Data Exists",
+        "query": "SELECT count(*) FROM AwsMskTopicSample SINCE {timeRange}",
+        "critical": false
+      },
+      "nrql": "SELECT count(*) FROM AwsMskTopicSample SINCE 1 hour ago",
+      "result": {
+        "metadata": {
+          "eventTypes": [
+            "AwsMskTopicSample"
+          ],
+          "timeWindow": {
+            "begin": 1749070618786,
+            "end": 1749074218786
+          }
+        },
+        "results": [
+          {
+            "count": 1601
+          }
+        ]
+      },
+      "success": true,
+      "hasData": true,
+      "resultCount": 1601
+    },
+    {
+      "category": "MSK Polling Data",
+      "query": {
+        "id": "1.6",
+        "name": "Topic Metrics Present",
+        "query": "SELECT \n          count(provider.bytesInPerSec.Sum) as 'Has Bytes In',\n          count(provider.bytesOutPerSec.Sum) as 'Has Bytes Out'\n        FROM AwsMskTopicSample SINCE {timeRange}",
+        "critical": false
+      },
+      "nrql": "SELECT \n          count(provider.bytesInPerSec.Sum) as 'Has Bytes In',\n          count(provider.bytesOutPerSec.Sum) as 'Has Bytes Out'\n        FROM AwsMskTopicSample SINCE 1 hour ago",
+      "result": {
+        "metadata": {
+          "eventTypes": [
+            "AwsMskTopicSample"
+          ],
+          "timeWindow": {
+            "begin": 1749070619328,
+            "end": 1749074219328
+          }
+        },
+        "results": [
+          {
+            "Has Bytes In": 0,
+            "Has Bytes Out": 0
+          }
+        ]
+      },
+      "success": true,
+      "hasData": true,
+      "resultCount": 1
+    },
+    {
+      "category": "MSK Polling Data",
+      "query": {
+        "id": "1.7",
+        "name": "Cluster Attributes Present",
+        "query": "SELECT \n          count(provider.clusterName) as 'Has Cluster Name',\n          count(entity.guid) as 'Has Entity GUID',\n          count(entityName) as 'Has Entity Name'\n        FROM AwsMskClusterSample SINCE {timeRange}",
+        "critical": true
+      },
+      "nrql": "SELECT \n          count(provider.clusterName) as 'Has Cluster Name',\n          count(entity.guid) as 'Has Entity GUID',\n          count(entityName) as 'Has Entity Name'\n        FROM AwsMskClusterSample SINCE 1 hour ago",
+      "result": {
+        "metadata": {
+          "eventTypes": [
+            "AwsMskClusterSample"
+          ],
+          "timeWindow": {
+            "begin": 1749070619313,
+            "end": 1749074219313
+          }
+        },
+        "results": [
+          {
+            "Has Cluster Name": 407,
+            "Has Entity GUID": 0,
+            "Has Entity Name": 407
+          }
+        ]
+      },
+      "success": true,
+      "hasData": true,
+      "resultCount": 1
+    },
+    {
+      "category": "MSK Polling Data",
+      "query": {
+        "id": "1.8",
+        "name": "Broker Attributes Present",
+        "query": "SELECT \n          count(provider.clusterName) as 'Has Cluster Name',\n          count(provider.brokerId) as 'Has Broker ID',\n          count(entity.guid) as 'Has Entity GUID'\n        FROM AwsMskBrokerSample SINCE {timeRange}",
+        "critical": true
+      },
+      "nrql": "SELECT \n          count(provider.clusterName) as 'Has Cluster Name',\n          count(provider.brokerId) as 'Has Broker ID',\n          count(entity.guid) as 'Has Entity GUID'\n        FROM AwsMskBrokerSample SINCE 1 hour ago",
+      "result": {
+        "metadata": {
+          "eventTypes": [
+            "AwsMskBrokerSample"
+          ],
+          "timeWindow": {
+            "begin": 1749070619298,
+            "end": 1749074219298
+          }
+        },
+        "results": [
+          {
+            "Has Broker ID": 322,
+            "Has Cluster Name": 322,
+            "Has Entity GUID": 0
+          }
+        ]
+      },
+      "success": true,
+      "hasData": true,
+      "resultCount": 1
+    },
+    {
+      "category": "MSK Polling Data",
+      "query": {
+        "id": "1.9",
+        "name": "Topic Attributes Present",
+        "query": "SELECT \n          count(provider.topic) as 'Has Topic Name',\n          count(displayName) as 'Has Display Name',\n          count(entity.guid) as 'Has Entity GUID'\n        FROM AwsMskTopicSample SINCE {timeRange}",
+        "critical": false
+      },
+      "nrql": "SELECT \n          count(provider.topic) as 'Has Topic Name',\n          count(displayName) as 'Has Display Name',\n          count(entity.guid) as 'Has Entity GUID'\n        FROM AwsMskTopicSample SINCE 1 hour ago",
+      "result": {
+        "metadata": {
+          "eventTypes": [
+            "AwsMskTopicSample"
+          ],
+          "timeWindow": {
+            "begin": 1749070619294,
+            "end": 1749074219294
+          }
+        },
+        "results": [
+          {
+            "Has Display Name": 1605,
+            "Has Entity GUID": 0,
+            "Has Topic Name": 0
+          }
+        ]
+      },
+      "success": true,
+      "hasData": true,
+      "resultCount": 1
+    },
+    {
+      "category": "Metric Streams Data",
+      "query": {
+        "id": "2.1",
+        "name": "Metric Events Exist",
+        "query": "SELECT count(*) FROM Metric WHERE metricName LIKE 'newrelic.goldenmetrics%' OR metricName LIKE 'kafka%' SINCE {timeRange}",
+        "critical": false
+      },
+      "nrql": "SELECT count(*) FROM Metric WHERE metricName LIKE 'newrelic.goldenmetrics%' OR metricName LIKE 'kafka%' SINCE 1 hour ago",
+      "result": {
+        "metadata": {
+          "eventTypes": [
+            "Metric"
+          ],
+          "timeWindow": {
+            "begin": 1749070619271,
+            "end": 1749074219271
+          }
+        },
+        "results": [
+          {
+            "count": 7259
+          }
+        ]
+      },
+      "success": true,
+      "hasData": true,
+      "resultCount": 7259
+    },
+    {
+      "category": "Metric Streams Data",
+      "query": {
+        "id": "2.2",
+        "name": "Cluster-Level Metrics",
+        "query": "SELECT \n          filter(count(*), WHERE metricName = 'aws.kafka.ActiveControllerCount') as 'Active Controller',\n          filter(count(*), WHERE metricName = 'aws.kafka.OfflinePartitionsCount') as 'Offline Partitions',\n          filter(count(*), WHERE metricName = 'aws.kafka.GlobalPartitionCount') as 'Global Partitions'\n        FROM Metric WHERE metricName LIKE 'aws.kafka%' SINCE {timeRange}",
+        "critical": false
+      },
+      "nrql": "SELECT \n          filter(count(*), WHERE metricName = 'aws.kafka.ActiveControllerCount') as 'Active Controller',\n          filter(count(*), WHERE metricName = 'aws.kafka.OfflinePartitionsCount') as 'Offline Partitions',\n          filter(count(*), WHERE metricName = 'aws.kafka.GlobalPartitionCount') as 'Global Partitions'\n        FROM Metric WHERE metricName LIKE 'aws.kafka%' SINCE 1 hour ago",
+      "result": {
+        "metadata": {
+          "eventTypes": [
+            "Metric"
+          ],
+          "timeWindow": {
+            "begin": 1749070619758,
+            "end": 1749074219758
+          }
+        },
+        "results": [
+          {
+            "Active Controller": 0,
+            "Global Partitions": 0,
+            "Offline Partitions": 0
+          }
+        ]
+      },
+      "success": true,
+      "hasData": true,
+      "resultCount": 1
+    },
+    {
+      "category": "Metric Streams Data",
+      "query": {
+        "id": "2.3",
+        "name": "Broker-Level Metrics",
+        "query": "SELECT \n          filter(count(*), WHERE metricName = 'aws.kafka.BytesInPerSec.byBroker') as 'Broker Bytes In',\n          filter(count(*), WHERE metricName = 'aws.kafka.BytesOutPerSec.byBroker') as 'Broker Bytes Out',\n          filter(count(*), WHERE metricName = 'aws.kafka.UnderReplicatedPartitions') as 'Under Replicated'\n        FROM Metric WHERE metricName LIKE 'aws.kafka%' SINCE {timeRange}",
+        "critical": false
+      },
+      "nrql": "SELECT \n          filter(count(*), WHERE metricName = 'aws.kafka.BytesInPerSec.byBroker') as 'Broker Bytes In',\n          filter(count(*), WHERE metricName = 'aws.kafka.BytesOutPerSec.byBroker') as 'Broker Bytes Out',\n          filter(count(*), WHERE metricName = 'aws.kafka.UnderReplicatedPartitions') as 'Under Replicated'\n        FROM Metric WHERE metricName LIKE 'aws.kafka%' SINCE 1 hour ago",
+      "result": {
+        "metadata": {
+          "eventTypes": [
+            "Metric"
+          ],
+          "timeWindow": {
+            "begin": 1749070619751,
+            "end": 1749074219751
+          }
+        },
+        "results": [
+          {
+            "Broker Bytes In": 0,
+            "Broker Bytes Out": 0,
+            "Under Replicated": 0
+          }
+        ]
+      },
+      "success": true,
+      "hasData": true,
+      "resultCount": 1
+    },
+    {
+      "category": "Metric Streams Data",
+      "query": {
+        "id": "2.4",
+        "name": "Topic-Level Metrics",
+        "query": "SELECT \n          filter(count(*), WHERE metricName = 'aws.kafka.BytesInPerSec.byTopic') as 'Topic Bytes In',\n          filter(count(*), WHERE metricName = 'aws.kafka.BytesOutPerSec.byTopic') as 'Topic Bytes Out'\n        FROM Metric WHERE metricName LIKE 'aws.kafka%' SINCE {timeRange}",
+        "critical": false
+      },
+      "nrql": "SELECT \n          filter(count(*), WHERE metricName = 'aws.kafka.BytesInPerSec.byTopic') as 'Topic Bytes In',\n          filter(count(*), WHERE metricName = 'aws.kafka.BytesOutPerSec.byTopic') as 'Topic Bytes Out'\n        FROM Metric WHERE metricName LIKE 'aws.kafka%' SINCE 1 hour ago",
+      "result": {
+        "metadata": {
+          "eventTypes": [
+            "Metric"
+          ],
+          "timeWindow": {
+            "begin": 1749070619727,
+            "end": 1749074219727
+          }
+        },
+        "results": [
+          {
+            "Topic Bytes In": 0,
+            "Topic Bytes Out": 0
+          }
+        ]
+      },
+      "success": true,
+      "hasData": true,
+      "resultCount": 1
+    },
+    {
+      "category": "Metric Streams Data",
+      "query": {
+        "id": "2.5",
+        "name": "Metric Streams Attributes",
+        "query": "SELECT \n          count(aws.kafka.ClusterName OR aws.msk.clusterName) as 'Has Cluster Name',\n          count(aws.kafka.BrokerID OR aws.msk.brokerId) as 'Has Broker ID',\n          count(aws.kafka.Topic OR aws.msk.topic) as 'Has Topic Name'\n        FROM Metric WHERE metricName LIKE 'aws.kafka%' SINCE {timeRange}",
+        "critical": false
+      },
+      "nrql": "SELECT \n          count(aws.kafka.ClusterName OR aws.msk.clusterName) as 'Has Cluster Name',\n          count(aws.kafka.BrokerID OR aws.msk.brokerId) as 'Has Broker ID',\n          count(aws.kafka.Topic OR aws.msk.topic) as 'Has Topic Name'\n        FROM Metric WHERE metricName LIKE 'aws.kafka%' SINCE 1 hour ago",
+      "result": {
+        "metadata": {
+          "eventTypes": [
+            "Metric"
+          ],
+          "timeWindow": {
+            "begin": 1749070619724,
+            "end": 1749074219724
+          }
+        },
+        "results": [
+          {
+            "Has Broker ID": 0,
+            "Has Cluster Name": 0,
+            "Has Topic Name": 0
+          }
+        ]
+      },
+      "success": true,
+      "hasData": true,
+      "resultCount": 1
+    },
+    {
+      "category": "Standard Kafka Integration",
+      "query": {
+        "id": "3.1",
+        "name": "Broker Sample Data",
+        "query": "SELECT count(*) FROM KafkaBrokerSample SINCE {timeRange}",
+        "critical": false
+      },
+      "nrql": "SELECT count(*) FROM KafkaBrokerSample SINCE 1 hour ago",
+      "result": {
+        "metadata": {
+          "eventTypes": [
+            "KafkaBrokerSample"
+          ],
+          "timeWindow": {
+            "begin": 1749070619698,
+            "end": 1749074219698
+          }
+        },
+        "results": [
+          {
+            "count": 1615
+          }
+        ]
+      },
+      "success": true,
+      "hasData": true,
+      "resultCount": 1615
+    },
+    {
+      "category": "Standard Kafka Integration",
+      "query": {
+        "id": "3.2",
+        "name": "Topic Sample Data",
+        "query": "SELECT count(*) FROM KafkaTopicSample SINCE {timeRange}",
+        "critical": false
+      },
+      "nrql": "SELECT count(*) FROM KafkaTopicSample SINCE 1 hour ago",
+      "result": {
+        "metadata": {
+          "eventTypes": [
+            "KafkaTopicSample"
+          ],
+          "timeWindow": {
+            "begin": 1749070620186,
+            "end": 1749074220186
+          }
+        },
+        "results": [
+          {
+            "count": 484
+          }
+        ]
+      },
+      "success": true,
+      "hasData": true,
+      "resultCount": 484
+    },
+    {
+      "category": "Standard Kafka Integration",
+      "query": {
+        "id": "3.3",
+        "name": "Offset Sample Data",
+        "query": "SELECT count(*) FROM KafkaOffsetSample SINCE {timeRange}",
+        "critical": false
+      },
+      "nrql": "SELECT count(*) FROM KafkaOffsetSample SINCE 1 hour ago",
+      "result": {
+        "metadata": {
+          "eventTypes": [
+            "KafkaOffsetSample"
+          ],
+          "timeWindow": {
+            "begin": 1749070620184,
+            "end": 1749074220184
+          }
+        },
+        "results": [
+          {
+            "count": 3986
+          }
+        ]
+      },
+      "success": true,
+      "hasData": true,
+      "resultCount": 3986
+    },
+    {
+      "category": "Standard Kafka Integration",
+      "query": {
+        "id": "3.4",
+        "name": "Producer Sample Data",
+        "query": "SELECT count(*) FROM KafkaProducerSample SINCE {timeRange}",
+        "critical": false
+      },
+      "nrql": "SELECT count(*) FROM KafkaProducerSample SINCE 1 hour ago",
+      "result": {
+        "metadata": {
+          "eventTypes": [
+            "KafkaProducerSample"
+          ],
+          "timeWindow": {
+            "begin": 1749070620143,
+            "end": 1749074220143
+          }
+        },
+        "results": [
+          {
+            "count": 30
+          }
+        ]
+      },
+      "success": true,
+      "hasData": true,
+      "resultCount": 30
+    },
+    {
+      "category": "Standard Kafka Integration",
+      "query": {
+        "id": "3.5",
+        "name": "Consumer Sample Data",
+        "query": "SELECT count(*) FROM KafkaConsumerSample SINCE {timeRange}",
+        "critical": false
+      },
+      "nrql": "SELECT count(*) FROM KafkaConsumerSample SINCE 1 hour ago",
+      "result": {
+        "metadata": {
+          "eventTypes": [
+            "KafkaConsumerSample"
+          ],
+          "timeWindow": {
+            "begin": 1749070620115,
+            "end": 1749074220115
+          }
+        },
+        "results": [
+          {
+            "count": 112
+          }
+        ]
+      },
+      "success": true,
+      "hasData": true,
+      "resultCount": 112
+    },
+    {
+      "category": "Data Quality",
+      "query": {
+        "id": "4.1",
+        "name": "Check for Null Values",
+        "query": "SELECT \n          count(*) as 'Total Records',\n          filter(count(*), WHERE provider.activeControllerCount.Sum IS NULL) as 'Null Active Controllers',\n          filter(count(*), WHERE provider.offlinePartitionsCount.Sum IS NULL) as 'Null Offline Partitions',\n          filter(count(*), WHERE provider.clusterName IS NULL) as 'Null Cluster Names'\n        FROM AwsMskClusterSample \n        SINCE {timeRange}",
+        "critical": false
+      },
+      "nrql": "SELECT \n          count(*) as 'Total Records',\n          filter(count(*), WHERE provider.activeControllerCount.Sum IS NULL) as 'Null Active Controllers',\n          filter(count(*), WHERE provider.offlinePartitionsCount.Sum IS NULL) as 'Null Offline Partitions',\n          filter(count(*), WHERE provider.clusterName IS NULL) as 'Null Cluster Names'\n        FROM AwsMskClusterSample \n        SINCE 1 hour ago",
+      "result": {
+        "metadata": {
+          "eventTypes": [
+            "AwsMskClusterSample"
+          ],
+          "timeWindow": {
+            "begin": 1749070620139,
+            "end": 1749074220139
+          }
+        },
+        "results": [
+          {
+            "Null Active Controllers": 0,
+            "Null Cluster Names": 0,
+            "Null Offline Partitions": 121,
+            "Total Records": 407
+          }
+        ]
+      },
+      "success": true,
+      "hasData": true,
+      "resultCount": 1
+    },
+    {
+      "category": "Data Quality",
+      "query": {
+        "id": "4.2",
+        "name": "Data Freshness (Polling)",
+        "query": "SELECT \n          latest(timestamp) as 'Last Data Point',\n          (now() - latest(timestamp))/1000 as 'Age in Seconds'\n        FROM AwsMskClusterSample \n        FACET provider.clusterName\n        SINCE {timeRange}",
+        "critical": true
+      },
+      "nrql": "SELECT \n          latest(timestamp) as 'Last Data Point',\n          (now() - latest(timestamp))/1000 as 'Age in Seconds'\n        FROM AwsMskClusterSample \n        FACET provider.clusterName\n        SINCE 1 hour ago",
+      "error": "Unknown function now()",
+      "success": false,
+      "hasData": false,
+      "resultCount": 0
+    },
+    {
+      "category": "Data Quality",
+      "query": {
+        "id": "4.3",
+        "name": "Data Freshness (Metric Streams)",
+        "query": "SELECT \n          latest(timestamp) as 'Last Data Point',\n          (now() - latest(timestamp))/1000 as 'Age in Seconds',\n          count(*) as 'Total Metric Points'\n        FROM Metric \n        WHERE metricName LIKE 'newrelic.goldenmetrics.infra.kafkabroker%'\n        FACET entity.name\n        SINCE {timeRange}",
+        "critical": false
+      },
+      "nrql": "SELECT \n          latest(timestamp) as 'Last Data Point',\n          (now() - latest(timestamp))/1000 as 'Age in Seconds',\n          count(*) as 'Total Metric Points'\n        FROM Metric \n        WHERE metricName LIKE 'newrelic.goldenmetrics.infra.kafkabroker%'\n        FACET entity.name\n        SINCE 1 hour ago",
+      "error": "Unknown function now()",
+      "success": false,
+      "hasData": false,
+      "resultCount": 0
+    },
+    {
+      "category": "Data Quality",
+      "query": {
+        "id": "4.4",
+        "name": "Tag Completeness",
+        "query": "SELECT \n          count(*) as 'Total Records',\n          filter(count(*), WHERE environment IS NOT NULL) as 'Has Environment Tag',\n          filter(count(*), WHERE label.env IS NOT NULL) as 'Has Environment Label',\n          filter(count(*), WHERE label.cluster IS NOT NULL) as 'Has Cluster Label',\n          filter(count(*), WHERE label.integration IS NOT NULL) as 'Has Integration Label'\n        FROM AwsMskClusterSample \n        FACET provider.clusterName\n        SINCE {timeRange}",
+        "critical": false
+      },
+      "nrql": "SELECT \n          count(*) as 'Total Records',\n          filter(count(*), WHERE environment IS NOT NULL) as 'Has Environment Tag',\n          filter(count(*), WHERE label.env IS NOT NULL) as 'Has Environment Label',\n          filter(count(*), WHERE label.cluster IS NOT NULL) as 'Has Cluster Label',\n          filter(count(*), WHERE label.integration IS NOT NULL) as 'Has Integration Label'\n        FROM AwsMskClusterSample \n        FACET provider.clusterName\n        SINCE 1 hour ago",
+      "result": {
+        "metadata": {
+          "eventTypes": [
+            "AwsMskClusterSample"
+          ],
+          "timeWindow": {
+            "begin": 1749070620580,
+            "end": 1749074220580
+          }
+        },
+        "results": [
+          {
+            "facet": "minikube-kafka",
+            "Has Cluster Label": 201,
+            "Has Environment Label": 201,
+            "Has Environment Tag": 322,
+            "Has Integration Label": 201,
+            "Total Records": 322,
+            "provider.clusterName": "minikube-kafka"
+          },
+          {
+            "facet": "strimzi-kafka-cluster",
+            "Has Cluster Label": 85,
+            "Has Environment Label": 85,
+            "Has Environment Tag": 85,
+            "Has Integration Label": 85,
+            "Total Records": 85,
+            "provider.clusterName": "strimzi-kafka-cluster"
+          }
+        ]
+      },
+      "success": true,
+      "hasData": true,
+      "resultCount": 2
+    },
+    {
+      "category": "Data Quality",
+      "query": {
+        "id": "4.5",
+        "name": "Data Consistency Check",
+        "query": "SELECT uniqueCount(provider.clusterName) as `Clusters in ClusterSample` FROM AwsMskClusterSample SINCE {timeRange}",
+        "critical": false
+      },
+      "nrql": "SELECT uniqueCount(provider.clusterName) as `Clusters in ClusterSample` FROM AwsMskClusterSample SINCE 1 hour ago",
+      "result": {
+        "metadata": {
+          "eventTypes": [
+            "AwsMskClusterSample"
+          ],
+          "timeWindow": {
+            "begin": 1749070620568,
+            "end": 1749074220568
+          }
+        },
+        "results": [
+          {
+            "Clusters in ClusterSample": 2
+          }
+        ]
+      },
+      "success": true,
+      "hasData": true,
+      "resultCount": 2
+    },
+    {
+      "category": "Throughput Calculations",
+      "query": {
+        "id": "5.1",
+        "name": "Cluster Throughput Summary",
+        "query": "SELECT \n          sum(provider.bytesInPerSec.Average) as 'Total Bytes In/Sec',\n          sum(provider.bytesOutPerSec.Average) as 'Total Bytes Out/Sec',\n          sum(provider.messagesInPerSec.Average) as 'Total Messages In/Sec'\n        FROM AwsMskBrokerSample \n        FACET provider.clusterName\n        SINCE {timeRange}",
+        "critical": false
+      },
+      "nrql": "SELECT \n          sum(provider.bytesInPerSec.Average) as 'Total Bytes In/Sec',\n          sum(provider.bytesOutPerSec.Average) as 'Total Bytes Out/Sec',\n          sum(provider.messagesInPerSec.Average) as 'Total Messages In/Sec'\n        FROM AwsMskBrokerSample \n        FACET provider.clusterName\n        SINCE 1 hour ago",
+      "result": {
+        "metadata": {
+          "eventTypes": [
+            "AwsMskBrokerSample"
+          ],
+          "timeWindow": {
+            "begin": 1749070620546,
+            "end": 1749074220546
+          }
+        },
+        "results": [
+          {
+            "facet": "minikube-kafka",
+            "Total Bytes In/Sec": 191905.72061793396,
+            "Total Bytes Out/Sec": 387221.43006940273,
+            "Total Messages In/Sec": 2262.143959194027,
+            "provider.clusterName": "minikube-kafka"
+          }
+        ]
+      },
+      "success": true,
+      "hasData": true,
+      "resultCount": 1
+    },
+    {
+      "category": "Throughput Calculations",
+      "query": {
+        "id": "5.2",
+        "name": "Throughput Aggregation",
+        "query": "SELECT sum(bytesInPerSec) as 'Total Incoming', sum(bytesOutPerSec) as 'Total Outgoing'\n        FROM (\n          SELECT average(provider.bytesInPerSec.Average) as 'bytesInPerSec',\n                 average(provider.bytesOutPerSec.Average) as 'bytesOutPerSec'\n          FROM AwsMskBrokerSample\n          FACET provider.clusterName as cluster, provider.brokerId\n          LIMIT MAX\n        ) SINCE {timeRange}",
+        "critical": false
+      },
+      "nrql": "SELECT sum(bytesInPerSec) as 'Total Incoming', sum(bytesOutPerSec) as 'Total Outgoing'\n        FROM (\n          SELECT average(provider.bytesInPerSec.Average) as 'bytesInPerSec',\n                 average(provider.bytesOutPerSec.Average) as 'bytesOutPerSec'\n          FROM AwsMskBrokerSample\n          FACET provider.clusterName as cluster, provider.brokerId\n          LIMIT MAX\n        ) SINCE 1 hour ago",
+      "result": {
+        "metadata": {
+          "eventTypes": [],
+          "timeWindow": {
+            "begin": 1749070624624,
+            "end": 1749074224624
+          }
+        },
+        "results": [
+          {
+            "Total Incoming": 950.0283198907622,
+            "Total Outgoing": 1916.9377726208056
+          }
+        ]
+      },
+      "success": true,
+      "hasData": true,
+      "resultCount": 1
+    },
+    {
+      "category": "Throughput Calculations",
+      "query": {
+        "id": "5.3",
+        "name": "Topic Throughput",
+        "query": "SELECT \n          latest(provider.bytesInPerSec.Sum) OR 0 AS 'Bytes In/Sec',\n          latest(provider.bytesOutPerSec.Sum) OR 0 AS 'Bytes Out/Sec'\n        FROM AwsMskTopicSample\n        FACET displayName\n        SINCE {timeRange}\n        LIMIT 10",
+        "critical": false
+      },
+      "nrql": "SELECT \n          latest(provider.bytesInPerSec.Sum) OR 0 AS 'Bytes In/Sec',\n          latest(provider.bytesOutPerSec.Sum) OR 0 AS 'Bytes Out/Sec'\n        FROM AwsMskTopicSample\n        FACET displayName\n        SINCE 1 hour ago\n        LIMIT 10",
+      "result": {
+        "metadata": {
+          "eventTypes": [
+            "AwsMskTopicSample"
+          ],
+          "timeWindow": {
+            "begin": 1749070624574,
+            "end": 1749074224574
+          }
+        },
+        "results": [
+          {
+            "facet": "aws-msk-topic:minikube-kafka-topic-events",
+            "Bytes In/Sec": 0,
+            "Bytes Out/Sec": 0,
+            "constant": 0,
+            "displayName": "aws-msk-topic:minikube-kafka-topic-events"
+          },
+          {
+            "facet": "aws-msk-topic:minikube-kafka-topic-logs",
+            "Bytes In/Sec": 0,
+            "Bytes Out/Sec": 0,
+            "constant": 0,
+            "displayName": "aws-msk-topic:minikube-kafka-topic-logs"
+          },
+          {
+            "facet": "aws-msk-topic:minikube-kafka-topic-metrics",
+            "Bytes In/Sec": 0,
+            "Bytes Out/Sec": 0,
+            "constant": 0,
+            "displayName": "aws-msk-topic:minikube-kafka-topic-metrics"
+          },
+          {
+            "facet": "aws-msk-topic:minikube-kafka-topic-__consumer_offsets",
+            "Bytes In/Sec": 0,
+            "Bytes Out/Sec": 0,
+            "constant": 0,
+            "displayName": "aws-msk-topic:minikube-kafka-topic-__consumer_offsets"
+          }
+        ]
+      },
+      "success": true,
+      "hasData": true,
+      "resultCount": 4
+    },
+    {
+      "category": "Throughput Calculations",
+      "query": {
+        "id": "5.4",
+        "name": "Message Rates",
+        "query": "SELECT sum(provider.messagesInPerSec.Average) as 'Total Messages In'\n        FROM AwsMskBrokerSample SINCE {timeRange}",
+        "critical": false
+      },
+      "nrql": "SELECT sum(provider.messagesInPerSec.Average) as 'Total Messages In'\n        FROM AwsMskBrokerSample SINCE 1 hour ago",
+      "result": {
+        "metadata": {
+          "eventTypes": [
+            "AwsMskBrokerSample"
+          ],
+          "timeWindow": {
+            "begin": 1749070624645,
+            "end": 1749074224645
+          }
+        },
+        "results": [
+          {
+            "Total Messages In": 2262.143959194027
+          }
+        ]
+      },
+      "success": true,
+      "hasData": true,
+      "resultCount": 2262.143959194027
+    },
+    {
+      "category": "Entity Relationships",
+      "query": {
+        "id": "6.1",
+        "name": "Brokers per Cluster",
+        "query": "SELECT uniqueCount(provider.brokerId) as 'Broker Count'\n        FROM AwsMskBrokerSample \n        FACET provider.clusterName\n        SINCE {timeRange}",
+        "critical": false
+      },
+      "nrql": "SELECT uniqueCount(provider.brokerId) as 'Broker Count'\n        FROM AwsMskBrokerSample \n        FACET provider.clusterName\n        SINCE 1 hour ago",
+      "result": {
+        "metadata": {
+          "eventTypes": [
+            "AwsMskBrokerSample"
+          ],
+          "timeWindow": {
+            "begin": 1749070624628,
+            "end": 1749074224628
+          }
+        },
+        "results": [
+          {
+            "facet": "minikube-kafka",
+            "Broker Count": 1,
+            "provider.clusterName": "minikube-kafka"
+          }
+        ]
+      },
+      "success": true,
+      "hasData": true,
+      "resultCount": 1
+    },
+    {
+      "category": "Entity Relationships",
+      "query": {
+        "id": "6.2",
+        "name": "Topics per Cluster",
+        "query": "SELECT uniqueCount(displayName) as 'Topic Count'\n        FROM AwsMskTopicSample\n        FACET provider.clusterName\n        SINCE {timeRange}",
+        "critical": false
+      },
+      "nrql": "SELECT uniqueCount(displayName) as 'Topic Count'\n        FROM AwsMskTopicSample\n        FACET provider.clusterName\n        SINCE 1 hour ago",
+      "result": {
+        "metadata": {
+          "eventTypes": [
+            "AwsMskTopicSample"
+          ],
+          "timeWindow": {
+            "begin": 1749070624638,
+            "end": 1749074224638
+          }
+        },
+        "results": [
+          {
+            "facet": "minikube-kafka",
+            "Topic Count": 4,
+            "provider.clusterName": "minikube-kafka"
+          }
+        ]
+      },
+      "success": true,
+      "hasData": true,
+      "resultCount": 1
+    },
+    {
+      "category": "Entity Relationships",
+      "query": {
+        "id": "6.3",
+        "name": "Entity GUIDs Present",
+        "query": "SELECT \n          count(entity.guid) as 'Total Entity GUIDs',\n          uniqueCount(entity.guid) as 'Unique Entity GUIDs'\n        FROM AwsMskBrokerSample\n        SINCE {timeRange}",
+        "critical": false
+      },
+      "nrql": "SELECT \n          count(entity.guid) as 'Total Entity GUIDs',\n          uniqueCount(entity.guid) as 'Unique Entity GUIDs'\n        FROM AwsMskBrokerSample\n        SINCE 1 hour ago",
+      "result": {
+        "metadata": {
+          "eventTypes": [
+            "AwsMskBrokerSample"
+          ],
+          "timeWindow": {
+            "begin": 1749070625209,
+            "end": 1749074225209
+          }
+        },
+        "results": [
+          {
+            "Total Entity GUIDs": 0,
+            "Unique Entity GUIDs": 0
+          }
+        ]
+      },
+      "success": true,
+      "hasData": true,
+      "resultCount": 1
+    },
+    {
+      "category": "Health Metrics",
+      "query": {
+        "id": "7.1",
+        "name": "Cluster Health Status",
+        "query": "SELECT \n          latest(provider.activeControllerCount.Sum) as 'Active Controllers',\n          latest(provider.offlinePartitionsCount.Sum) as 'Offline Partitions'\n        FROM AwsMskClusterSample\n        FACET provider.clusterName\n        SINCE {timeRange}",
+        "critical": true
+      },
+      "nrql": "SELECT \n          latest(provider.activeControllerCount.Sum) as 'Active Controllers',\n          latest(provider.offlinePartitionsCount.Sum) as 'Offline Partitions'\n        FROM AwsMskClusterSample\n        FACET provider.clusterName\n        SINCE 1 hour ago",
+      "result": {
+        "metadata": {
+          "eventTypes": [
+            "AwsMskClusterSample"
+          ],
+          "timeWindow": {
+            "begin": 1749070625178,
+            "end": 1749074225178
+          }
+        },
+        "results": [
+          {
+            "facet": "minikube-kafka",
+            "Active Controllers": 1,
+            "Offline Partitions": 0,
+            "provider.clusterName": "minikube-kafka"
+          },
+          {
+            "facet": "strimzi-kafka-cluster",
+            "Active Controllers": 1,
+            "Offline Partitions": 0,
+            "provider.clusterName": "strimzi-kafka-cluster"
+          }
+        ]
+      },
+      "success": true,
+      "hasData": true,
+      "resultCount": 2
+    },
+    {
+      "category": "Health Metrics",
+      "query": {
+        "id": "7.2",
+        "name": "Broker Health Status",
+        "query": "SELECT \n          latest(provider.bytesInPerSec.Average) as 'Bytes In Rate',\n          latest(provider.bytesOutPerSec.Average) as 'Bytes Out Rate',\n          latest(provider.messagesInPerSec.Average) as 'Message Rate'\n        FROM AwsMskBrokerSample\n        FACET provider.clusterName, provider.brokerId\n        SINCE {timeRange}\n        LIMIT 20",
+        "critical": false
+      },
+      "nrql": "SELECT \n          latest(provider.bytesInPerSec.Average) as 'Bytes In Rate',\n          latest(provider.bytesOutPerSec.Average) as 'Bytes Out Rate',\n          latest(provider.messagesInPerSec.Average) as 'Message Rate'\n        FROM AwsMskBrokerSample\n        FACET provider.clusterName, provider.brokerId\n        SINCE 1 hour ago\n        LIMIT 20",
+      "result": {
+        "metadata": {
+          "eventTypes": [
+            "AwsMskBrokerSample"
+          ],
+          "timeWindow": {
+            "begin": 1749070625183,
+            "end": 1749074225183
+          }
+        },
+        "results": [
+          {
+            "facet": [
+              "minikube-kafka",
+              "1"
+            ],
+            "Bytes In Rate": 583.8666666666667,
+            "Bytes Out Rate": 452.06666666666666,
+            "Message Rate": 6.733333333333333
+          }
+        ]
+      },
+      "success": true,
+      "hasData": true,
+      "resultCount": 1
+    },
+    {
+      "category": "Health Metrics",
+      "query": {
+        "id": "7.3",
+        "name": "Unhealthy Cluster Count",
+        "query": "SELECT \n          uniqueCount(entity.guid) as 'Total',\n          filter(uniqueCount(entity.guid), WHERE provider.offlinePartitionsCount.Sum > 0) as 'Unhealthy'\n        FROM AwsMskClusterSample SINCE {timeRange}",
+        "critical": true
+      },
+      "nrql": "SELECT \n          uniqueCount(entity.guid) as 'Total',\n          filter(uniqueCount(entity.guid), WHERE provider.offlinePartitionsCount.Sum > 0) as 'Unhealthy'\n        FROM AwsMskClusterSample SINCE 1 hour ago",
+      "result": {
+        "metadata": {
+          "eventTypes": [
+            "AwsMskClusterSample"
+          ],
+          "timeWindow": {
+            "begin": 1749070625177,
+            "end": 1749074225177
+          }
+        },
+        "results": [
+          {
+            "Total": 0,
+            "Unhealthy": 0
+          }
+        ]
+      },
+      "success": true,
+      "hasData": true,
+      "resultCount": 1
+    },
+    {
+      "category": "Time Series Data",
+      "query": {
+        "id": "8.1",
+        "name": "Throughput Time Series",
+        "query": "SELECT sum(provider.bytesInPerSec.Average) as 'Incoming Throughput'\n        FROM AwsMskBrokerSample\n        FACET provider.clusterName\n        TIMESERIES 5 minutes\n        SINCE {timeRange}",
+        "critical": false
+      },
+      "nrql": "SELECT sum(provider.bytesInPerSec.Average) as 'Incoming Throughput'\n        FROM AwsMskBrokerSample\n        FACET provider.clusterName\n        TIMESERIES 5 minutes\n        SINCE 1 hour ago",
+      "result": {
+        "metadata": {
+          "eventTypes": [
+            "AwsMskBrokerSample"
+          ],
+          "timeWindow": {
+            "begin": 1749070625221,
+            "end": 1749074225221
+          }
+        },
+        "results": [
+          {
+            "facet": "minikube-kafka",
+            "beginTimeSeconds": 1749070625,
+            "endTimeSeconds": 1749070925,
+            "Incoming Throughput": 3086.111234705228,
+            "provider.clusterName": "minikube-kafka"
+          },
+          {
+            "facet": "minikube-kafka",
+            "beginTimeSeconds": 1749070925,
+            "endTimeSeconds": 1749071225,
+            "Incoming Throughput": 8175.040229885057,
+            "provider.clusterName": "minikube-kafka"
+          },
+          {
+            "facet": "minikube-kafka",
+            "beginTimeSeconds": 1749071225,
+            "endTimeSeconds": 1749071525,
+            "Incoming Throughput": 6066.2010752688175,
+            "provider.clusterName": "minikube-kafka"
+          },
+          {
+            "facet": "minikube-kafka",
+            "beginTimeSeconds": 1749071525,
+            "endTimeSeconds": 1749071825,
+            "Incoming Throughput": 9953.248350018539,
+            "provider.clusterName": "minikube-kafka"
+          },
+          {
+            "facet": "minikube-kafka",
+            "beginTimeSeconds": 1749071825,
+            "endTimeSeconds": 1749072125,
+            "Incoming Throughput": 16290.397626992957,
+            "provider.clusterName": "minikube-kafka"
+          },
+          {
+            "facet": "minikube-kafka",
+            "beginTimeSeconds": 1749072125,
+            "endTimeSeconds": 1749072425,
+            "Incoming Throughput": 19613.30100111235,
+            "provider.clusterName": "minikube-kafka"
+          },
+          {
+            "facet": "minikube-kafka",
+            "beginTimeSeconds": 1749072425,
+            "endTimeSeconds": 1749072725,
+            "Incoming Throughput": 20719.804441442873,
+            "provider.clusterName": "minikube-kafka"
+          },
+          {
+            "facet": "minikube-kafka",
+            "beginTimeSeconds": 1749072725,
+            "endTimeSeconds": 1749073025,
+            "Incoming Throughput": 22471.745089120188,
+            "provider.clusterName": "minikube-kafka"
+          },
+          {
+            "facet": "minikube-kafka",
+            "beginTimeSeconds": 1749073025,
+            "endTimeSeconds": 1749073325,
+            "Incoming Throughput": 21834.137837676786,
+            "provider.clusterName": "minikube-kafka"
+          },
+          {
+            "facet": "minikube-kafka",
+            "beginTimeSeconds": 1749073325,
+            "endTimeSeconds": 1749073625,
+            "Incoming Throughput": 20808.973850361494,
+            "provider.clusterName": "minikube-kafka"
+          },
+          {
+            "facet": "minikube-kafka",
+            "beginTimeSeconds": 1749073625,
+            "endTimeSeconds": 1749073925,
+            "Incoming Throughput": 21405.4531701891,
+            "provider.clusterName": "minikube-kafka"
+          },
+          {
+            "facet": "minikube-kafka",
+            "beginTimeSeconds": 1749073925,
+            "endTimeSeconds": 1749074225,
+            "Incoming Throughput": 21481.30671116055,
+            "provider.clusterName": "minikube-kafka"
+          }
+        ]
+      },
+      "success": true,
+      "hasData": true,
+      "resultCount": 12
+    },
+    {
+      "category": "Time Series Data",
+      "query": {
+        "id": "8.2",
+        "name": "Message Rate Time Series",
+        "query": "SELECT sum(provider.messagesInPerSec.Average) as 'Message Rate'\n        FROM AwsMskBrokerSample\n        TIMESERIES 5 minutes\n        SINCE {timeRange}",
+        "critical": false
+      },
+      "nrql": "SELECT sum(provider.messagesInPerSec.Average) as 'Message Rate'\n        FROM AwsMskBrokerSample\n        TIMESERIES 5 minutes\n        SINCE 1 hour ago",
+      "result": {
+        "metadata": {
+          "eventTypes": [
+            "AwsMskBrokerSample"
+          ],
+          "timeWindow": {
+            "begin": 1749070625735,
+            "end": 1749074225735
+          }
+        },
+        "results": [
+          {
+            "beginTimeSeconds": 1749070625,
+            "endTimeSeconds": 1749070925,
+            "Message Rate": 41.804189840563595
+          },
+          {
+            "beginTimeSeconds": 1749070925,
+            "endTimeSeconds": 1749071225,
+            "Message Rate": 123.67556544308492
+          },
+          {
+            "beginTimeSeconds": 1749071225,
+            "endTimeSeconds": 1749071525,
+            "Message Rate": 97.2967741935484
+          },
+          {
+            "beginTimeSeconds": 1749071525,
+            "endTimeSeconds": 1749071825,
+            "Message Rate": 154.11572117167225
+          },
+          {
+            "beginTimeSeconds": 1749071825,
+            "endTimeSeconds": 1749072125,
+            "Message Rate": 210.05628476084541
+          },
+          {
+            "beginTimeSeconds": 1749072125,
+            "endTimeSeconds": 1749072425,
+            "Message Rate": 227.88427882832778
+          },
+          {
+            "beginTimeSeconds": 1749072425,
+            "endTimeSeconds": 1749072725,
+            "Message Rate": 224.55890672175437
+          },
+          {
+            "beginTimeSeconds": 1749072725,
+            "endTimeSeconds": 1749073025,
+            "Message Rate": 242.5243863130751
+          },
+          {
+            "beginTimeSeconds": 1749073025,
+            "endTimeSeconds": 1749073325,
+            "Message Rate": 240.06791971237877
+          },
+          {
+            "beginTimeSeconds": 1749073325,
+            "endTimeSeconds": 1749073625,
+            "Message Rate": 230.4708702881239
+          },
+          {
+            "beginTimeSeconds": 1749073625,
+            "endTimeSeconds": 1749073925,
+            "Message Rate": 236.2942528735632
+          },
+          {
+            "beginTimeSeconds": 1749073925,
+            "endTimeSeconds": 1749074225,
+            "Message Rate": 233.39480904708932
+          }
+        ]
+      },
+      "success": true,
+      "hasData": true,
+      "resultCount": 12
+    },
+    {
+      "category": "Time Series Data",
+      "query": {
+        "id": "8.3",
+        "name": "Partition Count Trend",
+        "query": "SELECT average(provider.globalPartitionCount.Average) as 'Partitions'\n        FROM AwsMskClusterSample\n        TIMESERIES 10 minutes\n        SINCE {timeRange}",
+        "critical": false
+      },
+      "nrql": "SELECT average(provider.globalPartitionCount.Average) as 'Partitions'\n        FROM AwsMskClusterSample\n        TIMESERIES 10 minutes\n        SINCE 1 hour ago",
+      "result": {
+        "metadata": {
+          "eventTypes": [
+            "AwsMskClusterSample"
+          ],
+          "timeWindow": {
+            "begin": 1749070625717,
+            "end": 1749074225717
+          }
+        },
+        "results": [
+          {
+            "beginTimeSeconds": 1749070625,
+            "endTimeSeconds": 1749071225,
+            "Partitions": null
+          },
+          {
+            "beginTimeSeconds": 1749071225,
+            "endTimeSeconds": 1749071825,
+            "Partitions": null
+          },
+          {
+            "beginTimeSeconds": 1749071825,
+            "endTimeSeconds": 1749072425,
+            "Partitions": null
+          },
+          {
+            "beginTimeSeconds": 1749072425,
+            "endTimeSeconds": 1749073025,
+            "Partitions": null
+          },
+          {
+            "beginTimeSeconds": 1749073025,
+            "endTimeSeconds": 1749073625,
+            "Partitions": null
+          },
+          {
+            "beginTimeSeconds": 1749073625,
+            "endTimeSeconds": 1749074225,
+            "Partitions": null
+          }
+        ]
+      },
+      "success": true,
+      "hasData": true,
+      "resultCount": 6
+    },
+    {
+      "category": "Account Aggregation",
+      "query": {
+        "id": "9.1",
+        "name": "Account Summary",
+        "query": "SELECT \n          uniqueCount(entity.guid) as 'Cluster Count',\n          uniqueCount(provider.clusterName) as 'Named Cluster Count'\n        FROM AwsMskClusterSample\n        SINCE {timeRange}",
+        "critical": false
+      },
+      "nrql": "SELECT \n          uniqueCount(entity.guid) as 'Cluster Count',\n          uniqueCount(provider.clusterName) as 'Named Cluster Count'\n        FROM AwsMskClusterSample\n        SINCE 1 hour ago",
+      "result": {
+        "metadata": {
+          "eventTypes": [
+            "AwsMskClusterSample"
+          ],
+          "timeWindow": {
+            "begin": 1749070625726,
+            "end": 1749074225726
+          }
+        },
+        "results": [
+          {
+            "Cluster Count": 0,
+            "Named Cluster Count": 2
+          }
+        ]
+      },
+      "success": true,
+      "hasData": true,
+      "resultCount": 1
+    },
+    {
+      "category": "Account Aggregation",
+      "query": {
+        "id": "9.2",
+        "name": "Account Health Summary",
+        "query": "SELECT \n          uniqueCount(entity.guid) as 'Total Clusters',\n          filter(uniqueCount(entity.guid), WHERE provider.offlinePartitionsCount.Sum > 0) as 'Unhealthy Clusters'\n        FROM AwsMskClusterSample SINCE {timeRange}",
+        "critical": false
+      },
+      "nrql": "SELECT \n          uniqueCount(entity.guid) as 'Total Clusters',\n          filter(uniqueCount(entity.guid), WHERE provider.offlinePartitionsCount.Sum > 0) as 'Unhealthy Clusters'\n        FROM AwsMskClusterSample SINCE 1 hour ago",
+      "result": {
+        "metadata": {
+          "eventTypes": [
+            "AwsMskClusterSample"
+          ],
+          "timeWindow": {
+            "begin": 1749070625728,
+            "end": 1749074225728
+          }
+        },
+        "results": [
+          {
+            "Total Clusters": 0,
+            "Unhealthy Clusters": 0
+          }
+        ]
+      },
+      "success": true,
+      "hasData": true,
+      "resultCount": 1
+    },
+    {
+      "category": "Performance Metrics",
+      "query": {
+        "id": "10.1",
+        "name": "Data Volume Check",
+        "query": "SELECT \n          filter(count(*), WHERE eventType() = 'AwsMskClusterSample') as 'Cluster Events',\n          filter(count(*), WHERE eventType() = 'AwsMskBrokerSample') as 'Broker Events',\n          filter(count(*), WHERE eventType() = 'AwsMskTopicSample') as 'Topic Events'\n        FROM AwsMskClusterSample, AwsMskBrokerSample, AwsMskTopicSample\n        SINCE {timeRange}",
+        "critical": false
+      },
+      "nrql": "SELECT \n          filter(count(*), WHERE eventType() = 'AwsMskClusterSample') as 'Cluster Events',\n          filter(count(*), WHERE eventType() = 'AwsMskBrokerSample') as 'Broker Events',\n          filter(count(*), WHERE eventType() = 'AwsMskTopicSample') as 'Topic Events'\n        FROM AwsMskClusterSample, AwsMskBrokerSample, AwsMskTopicSample\n        SINCE 1 hour ago",
+      "result": {
+        "metadata": {
+          "eventTypes": [
+            "AwsMskClusterSample",
+            "AwsMskBrokerSample",
+            "AwsMskTopicSample"
+          ],
+          "timeWindow": {
+            "begin": 1749070625691,
+            "end": 1749074225691
+          }
+        },
+        "results": [
+          {
+            "Broker Events": 323,
+            "Cluster Events": 408,
+            "Topic Events": 1609
+          }
+        ]
+      },
+      "success": true,
+      "hasData": true,
+      "resultCount": 1
+    },
+    {
+      "category": "Performance Metrics",
+      "query": {
+        "id": "10.2",
+        "name": "Large Dataset Check",
+        "query": "SELECT \n          uniqueCount(displayName) as 'Topic Count',\n          count(*) as 'Total Events'\n        FROM AwsMskTopicSample\n        FACET provider.clusterName\n        SINCE {timeRange}\n        LIMIT 5",
+        "critical": false
+      },
+      "nrql": "SELECT \n          uniqueCount(displayName) as 'Topic Count',\n          count(*) as 'Total Events'\n        FROM AwsMskTopicSample\n        FACET provider.clusterName\n        SINCE 1 hour ago\n        LIMIT 5",
+      "result": {
+        "metadata": {
+          "eventTypes": [
+            "AwsMskTopicSample"
+          ],
+          "timeWindow": {
+            "begin": 1749070626218,
+            "end": 1749074226218
+          }
+        },
+        "results": [
+          {
+            "facet": "minikube-kafka",
+            "Topic Count": 4,
+            "Total Events": 1609,
+            "provider.clusterName": "minikube-kafka"
+          }
+        ]
+      },
+      "success": true,
+      "hasData": true,
+      "resultCount": 1
+    },
+    {
+      "category": "Edge Cases",
+      "query": {
+        "id": "11.1",
+        "name": "Idle Topics",
+        "query": "SELECT \n          count(*) as 'Total Topics',\n          average(provider.bytesInPerSec.Sum) as 'Avg Bytes In',\n          average(provider.bytesOutPerSec.Sum) as 'Avg Bytes Out'\n        FROM AwsMskTopicSample\n        SINCE {timeRange}",
+        "critical": false
+      },
+      "nrql": "SELECT \n          count(*) as 'Total Topics',\n          average(provider.bytesInPerSec.Sum) as 'Avg Bytes In',\n          average(provider.bytesOutPerSec.Sum) as 'Avg Bytes Out'\n        FROM AwsMskTopicSample\n        SINCE 1 hour ago",
+      "result": {
+        "metadata": {
+          "eventTypes": [
+            "AwsMskTopicSample"
+          ],
+          "timeWindow": {
+            "begin": 1749070626148,
+            "end": 1749074226148
+          }
+        },
+        "results": [
+          {
+            "Avg Bytes In": null,
+            "Avg Bytes Out": null,
+            "Total Topics": 1609
+          }
+        ]
+      },
+      "success": true,
+      "hasData": true,
+      "resultCount": 1
+    },
+    {
+      "category": "Edge Cases",
+      "query": {
+        "id": "11.2",
+        "name": "Stale Data Detection",
+        "query": "SELECT \n          count(*) as 'Total Samples',\n          max(timestamp) as 'Latest Timestamp',\n          min(timestamp) as 'Earliest Timestamp'\n        FROM AwsMskClusterSample\n        FACET provider.clusterName\n        SINCE {timeRange}",
+        "critical": false
+      },
+      "nrql": "SELECT \n          count(*) as 'Total Samples',\n          max(timestamp) as 'Latest Timestamp',\n          min(timestamp) as 'Earliest Timestamp'\n        FROM AwsMskClusterSample\n        FACET provider.clusterName\n        SINCE 1 hour ago",
+      "result": {
+        "metadata": {
+          "eventTypes": [
+            "AwsMskClusterSample"
+          ],
+          "timeWindow": {
+            "begin": 1749070626204,
+            "end": 1749074226204
+          }
+        },
+        "results": [
+          {
+            "facet": "minikube-kafka",
+            "Earliest Timestamp": 1749070634000,
+            "Latest Timestamp": 1749074216000,
+            "Total Samples": 323,
+            "provider.clusterName": "minikube-kafka"
+          },
+          {
+            "facet": "strimzi-kafka-cluster",
+            "Earliest Timestamp": 1749071691000,
+            "Latest Timestamp": 1749074213000,
+            "Total Samples": 85,
+            "provider.clusterName": "strimzi-kafka-cluster"
+          }
+        ]
+      },
+      "success": true,
+      "hasData": true,
+      "resultCount": 2
+    },
+    {
+      "category": "Edge Cases",
+      "query": {
+        "id": "11.3",
+        "name": "Partial Data Check",
+        "query": "SELECT \n          count(*) as 'Total Topics',\n          filter(count(*), WHERE provider.bytesInPerSec.Sum IS NULL) as 'Missing Bytes In',\n          filter(count(*), WHERE provider.bytesOutPerSec.Sum IS NULL) as 'Missing Bytes Out'\n        FROM AwsMskTopicSample\n        SINCE {timeRange}",
+        "critical": false
+      },
+      "nrql": "SELECT \n          count(*) as 'Total Topics',\n          filter(count(*), WHERE provider.bytesInPerSec.Sum IS NULL) as 'Missing Bytes In',\n          filter(count(*), WHERE provider.bytesOutPerSec.Sum IS NULL) as 'Missing Bytes Out'\n        FROM AwsMskTopicSample\n        SINCE 1 hour ago",
+      "result": {
+        "metadata": {
+          "eventTypes": [
+            "AwsMskTopicSample"
+          ],
+          "timeWindow": {
+            "begin": 1749070626199,
+            "end": 1749074226199
+          }
+        },
+        "results": [
+          {
+            "Missing Bytes In": 1609,
+            "Missing Bytes Out": 1609,
+            "Total Topics": 1609
+          }
+        ]
+      },
+      "success": true,
+      "hasData": true,
+      "resultCount": 1
+    },
+    {
+      "category": "Top N Analysis",
+      "query": {
+        "id": "12.1",
+        "name": "Top 10 Topics by Throughput",
+        "query": "SELECT \n          count(*) as 'Sample Count',\n          average(provider.bytesInPerSec.Sum) as 'Avg Bytes In'\n        FROM AwsMskTopicSample\n        FACET displayName\n        SINCE {timeRange}\n        LIMIT 10",
+        "critical": false
+      },
+      "nrql": "SELECT \n          count(*) as 'Sample Count',\n          average(provider.bytesInPerSec.Sum) as 'Avg Bytes In'\n        FROM AwsMskTopicSample\n        FACET displayName\n        SINCE 1 hour ago\n        LIMIT 10",
+      "result": {
+        "metadata": {
+          "eventTypes": [
+            "AwsMskTopicSample"
+          ],
+          "timeWindow": {
+            "begin": 1749070626205,
+            "end": 1749074226205
+          }
+        },
+        "results": [
+          {
+            "facet": "aws-msk-topic:minikube-kafka-topic-events",
+            "Avg Bytes In": null,
+            "Sample Count": 403,
+            "displayName": "aws-msk-topic:minikube-kafka-topic-events"
+          },
+          {
+            "facet": "aws-msk-topic:minikube-kafka-topic-logs",
+            "Avg Bytes In": null,
+            "Sample Count": 403,
+            "displayName": "aws-msk-topic:minikube-kafka-topic-logs"
+          },
+          {
+            "facet": "aws-msk-topic:minikube-kafka-topic-__consumer_offsets",
+            "Avg Bytes In": null,
+            "Sample Count": 402,
+            "displayName": "aws-msk-topic:minikube-kafka-topic-__consumer_offsets"
+          },
+          {
+            "facet": "aws-msk-topic:minikube-kafka-topic-metrics",
+            "Avg Bytes In": null,
+            "Sample Count": 401,
+            "displayName": "aws-msk-topic:minikube-kafka-topic-metrics"
+          }
+        ]
+      },
+      "success": true,
+      "hasData": true,
+      "resultCount": 4
+    },
+    {
+      "category": "Top N Analysis",
+      "query": {
+        "id": "12.2",
+        "name": "Top 5 Clusters by Size",
+        "query": "SELECT \n          uniqueCount(provider.brokerId) as 'Broker Count',\n          uniqueCount(displayName) as 'Topic Count'\n        FROM AwsMskBrokerSample, AwsMskTopicSample\n        WHERE provider.clusterName IS NOT NULL\n        FACET provider.clusterName\n        SINCE {timeRange}\n        LIMIT 5",
+        "critical": false
+      },
+      "nrql": "SELECT \n          uniqueCount(provider.brokerId) as 'Broker Count',\n          uniqueCount(displayName) as 'Topic Count'\n        FROM AwsMskBrokerSample, AwsMskTopicSample\n        WHERE provider.clusterName IS NOT NULL\n        FACET provider.clusterName\n        SINCE 1 hour ago\n        LIMIT 5",
+      "result": {
+        "metadata": {
+          "eventTypes": [
+            "AwsMskBrokerSample",
+            "AwsMskTopicSample"
+          ],
+          "timeWindow": {
+            "begin": 1749070626764,
+            "end": 1749074226764
+          }
+        },
+        "results": [
+          {
+            "facet": "minikube-kafka",
+            "Broker Count": 1,
+            "Topic Count": 5,
+            "provider.clusterName": "minikube-kafka"
+          }
+        ]
+      },
+      "success": true,
+      "hasData": true,
+      "resultCount": 1
+    },
+    {
+      "category": "Confluent Cloud Compatibility",
+      "query": {
+        "id": "13.1",
+        "name": "Common Throughput Pattern",
+        "query": "SELECT \n          count(provider.bytesInPerSec.Average) as 'Has Bytes In',\n          count(provider.bytesOutPerSec.Average) as 'Has Bytes Out'\n        FROM AwsMskBrokerSample SINCE {timeRange}",
+        "critical": false
+      },
+      "nrql": "SELECT \n          count(provider.bytesInPerSec.Average) as 'Has Bytes In',\n          count(provider.bytesOutPerSec.Average) as 'Has Bytes Out'\n        FROM AwsMskBrokerSample SINCE 1 hour ago",
+      "result": {
+        "metadata": {
+          "eventTypes": [
+            "AwsMskBrokerSample"
+          ],
+          "timeWindow": {
+            "begin": 1749070626754,
+            "end": 1749074226754
+          }
+        },
+        "results": [
+          {
+            "Has Bytes In": 202,
+            "Has Bytes Out": 202
+          }
+        ]
+      },
+      "success": true,
+      "hasData": true,
+      "resultCount": 1
+    },
+    {
+      "category": "Confluent Cloud Compatibility",
+      "query": {
+        "id": "13.2",
+        "name": "Common Message Pattern",
+        "query": "SELECT \n          count(provider.messagesInPerSec.Average) as 'Has Messages In',\n          count(provider.messagesOutPerSec.Average) as 'Has Messages Out'\n        FROM AwsMskBrokerSample SINCE {timeRange}",
+        "critical": false
+      },
+      "nrql": "SELECT \n          count(provider.messagesInPerSec.Average) as 'Has Messages In',\n          count(provider.messagesOutPerSec.Average) as 'Has Messages Out'\n        FROM AwsMskBrokerSample SINCE 1 hour ago",
+      "result": {
+        "metadata": {
+          "eventTypes": [
+            "AwsMskBrokerSample"
+          ],
+          "timeWindow": {
+            "begin": 1749070626875,
+            "end": 1749074226875
+          }
+        },
+        "results": [
+          {
+            "Has Messages In": 202,
+            "Has Messages Out": 0
+          }
+        ]
+      },
+      "success": true,
+      "hasData": true,
+      "resultCount": 1
+    },
+    {
+      "category": "Filter Validation",
+      "query": {
+        "id": "14.1",
+        "name": "Available Clusters",
+        "query": "SELECT count(*) as `Total Samples` FROM AwsMskClusterSample SINCE {timeRange}",
+        "critical": false
+      },
+      "nrql": "SELECT count(*) as `Total Samples` FROM AwsMskClusterSample SINCE 1 hour ago",
+      "result": {
+        "metadata": {
+          "eventTypes": [
+            "AwsMskClusterSample"
+          ],
+          "timeWindow": {
+            "begin": 1749070626732,
+            "end": 1749074226732
+          }
+        },
+        "results": [
+          {
+            "Total Samples": 408
+          }
+        ]
+      },
+      "success": true,
+      "hasData": true,
+      "resultCount": 408
+    },
+    {
+      "category": "Filter Validation",
+      "query": {
+        "id": "14.2",
+        "name": "Available Topics",
+        "query": "SELECT count(*) as `Total Samples` FROM AwsMskTopicSample SINCE {timeRange}",
+        "critical": false
+      },
+      "nrql": "SELECT count(*) as `Total Samples` FROM AwsMskTopicSample SINCE 1 hour ago",
+      "result": {
+        "metadata": {
+          "eventTypes": [
+            "AwsMskTopicSample"
+          ],
+          "timeWindow": {
+            "begin": 1749070626730,
+            "end": 1749074226730
+          }
+        },
+        "results": [
+          {
+            "Total Samples": 1609
+          }
+        ]
+      },
+      "success": true,
+      "hasData": true,
+      "resultCount": 1609
+    },
+    {
+      "category": "Metric Calculations",
+      "query": {
+        "id": "15.1",
+        "name": "Throughput Range",
+        "query": "SELECT \n          min(provider.bytesInPerSec.Average) as 'Min Throughput',\n          max(provider.bytesInPerSec.Average) as 'Max Throughput',\n          average(provider.bytesInPerSec.Average) as 'Avg Throughput'\n        FROM AwsMskBrokerSample\n        FACET provider.clusterName\n        SINCE {timeRange}",
+        "critical": false
+      },
+      "nrql": "SELECT \n          min(provider.bytesInPerSec.Average) as 'Min Throughput',\n          max(provider.bytesInPerSec.Average) as 'Max Throughput',\n          average(provider.bytesInPerSec.Average) as 'Avg Throughput'\n        FROM AwsMskBrokerSample\n        FACET provider.clusterName\n        SINCE 1 hour ago",
+      "result": {
+        "metadata": {
+          "eventTypes": [
+            "AwsMskBrokerSample"
+          ],
+          "timeWindow": {
+            "begin": 1749070627293,
+            "end": 1749074227293
+          }
+        },
+        "results": [
+          {
+            "facet": "minikube-kafka",
+            "Avg Throughput": 950.0283198907622,
+            "Max Throughput": 1746.25,
+            "Min Throughput": 0,
+            "provider.clusterName": "minikube-kafka"
+          }
+        ]
+      },
+      "success": true,
+      "hasData": true,
+      "resultCount": 1
+    },
+    {
+      "category": "Metric Calculations",
+      "query": {
+        "id": "15.2",
+        "name": "Percentage Calculations",
+        "query": "SELECT \n          uniqueCount(entity.guid) as 'Total',\n          filter(uniqueCount(entity.guid), WHERE provider.offlinePartitionsCount.Sum > 0) as 'Unhealthy',\n          100.0 * filter(uniqueCount(entity.guid), WHERE provider.offlinePartitionsCount.Sum > 0) / uniqueCount(entity.guid) as 'Unhealthy %'\n        FROM AwsMskClusterSample SINCE {timeRange}",
+        "critical": false
+      },
+      "nrql": "SELECT \n          uniqueCount(entity.guid) as 'Total',\n          filter(uniqueCount(entity.guid), WHERE provider.offlinePartitionsCount.Sum > 0) as 'Unhealthy',\n          100.0 * filter(uniqueCount(entity.guid), WHERE provider.offlinePartitionsCount.Sum > 0) / uniqueCount(entity.guid) as 'Unhealthy %'\n        FROM AwsMskClusterSample SINCE 1 hour ago",
+      "result": {
+        "metadata": {
+          "eventTypes": [
+            "AwsMskClusterSample"
+          ],
+          "timeWindow": {
+            "begin": 1749070627300,
+            "end": 1749074227300
+          }
+        },
+        "results": [
+          {
+            "Total": 0,
+            "Unhealthy": 0,
+            "Unhealthy %": null
+          }
+        ]
+      },
+      "success": true,
+      "hasData": true,
+      "resultCount": 1
+    },
+    {
+      "category": "Summary Verification",
+      "query": {
+        "id": "16.1",
+        "name": "Complete Data Check",
+        "query": "SELECT \n          filter(count(*), WHERE eventType() = 'AwsMskClusterSample') as 'Has Cluster Data',\n          filter(count(*), WHERE eventType() = 'AwsMskBrokerSample') as 'Has Broker Data',\n          filter(count(*), WHERE eventType() = 'AwsMskTopicSample') as 'Has Topic Data',\n          min(timestamp) as 'Oldest Data',\n          max(timestamp) as 'Newest Data',\n          max(timestamp) as 'Newest Data'\n        FROM AwsMskClusterSample, AwsMskBrokerSample, AwsMskTopicSample\n        SINCE {timeRange}",
+        "critical": true
+      },
+      "nrql": "SELECT \n          filter(count(*), WHERE eventType() = 'AwsMskClusterSample') as 'Has Cluster Data',\n          filter(count(*), WHERE eventType() = 'AwsMskBrokerSample') as 'Has Broker Data',\n          filter(count(*), WHERE eventType() = 'AwsMskTopicSample') as 'Has Topic Data',\n          min(timestamp) as 'Oldest Data',\n          max(timestamp) as 'Newest Data',\n          max(timestamp) as 'Newest Data'\n        FROM AwsMskClusterSample, AwsMskBrokerSample, AwsMskTopicSample\n        SINCE 1 hour ago",
+      "result": {
+        "metadata": {
+          "eventTypes": [
+            "AwsMskClusterSample",
+            "AwsMskBrokerSample",
+            "AwsMskTopicSample"
+          ],
+          "timeWindow": {
+            "begin": 1749070627290,
+            "end": 1749074227290
+          }
+        },
+        "results": [
+          {
+            "Has Broker Data": 323,
+            "Has Cluster Data": 408,
+            "Has Topic Data": 1609,
+            "Newest Data": 1749074216000,
+            "Oldest Data": 1749070634000
+          }
+        ]
+      },
+      "success": true,
+      "hasData": true,
+      "resultCount": 1
+    },
+    {
+      "category": "Standard vs MSK Comparison",
+      "query": {
+        "id": "17.1",
+        "name": "Entity Count Comparison",
+        "query": "SELECT \n          filter(uniqueCount(entityName), WHERE eventType() = 'KafkaBrokerSample') as 'Standard Brokers',\n          filter(uniqueCount(entityName), WHERE eventType() = 'AwsMskBrokerSample') as 'MSK Brokers'\n        FROM KafkaBrokerSample, AwsMskBrokerSample SINCE {timeRange}",
+        "critical": false
+      },
+      "nrql": "SELECT \n          filter(uniqueCount(entityName), WHERE eventType() = 'KafkaBrokerSample') as 'Standard Brokers',\n          filter(uniqueCount(entityName), WHERE eventType() = 'AwsMskBrokerSample') as 'MSK Brokers'\n        FROM KafkaBrokerSample, AwsMskBrokerSample SINCE 1 hour ago",
+      "result": {
+        "metadata": {
+          "eventTypes": [
+            "KafkaBrokerSample",
+            "AwsMskBrokerSample"
+          ],
+          "timeWindow": {
+            "begin": 1749070627244,
+            "end": 1749074227244
+          }
+        },
+        "results": [
+          {
+            "MSK Brokers": 2,
+            "Standard Brokers": 0
+          }
+        ]
+      },
+      "success": true,
+      "hasData": true,
+      "resultCount": 1
+    },
+    {
+      "category": "Standard vs MSK Comparison",
+      "query": {
+        "id": "17.2",
+        "name": "Metric Coverage Comparison",
+        "query": "SELECT \n          filter(count(*), WHERE eventType() = 'KafkaTopicSample') as 'Standard Topic Events',\n          filter(count(*), WHERE eventType() = 'AwsMskTopicSample') as 'MSK Topic Events'\n        FROM KafkaTopicSample, AwsMskTopicSample SINCE {timeRange}",
+        "critical": false
+      },
+      "nrql": "SELECT \n          filter(count(*), WHERE eventType() = 'KafkaTopicSample') as 'Standard Topic Events',\n          filter(count(*), WHERE eventType() = 'AwsMskTopicSample') as 'MSK Topic Events'\n        FROM KafkaTopicSample, AwsMskTopicSample SINCE 1 hour ago",
+      "result": {
+        "metadata": {
+          "eventTypes": [
+            "KafkaTopicSample",
+            "AwsMskTopicSample"
+          ],
+          "timeWindow": {
+            "begin": 1749070627271,
+            "end": 1749074227271
+          }
+        },
+        "results": [
+          {
+            "MSK Topic Events": 1609,
+            "Standard Topic Events": 484
+          }
+        ]
+      },
+      "success": true,
+      "hasData": true,
+      "resultCount": 1
+    }
+  ]
+}

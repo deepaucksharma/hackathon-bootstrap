@@ -135,40 +135,71 @@ func topicWorker(topicChan <-chan *Topic, wg *sync.WaitGroup, client connection.
 		// Collect topic metrics
 		if args.GlobalArgs.HasMetrics() {
 			log.Debug("Collecting metrics for topic %s", topic.Name)
-			// Create metric set for topic
-			sample := topic.Entity.NewMetricSet("KafkaTopicSample",
-				attribute.Attribute{Key: "displayName", Value: topic.Name},
-				attribute.Attribute{Key: "entityName", Value: "topic:" + topic.Name},
-				attribute.Attribute{Key: "clusterName", Value: args.GlobalArgs.ClusterName},
-			)
-
-			// Collect metrics and populate metric set with them
-			if err := populateTopicMetrics(topic, sample, client); err != nil {
-				log.Error("Error collecting metrics from Topic %q: %s", topic.Name, err.Error())
-			}
-
-			// Process with MSK hook if enabled
+			
+			// If MSK hook is enabled, collect metrics differently
 			if msk.GlobalMSKHook != nil && msk.GlobalMSKHook.IsEnabled() {
 				// Create topic data map for MSK transformation
 				topicData := make(map[string]interface{})
-				
-				// Copy all metrics from sample to map
-				for k, v := range sample.Metrics {
-					topicData[k] = v
-				}
 				
 				// Add topic identification
 				topicData["topic"] = topic.Name
 				topicData["topic.name"] = topic.Name
 				
+				// Add topic metadata
+				topicData["topic.partitionCount"] = float64(topic.PartitionCount)
+				topicData["topic.replicationFactor"] = float64(topic.ReplicationFactor)
+				
+				// Calculate and add topic metrics
+				// Non-preferred leader count
+				numberNonPreferredLeader := 0
+				for _, p := range topic.Partitions {
+					if p.Leader != p.Replicas[0] {
+						numberNonPreferredLeader++
+					}
+				}
+				topicData["topic.partitionsWithNonPreferredLeader"] = float64(numberNonPreferredLeader)
+				
+				// Under-replicated partitions
+				numberUnderReplicated := 0
+				for _, p := range topic.Partitions {
+					if len(p.InSyncReplicas) < len(p.Replicas) {
+						numberUnderReplicated++
+					}
+				}
+				topicData["topic.underReplicatedPartitions"] = float64(numberUnderReplicated)
+				
+				// Responds to metadata
+				responds := topicRespondsToMetadata(topic, client)
+				topicData["topic.respondsToMetadataRequests"] = float64(responds)
+				
 				// Transform to MSK format
 				if err := msk.GlobalMSKHook.TransformTopicData(topic.Name, topicData); err != nil {
 					log.Error("Failed to transform topic metrics to MSK format: %s", err)
+					// Fall back to regular collection
+					collectTopicMetricsRegular(topic, client)
 				}
+			} else {
+				// Regular collection without MSK transformation
+				collectTopicMetricsRegular(topic, client)
 			}
 
 			log.Debug("Done collecting metrics for topic %q", topic.Name)
 		}
+	}
+}
+
+// collectTopicMetricsRegular handles regular topic metrics collection without MSK transformation
+func collectTopicMetricsRegular(topic *Topic, client connection.Client) {
+	// Create metric set for topic
+	sample := topic.Entity.NewMetricSet("KafkaTopicSample",
+		attribute.Attribute{Key: "displayName", Value: topic.Name},
+		attribute.Attribute{Key: "entityName", Value: "topic:" + topic.Name},
+		attribute.Attribute{Key: "clusterName", Value: args.GlobalArgs.ClusterName},
+	)
+
+	// Collect metrics and populate metric set with them
+	if err := populateTopicMetrics(topic, sample, client); err != nil {
+		log.Error("Error collecting metrics from Topic %q: %s", topic.Name, err.Error())
 	}
 }
 

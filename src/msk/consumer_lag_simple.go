@@ -10,11 +10,11 @@ import (
 
 // SimpleConsumerLagEnricher enriches topic entities with consumer lag metrics
 type SimpleConsumerLagEnricher struct {
-	shim *Shim
+	shim *MSKShim
 }
 
 // NewSimpleConsumerLagEnricher creates a new consumer lag enricher
-func NewSimpleConsumerLagEnricher(shim *Shim) *SimpleConsumerLagEnricher {
+func NewSimpleConsumerLagEnricher(shim *MSKShim) *SimpleConsumerLagEnricher {
 	return &SimpleConsumerLagEnricher{shim: shim}
 }
 
