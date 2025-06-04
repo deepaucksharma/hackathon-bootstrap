@@ -1,0 +1,83 @@
+apiVersion: v1
+kind: ConfigMap
+metadata:
+  name: test-scripts
+  namespace: kafka-validation
+data:
+  producer.sh: |
+    #!/bin/bash
+    echo "Starting Kafka producer..."
+    while true; do
+      echo "Message at $(date)" | kafka-console-producer.sh \
+        --broker-list kafka-headless:9092 \
+        --topic test-topic
+      sleep 5
+    done
+  consumer.sh: |
+    #!/bin/bash
+    echo "Starting Kafka consumer..."
+    kafka-console-consumer.sh \
+      --bootstrap-server kafka-headless:9092 \
+      --topic test-topic \
+      --from-beginning \
+      --group test-consumer-group
+---
+apiVersion: apps/v1
+kind: Deployment
+metadata:
+  name: kafka-producer
+  namespace: kafka-validation
+  labels:
+    app: kafka-producer
+spec:
+  replicas: 1
+  selector:
+    matchLabels:
+      app: kafka-producer
+  template:
+    metadata:
+      labels:
+        app: kafka-producer
+    spec:
+      containers:
+      - name: producer
+        image: wurstmeister/kafka:latest
+        command: ["/bin/bash", "/scripts/producer.sh"]
+        volumeMounts:
+        - name: scripts
+          mountPath: /scripts
+      volumes:
+      - name: scripts
+        configMap:
+          name: test-scripts
+          defaultMode: 0755
+---
+apiVersion: apps/v1
+kind: Deployment
+metadata:
+  name: kafka-consumer
+  namespace: kafka-validation
+  labels:
+    app: kafka-consumer
+spec:
+  replicas: 2
+  selector:
+    matchLabels:
+      app: kafka-consumer
+  template:
+    metadata:
+      labels:
+        app: kafka-consumer
+    spec:
+      containers:
+      - name: consumer
+        image: wurstmeister/kafka:latest
+        command: ["/bin/bash", "/scripts/consumer.sh"]
+        volumeMounts:
+        - name: scripts
+          mountPath: /scripts
+      volumes:
+      - name: scripts
+        configMap:
+          name: test-scripts
+          defaultMode: 0755

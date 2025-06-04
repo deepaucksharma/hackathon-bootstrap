@@ -15,6 +15,7 @@ import (
 	"github.com/newrelic/infra-integrations-sdk/v3/log"
 	"github.com/newrelic/nri-kafka/src/args"
 	"github.com/newrelic/nri-kafka/src/connection"
+	"github.com/newrelic/nri-kafka/src/msk"
 )
 
 // Topic is a storage struct for information about topics
@@ -144,6 +145,26 @@ func topicWorker(topicChan <-chan *Topic, wg *sync.WaitGroup, client connection.
 			// Collect metrics and populate metric set with them
 			if err := populateTopicMetrics(topic, sample, client); err != nil {
 				log.Error("Error collecting metrics from Topic %q: %s", topic.Name, err.Error())
+			}
+
+			// Process with MSK hook if enabled
+			if msk.GlobalMSKHook != nil && msk.GlobalMSKHook.IsEnabled() {
+				// Create topic data map for MSK transformation
+				topicData := make(map[string]interface{})
+				
+				// Copy all metrics from sample to map
+				for k, v := range sample.Metrics {
+					topicData[k] = v
+				}
+				
+				// Add topic identification
+				topicData["topic"] = topic.Name
+				topicData["topic.name"] = topic.Name
+				
+				// Transform to MSK format
+				if err := msk.GlobalMSKHook.TransformTopicData(topic.Name, topicData); err != nil {
+					log.Error("Failed to transform topic metrics to MSK format: %s", err)
+				}
 			}
 
 			log.Debug("Done collecting metrics for topic %q", topic.Name)

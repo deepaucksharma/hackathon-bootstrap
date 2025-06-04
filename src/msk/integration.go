@@ -11,9 +11,19 @@ import (
 // GlobalMSKHook is a global instance of the MSK integration hook
 var GlobalMSKHook *IntegrationHook
 
+// MSKShim interface that both Shim and ComprehensiveMSKShim implement
+type MSKShim interface {
+	IsEnabled() bool
+	TransformBrokerMetrics(brokerData map[string]interface{}) error
+	TransformTopicMetrics(topicData map[string]interface{}) error
+	ProcessConsumerOffset(offsetData map[string]interface{}) error
+	SetSystemSampleAPI(api InfrastructureAPI)
+	Flush() error
+}
+
 // IntegrationHook provides enhanced hooks into the nri-kafka integration flow
 type IntegrationHook struct {
-	shim        *Shim
+	shim        MSKShim
 	integration *integration.Integration
 	mapper      *MetricMapper
 }
@@ -27,16 +37,14 @@ func NewIntegrationHook(i *integration.Integration) *IntegrationHook {
 		return nil
 	}
 
-	log.Info("Initializing MSK shim V2 with cluster: %s", config.ClusterName)
+	log.Info("Initializing Comprehensive MSK shim with cluster: %s", config.ClusterName)
 
-	shim, err := NewShim(i, config)
-	if err != nil {
-		log.Error("Failed to initialize MSK shim V2: %v", err)
-		return nil
-	}
+	// Use comprehensive shim for better functionality
+	comprehensiveShim := NewComprehensiveMSKShim(*config)
+	comprehensiveShim.SetIntegration(i)
 
 	hook := &IntegrationHook{
-		shim:        shim,
+		shim:        comprehensiveShim,
 		integration: i,
 		mapper:      NewMetricMapper(),
 	}

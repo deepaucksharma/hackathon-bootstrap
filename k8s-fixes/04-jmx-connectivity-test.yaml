@@ -1,0 +1,57 @@
+apiVersion: v1
+kind: Pod
+metadata:
+  name: jmx-test-pod
+  namespace: strimzi-kafka  # Update this to your namespace
+spec:
+  containers:
+  - name: jmx-test
+    image: busybox
+    command: ["/bin/sh"]
+    args: ["-c", "while true; do sleep 30; done"]
+---
+apiVersion: batch/v1
+kind: Job
+metadata:
+  name: test-kafka-jmx
+  namespace: strimzi-kafka  # Update this to your namespace
+spec:
+  template:
+    spec:
+      restartPolicy: Never
+      containers:
+      - name: test-jmx
+        image: newrelic/nri-kafka:latest
+        env:
+        - name: CLUSTER_NAME
+          value: "kafka-k8s-monitoring"
+        - name: AUTODISCOVER_STRATEGY
+          value: "bootstrap"
+        - name: BOOTSTRAP_BROKER_HOST
+          value: "production-kafka-kafka-bootstrap.strimzi-kafka.svc.cluster.local"
+        - name: BOOTSTRAP_BROKER_KAFKA_PORT
+          value: "9092"
+        - name: BOOTSTRAP_BROKER_JMX_PORT
+          value: "9999"
+        - name: VERBOSE
+          value: "true"
+        command: ["/bin/sh", "-c"]
+        args:
+        - |
+          echo "Testing Kafka connectivity..."
+          echo "1. Testing bootstrap broker DNS resolution:"
+          nslookup production-kafka-kafka-bootstrap.strimzi-kafka.svc.cluster.local
+          
+          echo -e "\n2. Testing Kafka port connectivity:"
+          nc -zv production-kafka-kafka-bootstrap.strimzi-kafka.svc.cluster.local 9092
+          
+          echo -e "\n3. Testing individual broker JMX ports:"
+          for i in 0 1 2; do
+            echo "Testing production-kafka-${i}:"
+            nc -zv production-kafka-${i}.production-kafka-kafka-brokers.strimzi-kafka.svc.cluster.local 9999 || echo "Failed to connect to broker $i JMX"
+          done
+          
+          echo -e "\n4. Running nri-kafka in test mode:"
+          nri-kafka --verbose --pretty || echo "NRI-Kafka test failed"
+          
+          echo -e "\nTest complete!"

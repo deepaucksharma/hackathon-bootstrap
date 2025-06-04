@@ -1,0 +1,348 @@
+{
+  "timestamp": "2025-06-04T16:35:07.079Z",
+  "accountId": 3630072,
+  "clusterName": "kafka-k8s-monitoring",
+  "summary": {
+    "totalChecks": 25,
+    "passed": 10,
+    "failed": 15,
+    "warnings": 0
+  },
+  "sections": {
+    "Standard Metrics": {
+      "checks": [
+        {
+          "description": "Broker samples exist",
+          "query": "FROM KafkaBrokerSample SELECT count(*), uniqueCount(entityName), uniqueCount(broker_host) WHERE clusterName = 'kafka-k8s-monitoring' SINCE 5 minutes ago",
+          "results": [
+            {
+              "count": 0,
+              "uniqueCount.broker_host": 0,
+              "uniqueCount.entityName": 0
+            }
+          ],
+          "status": "failed",
+          "message": "Count is 0"
+        },
+        {
+          "description": "Topic samples exist",
+          "query": "FROM KafkaTopicSample SELECT count(*), uniqueCount(topic), uniqueCount(entityName) WHERE clusterName = 'kafka-k8s-monitoring' SINCE 5 minutes ago",
+          "results": [
+            {
+              "count": 0,
+              "uniqueCount.entityName": 0,
+              "uniqueCount.topic": 0
+            }
+          ],
+          "status": "failed",
+          "message": "Count is 0"
+        },
+        {
+          "description": "Consumer offset samples exist",
+          "query": "FROM KafkaOffsetSample SELECT count(*), uniqueCount(consumerGroup), uniqueCount(topic) WHERE clusterName = 'kafka-k8s-monitoring' SINCE 5 minutes ago",
+          "results": [
+            {
+              "count": 0,
+              "uniqueCount.consumerGroup": 0,
+              "uniqueCount.topic": 0
+            }
+          ],
+          "status": "failed",
+          "message": "Count is 0"
+        },
+        {
+          "description": "Producer samples exist",
+          "query": "FROM KafkaProducerSample SELECT count(*), uniqueCount(entityName) WHERE clusterName = 'kafka-k8s-monitoring' SINCE 5 minutes ago",
+          "results": [
+            {
+              "count": 0,
+              "uniqueCount.entityName": 0
+            }
+          ],
+          "status": "failed",
+          "message": "Count is 0"
+        },
+        {
+          "description": "Consumer samples exist",
+          "query": "FROM KafkaConsumerSample SELECT count(*), uniqueCount(entityName) WHERE clusterName = 'kafka-k8s-monitoring' SINCE 5 minutes ago",
+          "results": [
+            {
+              "count": 0,
+              "uniqueCount.entityName": 0
+            }
+          ],
+          "status": "failed",
+          "message": "Count is 0"
+        }
+      ]
+    },
+    "Performance Metrics": {
+      "checks": [
+        {
+          "description": "Message throughput metrics",
+          "query": "FROM KafkaBrokerSample SELECT average(broker.messagesInPerSecond), average(broker.IOInPerSecond), average(broker.IOOutPerSecond) WHERE clusterName = 'kafka-k8s-monitoring' SINCE 5 minutes ago",
+          "results": [
+            {
+              "average.broker.IOInPerSecond": null,
+              "average.broker.IOOutPerSecond": null,
+              "average.broker.messagesInPerSecond": null
+            }
+          ],
+          "status": "passed",
+          "message": "Data exists"
+        },
+        {
+          "description": "Disk and replication metrics",
+          "query": "FROM KafkaBrokerSample SELECT average(broker.bytesWrittenToDiscPerSecond), average(replication.ISRExpandsPerSecond), average(replication.ISRShrinksPerSecond) WHERE clusterName = 'kafka-k8s-monitoring' SINCE 5 minutes ago",
+          "results": [
+            {
+              "average.broker.bytesWrittenToDiscPerSecond": null,
+              "average.replication.ISRExpandsPerSecond": null,
+              "average.replication.ISRShrinksPerSecond": null
+            }
+          ],
+          "status": "passed",
+          "message": "Data exists"
+        }
+      ]
+    },
+    "MSK Shim": {
+      "checks": [
+        {
+          "description": "MSK Cluster samples exist",
+          "query": "FROM AwsMskClusterSample SELECT count(*), uniqueCount(clusterName), uniqueCount(entityName) WHERE clusterName = 'kafka-k8s-monitoring' SINCE 5 minutes ago",
+          "results": [
+            {
+              "count": 0,
+              "uniqueCount.clusterName": 0,
+              "uniqueCount.entityName": 0
+            }
+          ],
+          "status": "failed",
+          "message": "Count is 0"
+        },
+        {
+          "description": "MSK Broker samples exist",
+          "query": "FROM AwsMskBrokerSample SELECT count(*), uniqueCount(brokerId), uniqueCount(clusterName) WHERE clusterName = 'kafka-k8s-monitoring' SINCE 5 minutes ago",
+          "results": [
+            {
+              "count": 0,
+              "uniqueCount.brokerId": 0,
+              "uniqueCount.clusterName": 0
+            }
+          ],
+          "status": "failed",
+          "message": "Count is 0"
+        },
+        {
+          "description": "MSK Topic samples exist",
+          "query": "FROM AwsMskTopicSample SELECT count(*), uniqueCount(topicName), uniqueCount(clusterName) WHERE clusterName = 'kafka-k8s-monitoring' SINCE 5 minutes ago",
+          "results": [
+            {
+              "count": 0,
+              "uniqueCount.clusterName": 0,
+              "uniqueCount.topicName": 0
+            }
+          ],
+          "status": "failed",
+          "message": "Count is 0"
+        },
+        {
+          "description": "MSK throughput metrics",
+          "query": "FROM AwsMskBrokerSample SELECT average(aws.msk.BytesInPerSec), average(aws.msk.BytesOutPerSec), average(aws.msk.MessagesInPerSec) WHERE clusterName = 'kafka-k8s-monitoring' SINCE 5 minutes ago",
+          "results": [
+            {
+              "average.aws.msk.BytesInPerSec": null,
+              "average.aws.msk.BytesOutPerSec": null,
+              "average.aws.msk.MessagesInPerSec": null
+            }
+          ],
+          "status": "passed",
+          "message": "Data exists"
+        }
+      ]
+    },
+    "MSK Attributes": {
+      "checks": [
+        {
+          "description": "MSK Cluster attributes present",
+          "query": "FROM AwsMskClusterSample SELECT count(provider.clusterName), count(entity.guid), count(entityName) WHERE clusterName = 'kafka-k8s-monitoring' SINCE 5 minutes ago",
+          "results": [
+            {
+              "count.entity.guid": 0,
+              "count.entityName": 0,
+              "count.provider.clusterName": 0
+            }
+          ],
+          "status": "passed",
+          "message": "Data exists"
+        },
+        {
+          "description": "MSK Broker attributes present",
+          "query": "FROM AwsMskBrokerSample SELECT count(provider.clusterName), count(provider.brokerId), count(entity.guid) WHERE clusterName = 'kafka-k8s-monitoring' SINCE 5 minutes ago",
+          "results": [
+            {
+              "count.entity.guid": 0,
+              "count.provider.brokerId": 0,
+              "count.provider.clusterName": 0
+            }
+          ],
+          "status": "passed",
+          "message": "Data exists"
+        }
+      ]
+    },
+    "Pipeline Analysis": {
+      "checks": [
+        {
+          "description": "Data by pipeline",
+          "query": "FROM KafkaBrokerSample SELECT count(*) FACET pipeline WHERE clusterName = 'kafka-k8s-monitoring' SINCE 1 hour ago",
+          "results": [],
+          "status": "failed",
+          "message": "No data returned"
+        }
+      ]
+    },
+    "Metric Discovery": {
+      "checks": [
+        {
+          "description": "Available broker metrics",
+          "query": "FROM KafkaBrokerSample SELECT keyset() WHERE clusterName = 'kafka-k8s-monitoring' SINCE 1 hour ago LIMIT 1",
+          "results": [
+            {
+              "type": "numeric",
+              "key": "timestamp"
+            }
+          ],
+          "status": "passed",
+          "message": "Data exists"
+        }
+      ]
+    },
+    "Consumer Lag": {
+      "checks": [
+        {
+          "description": "Consumer lag by group",
+          "query": "FROM KafkaOffsetSample SELECT average(consumer.lag), max(consumer.lag) FACET consumerGroup WHERE clusterName = 'kafka-k8s-monitoring' SINCE 5 minutes ago LIMIT 10",
+          "results": [],
+          "status": "failed",
+          "message": "No data returned"
+        }
+      ]
+    },
+    "Data Freshness": {
+      "checks": [
+        {
+          "description": "Standard metrics freshness",
+          "query": "FROM KafkaBrokerSample SELECT latest(timestamp), now() - latest(timestamp) as 'Age in Seconds' WHERE clusterName = 'kafka-k8s-monitoring' SINCE 10 minutes ago",
+          "results": [],
+          "status": "failed",
+          "message": "No data returned"
+        },
+        {
+          "description": "MSK metrics freshness",
+          "query": "FROM AwsMskBrokerSample SELECT latest(timestamp), now() - latest(timestamp) as 'Age in Seconds' WHERE clusterName = 'kafka-k8s-monitoring' SINCE 10 minutes ago",
+          "results": [],
+          "status": "failed",
+          "message": "No data returned"
+        }
+      ]
+    },
+    "Entity Summary": {
+      "checks": [
+        {
+          "description": "Unique entities by type",
+          "query": "SELECT uniqueCount(entityGuid) FROM KafkaBrokerSample, KafkaTopicSample, KafkaOffsetSample WHERE clusterName = 'kafka-k8s-monitoring' SINCE 1 hour ago FACET eventType()",
+          "results": [],
+          "status": "failed",
+          "message": "No data returned"
+        }
+      ]
+    },
+    "Cluster Discovery": {
+      "checks": [
+        {
+          "description": "All available clusters",
+          "query": "FROM KafkaBrokerSample SELECT uniqueCount(clusterName) FACET clusterName SINCE 1 hour ago",
+          "results": [
+            {
+              "facet": "strimzi-production-kafka",
+              "clusterName": "strimzi-production-kafka",
+              "uniqueCount.clusterName": 1
+            }
+          ],
+          "status": "passed",
+          "message": "Data exists"
+        },
+        {
+          "description": "All MSK clusters",
+          "query": "FROM AwsMskClusterSample SELECT uniqueCount(clusterName) FACET clusterName SINCE 1 hour ago",
+          "results": [
+            {
+              "facet": "strimzi-production-kafka",
+              "clusterName": "strimzi-production-kafka",
+              "uniqueCount.clusterName": 1
+            }
+          ],
+          "status": "passed",
+          "message": "Data exists"
+        }
+      ]
+    },
+    "Metric Values": {
+      "checks": [
+        {
+          "description": "Brokers with non-zero message rate",
+          "query": "FROM KafkaBrokerSample SELECT count(*) WHERE broker.messagesInPerSecond IS NOT NULL AND broker.messagesInPerSecond > 0 AND clusterName = 'kafka-k8s-monitoring' SINCE 5 minutes ago",
+          "results": [
+            {
+              "count": 0
+            }
+          ],
+          "status": "failed",
+          "message": "Count is 0"
+        },
+        {
+          "description": "MSK brokers with message rate data",
+          "query": "FROM AwsMskBrokerSample SELECT count(*) WHERE aws.msk.MessagesInPerSec IS NOT NULL AND clusterName = 'kafka-k8s-monitoring' SINCE 5 minutes ago",
+          "results": [
+            {
+              "count": 0
+            }
+          ],
+          "status": "failed",
+          "message": "Count is 0"
+        }
+      ]
+    },
+    "MSK Health": {
+      "checks": [
+        {
+          "description": "MSK cluster health metrics",
+          "query": "FROM AwsMskClusterSample SELECT latest(provider.activeControllerCount.Sum), latest(provider.offlinePartitionsCount.Sum), latest(provider.globalPartitionCount.Average) WHERE clusterName = 'kafka-k8s-monitoring' SINCE 5 minutes ago",
+          "results": [
+            {
+              "latest.provider.activeControllerCount.Sum": null,
+              "latest.provider.globalPartitionCount.Average": null,
+              "latest.provider.offlinePartitionsCount.Sum": null
+            }
+          ],
+          "status": "passed",
+          "message": "Data exists"
+        },
+        {
+          "description": "MSK broker health metrics",
+          "query": "FROM AwsMskBrokerSample SELECT latest(provider.underReplicatedPartitions.Sum), latest(provider.underMinIsrPartitionCount.Sum) WHERE clusterName = 'kafka-k8s-monitoring' SINCE 5 minutes ago",
+          "results": [
+            {
+              "latest.provider.underMinIsrPartitionCount.Sum": null,
+              "latest.provider.underReplicatedPartitions.Sum": null
+            }
+          ],
+          "status": "passed",
+          "message": "Data exists"
+        }
+      ]
+    }
+  }
+}
