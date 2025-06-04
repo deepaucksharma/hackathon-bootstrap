@@ -13,7 +13,7 @@ REQUIRED_VERSION="1.20"
 if ! printf '%s\n' "$REQUIRED_VERSION" "$GO_VERSION" | sort -V | tail -n1 | grep -q "$GO_VERSION"; then
     echo "Error: Go version $GO_VERSION is too old. Minimum required: $REQUIRED_VERSION"
     echo "Please upgrade Go or use Docker build:"
-    echo "  docker build -f Dockerfile.msk -t nri-kafka-msk ."
+    echo "  docker build -f build/docker/Dockerfile.msk -t nri-kafka-msk ."
     exit 1
 fi
 

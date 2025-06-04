@@ -75,6 +75,8 @@ spec:
       - name: nri-kafka
         image: nri-kafka-msk:v3
         imagePullPolicy: Never  # Use local image
+        command: ["/bin/sh"]
+        args: ["-c", "while true; do /var/db/newrelic-infra/newrelic-integrations/bin/nri-kafka; sleep 30; done"]
         env:
         - name: NRIA_LICENSE_KEY
           valueFrom:

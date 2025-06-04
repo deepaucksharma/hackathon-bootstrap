@@ -58,3 +58,6 @@ tests/integration/jmxremote/jmxremote.password
 
 # Release toolkit
 CHANGELOG.partial.md
+
+# Built binaries
+nri-kafka

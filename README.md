@@ -32,6 +32,25 @@ export KAFKA_CLUSTER_NAME=my-cluster
 
 See [MSK Shim Documentation](./docs/MSK-SHIM.md) for complete setup and configuration.
 
+## Project Structure
+
+```
+├── src/                    # Source code
+├── tests/                  # Test files and mocks
+├── scripts/               # Utility scripts
+│   ├── debug/             # Debugging tools
+│   ├── verify/            # Verification scripts
+│   └── msk/               # MSK-specific scripts
+├── examples/              # Configuration examples
+│   ├── configs/           # Sample configurations
+│   └── msk/               # MSK examples
+├── docs/                  # Documentation
+│   ├── msk/               # MSK documentation
+│   └── specs/             # Specifications
+├── k8s-deploy/            # Kubernetes deployment
+└── strimzi-kafka-setup/   # Strimzi Kafka setup
+```
+
 ## Installation and usage
 
 For installation and usage instructions, see our [documentation web site](https://docs.newrelic.com/docs/integrations/host-integrations/host-integrations-list/kafka-monitoring-integration).

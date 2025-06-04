@@ -1,0 +1,10 @@
+{
+  "guid": "MzYzMDA3MnxWSVp8REFTSEJPQVJEfGRhOjEwMTMwMTE3",
+  "name": "Strimzi Kafka Production Dashboard",
+  "deployedAt": "2025-06-04T15:40:18.433Z",
+  "accountId": 3630072,
+  "dashboardUrl": "https://one.newrelic.com/dashboards/detail/MzYzMDA3MnxWSVp8REFTSEJPQVJEfGRhOjEwMTMwMTE3?account=3630072",
+  "pages": 6,
+  "widgets": 26,
+  "description": "Comprehensive Strimzi Kafka monitoring with broker health, topics, consumer lag, and performance metrics"
+}

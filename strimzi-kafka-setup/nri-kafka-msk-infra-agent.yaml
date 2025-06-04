@@ -1,0 +1,92 @@
+apiVersion: v1
+kind: ConfigMap
+metadata:
+  name: nri-kafka-msk-integration
+  namespace: newrelic
+data:
+  kafka-msk.yml: |
+    integrations:
+      - name: nri-kafka
+        exec: /var/db/newrelic-infra/newrelic-integrations/bin/nri-kafka
+        env:
+          # MSK is always enabled in our custom build
+          CLUSTER_NAME: strimzi-production-kafka
+          AUTODISCOVER_STRATEGY: bootstrap
+          BOOTSTRAP_BROKER_HOST: production-kafka-kafka-bootstrap.strimzi-kafka.svc.cluster.local
+          BOOTSTRAP_BROKER_KAFKA_PORT: 9092
+          BOOTSTRAP_BROKER_JMX_PORT: 9999
+          DEFAULT_JMX_PORT: "9999"
+          METRICS: "true"
+          INVENTORY: "true"
+          EVENTS: "true"
+          TOPIC_MODE: "all"
+          COLLECT_TOPIC_SIZE: "true"
+          COLLECT_TOPIC_OFFSET: "true"
+          CONSUMER_FETCH_OFFSET: "true"
+          VERBOSE: "true"
+          NRJMX_VERBOSE: "true"
+        interval: 30s
+        labels:
+          env: kubernetes
+          cluster: strimzi-kafka
+          msk: enabled
+---
+apiVersion: apps/v1
+kind: Deployment
+metadata:
+  name: nri-kafka-msk-infra-agent
+  namespace: newrelic
+spec:
+  replicas: 1
+  selector:
+    matchLabels:
+      app: nri-kafka-msk-infra-agent
+  template:
+    metadata:
+      labels:
+        app: nri-kafka-msk-infra-agent
+    spec:
+      serviceAccountName: nri-bundle-newrelic-infrastructure
+      containers:
+      - name: newrelic-infra
+        image: nri-kafka-msk:v3
+        command: ["/usr/bin/newrelic-infra"]
+        env:
+        - name: NRIA_LICENSE_KEY
+          valueFrom:
+            secretKeyRef:
+              name: nri-bundle-newrelic-infrastructure-license
+              key: licenseKey
+        - name: NRIA_VERBOSE
+          value: "1"
+        - name: NRIA_LOG_LEVEL
+          value: "debug"
+        - name: NRIA_DISPLAY_NAME
+          value: "strimzi-msk-monitor"
+        - name: NRIA_CUSTOM_ATTRIBUTES
+          value: |
+            {"clusterName":"strimzi-production-kafka","deployment":"strimzi","msk":"enabled"}
+        # MSK environment variables
+        - name: MSK_SHIM_ENABLED
+          value: "true"
+        - name: AWS_ACCOUNT_ID
+          value: "123456789012"
+        - name: AWS_REGION
+          value: "us-east-1"
+        - name: KAFKA_CLUSTER_NAME
+          value: "strimzi-production-kafka"
+        - name: ENVIRONMENT
+          value: "production"
+        volumeMounts:
+        - name: nri-kafka-config
+          mountPath: /etc/newrelic-infra/integrations.d/
+        resources:
+          limits:
+            memory: 500Mi
+          requests:
+            cpu: 200m
+            memory: 256Mi
+      volumes:
+      - name: nri-kafka-config
+        configMap:
+          name: nri-kafka-msk-integration

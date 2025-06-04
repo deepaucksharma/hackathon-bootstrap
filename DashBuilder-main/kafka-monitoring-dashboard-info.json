@@ -1,9 +1,9 @@
 {
-  "guid": "MzYzMDA3MnxWSVp8REFTSEJPQVJEfGRhOjEwMTI1OTA5",
+  "guid": "MzYzMDA3MnxWSVp8REFTSEJPQVJEfGRhOjEwMTMwMTE2",
   "name": "Kafka Monitoring Dashboard - Complete",
-  "deployedAt": "2025-06-04T09:13:50.496Z",
+  "deployedAt": "2025-06-04T15:40:06.599Z",
   "accountId": 3630072,
-  "dashboardUrl": "https://one.newrelic.com/dashboards/detail/MzYzMDA3MnxWSVp8REFTSEJPQVJEfGRhOjEwMTI1OTA5?account=3630072",
+  "dashboardUrl": "https://one.newrelic.com/dashboards/detail/MzYzMDA3MnxWSVp8REFTSEJPQVJEfGRhOjEwMTMwMTE2?account=3630072",
   "pages": 5,
   "widgets": 16
 }

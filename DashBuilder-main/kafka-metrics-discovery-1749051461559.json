@@ -1,0 +1,60 @@
+{
+  "discoveryTime": "2025-06-04T15:37:35.856Z",
+  "eventTypes": {
+    "KafkaBrokerSample": {
+      "metrics": [
+        {
+          "name": "timestamp",
+          "type": "numeric"
+        }
+      ],
+      "count": 1
+    },
+    "KafkaTopicSample": {
+      "metrics": [
+        {
+          "name": "timestamp",
+          "type": "numeric"
+        }
+      ],
+      "count": 1
+    },
+    "KafkaOffsetSample": {
+      "metrics": [
+        {
+          "name": "timestamp",
+          "type": "numeric"
+        }
+      ],
+      "count": 1
+    },
+    "KafkaProducerSample": {
+      "metrics": [
+        {
+          "name": "timestamp",
+          "type": "numeric"
+        }
+      ],
+      "count": 1
+    },
+    "KafkaConsumerSample": {
+      "metrics": [
+        {
+          "name": "timestamp",
+          "type": "numeric"
+        }
+      ],
+      "count": 1
+    }
+  },
+  "totalMetrics": 5,
+  "summary": {
+    "eventTypesFound": 5,
+    "brokerMetrics": 1,
+    "topicMetrics": 1,
+    "offsetMetrics": 1,
+    "producerMetrics": 1,
+    "consumerMetrics": 1,
+    "mskMetrics": 0
+  }
+}
