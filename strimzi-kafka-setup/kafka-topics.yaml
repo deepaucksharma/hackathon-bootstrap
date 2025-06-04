@@ -1,0 +1,44 @@
+apiVersion: kafka.strimzi.io/v1beta2
+kind: KafkaTopic
+metadata:
+  name: events
+  namespace: strimzi-kafka
+  labels:
+    strimzi.io/cluster: production-kafka
+spec:
+  partitions: 10
+  replicas: 3
+  config:
+    retention.ms: 604800000  # 7 days
+    segment.ms: 86400000     # 1 day
+    compression.type: snappy
+---
+apiVersion: kafka.strimzi.io/v1beta2
+kind: KafkaTopic
+metadata:
+  name: logs
+  namespace: strimzi-kafka
+  labels:
+    strimzi.io/cluster: production-kafka
+spec:
+  partitions: 20
+  replicas: 3
+  config:
+    retention.ms: 259200000  # 3 days
+    segment.ms: 43200000     # 12 hours
+    compression.type: gzip
+---
+apiVersion: kafka.strimzi.io/v1beta2
+kind: KafkaTopic
+metadata:
+  name: metrics
+  namespace: strimzi-kafka
+  labels:
+    strimzi.io/cluster: production-kafka
+spec:
+  partitions: 15
+  replicas: 3
+  config:
+    retention.ms: 172800000  # 2 days
+    segment.ms: 21600000     # 6 hours
+    compression.type: lz4

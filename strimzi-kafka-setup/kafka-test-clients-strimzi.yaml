@@ -1,0 +1,113 @@
+apiVersion: v1
+kind: ConfigMap
+metadata:
+  name: kafka-client-config
+  namespace: strimzi-kafka
+data:
+  client.properties: |
+    bootstrap.servers=production-kafka-kafka-bootstrap.strimzi-kafka.svc.cluster.local:9092
+    security.protocol=SASL_PLAINTEXT
+    sasl.mechanism=SCRAM-SHA-512
+---
+apiVersion: apps/v1
+kind: Deployment
+metadata:
+  name: kafka-producer
+  namespace: strimzi-kafka
+spec:
+  replicas: 1
+  selector:
+    matchLabels:
+      app: kafka-producer
+  template:
+    metadata:
+      labels:
+        app: kafka-producer
+    spec:
+      containers:
+      - name: producer
+        image: quay.io/strimzi/kafka:0.38.0-kafka-3.5.1
+        command:
+          - /bin/bash
+          - -c
+          - |
+            # Wait for user credentials
+            while [ ! -f /tmp/sasl.properties ]; do
+              echo "sasl.jaas.config=org.apache.kafka.common.security.scram.ScramLoginModule required username=\"producer-user\" password=\"$(cat /var/run/secrets/producer/password)\";" > /tmp/sasl.properties
+              sleep 2
+            done
+            
+            # Produce messages
+            while true; do
+              echo "Message at $(date)" | /opt/kafka/bin/kafka-console-producer.sh \
+                --bootstrap-server production-kafka-kafka-bootstrap:9092 \
+                --topic events \
+                --producer.config /tmp/client.properties \
+                --producer-property sasl.jaas.config="$(cat /tmp/sasl.properties)"
+              sleep 5
+            done
+        volumeMounts:
+        - name: client-config
+          mountPath: /tmp/client.properties
+          subPath: client.properties
+        - name: producer-secret
+          mountPath: /var/run/secrets/producer
+          readOnly: true
+      volumes:
+      - name: client-config
+        configMap:
+          name: kafka-client-config
+      - name: producer-secret
+        secret:
+          secretName: producer-user
+---
+apiVersion: apps/v1
+kind: Deployment
+metadata:
+  name: kafka-consumer
+  namespace: strimzi-kafka
+spec:
+  replicas: 1
+  selector:
+    matchLabels:
+      app: kafka-consumer
+  template:
+    metadata:
+      labels:
+        app: kafka-consumer
+    spec:
+      containers:
+      - name: consumer
+        image: quay.io/strimzi/kafka:0.38.0-kafka-3.5.1
+        command:
+          - /bin/bash
+          - -c
+          - |
+            # Wait for user credentials
+            while [ ! -f /tmp/sasl.properties ]; do
+              echo "sasl.jaas.config=org.apache.kafka.common.security.scram.ScramLoginModule required username=\"consumer-user\" password=\"$(cat /var/run/secrets/consumer/password)\";" > /tmp/sasl.properties
+              sleep 2
+            done
+            
+            # Consume messages
+            /opt/kafka/bin/kafka-console-consumer.sh \
+              --bootstrap-server production-kafka-kafka-bootstrap:9092 \
+              --topic events \
+              --from-beginning \
+              --group test-consumer-group \
+              --consumer.config /tmp/client.properties \
+              --consumer-property sasl.jaas.config="$(cat /tmp/sasl.properties)"
+        volumeMounts:
+        - name: client-config
+          mountPath: /tmp/client.properties
+          subPath: client.properties
+        - name: consumer-secret
+          mountPath: /var/run/secrets/consumer
+          readOnly: true
+      volumes:
+      - name: client-config
+        configMap:
+          name: kafka-client-config
+      - name: consumer-secret
+        secret:
+          secretName: consumer-user
