@@ -1,0 +1,107 @@
+# Strimzi Kafka Cluster - Production Ready Configuration
+# This is the consolidated configuration for Kafka deployment
+apiVersion: kafka.strimzi.io/v1beta2
+kind: Kafka
+metadata:
+  name: production-kafka
+  namespace: strimzi-kafka
+spec:
+  kafka:
+    version: 3.9.0
+    replicas: 3
+    listeners:
+      - name: plain
+        port: 9092
+        type: internal
+        tls: false
+      - name: tls
+        port: 9093
+        type: internal
+        tls: true
+    config:
+      # Performance and reliability settings
+      offsets.topic.replication.factor: 3
+      transaction.state.log.replication.factor: 3
+      transaction.state.log.min.isr: 2
+      default.replication.factor: 3
+      min.insync.replicas: 2
+      inter.broker.protocol.version: "3.9"
+      
+      # JMX Configuration - REQUIRED for nri-kafka
+      # Note: Authentication disabled for monitoring
+    jmxOptions:
+      authentication:
+        type: password
+    jvmOptions:
+      -Xms: 2048m
+      -Xmx: 2048m
+      javaSystemProperties:
+        - name: com.sun.management.jmxremote
+          value: "true"
+        - name: com.sun.management.jmxremote.authenticate
+          value: "false"
+        - name: com.sun.management.jmxremote.ssl
+          value: "false"
+        - name: com.sun.management.jmxremote.port
+          value: "9999"
+        - name: com.sun.management.jmxremote.rmi.port
+          value: "9999"
+        - name: java.rmi.server.hostname
+          value: "localhost"
+    storage:
+      type: persistent-claim
+      size: 100Gi
+      deleteClaim: false
+    metricsConfig:
+      type: jmxPrometheusExporter
+      valueFrom:
+        configMapKeyRef:
+          name: kafka-metrics
+          key: kafka-metrics-config.yml
+  zookeeper:
+    replicas: 3
+    storage:
+      type: persistent-claim
+      size: 10Gi
+      deleteClaim: false
+    jvmOptions:
+      -Xms: 512m
+      -Xmx: 512m
+  entityOperator:
+    topicOperator:
+      jvmOptions:
+        -Xms: 256m
+        -Xmx: 256m
+    userOperator:
+      jvmOptions:
+        -Xms: 256m
+        -Xmx: 256m
+---
+apiVersion: v1
+kind: ConfigMap
+metadata:
+  name: kafka-metrics
+  namespace: strimzi-kafka
+data:
+  kafka-metrics-config.yml: |
+    lowercaseOutputName: true
+    rules:
+    - pattern: kafka.server<type=(.+), name=(.+), clientId=(.+), topic=(.+), partition=(.*)><>Value
+      name: kafka_server_$1_$2
+      type: GAUGE
+      labels:
+       clientId: "$3"
+       topic: "$4"
+       partition: "$5"
+    - pattern: kafka.server<type=(.+), name=(.+), clientId=(.+), brokerHost=(.+), brokerPort=(.+)><>Value
+      name: kafka_server_$1_$2
+      type: GAUGE
+      labels:
+       clientId: "$3"
+       broker: "$4:$5"
+    - pattern: kafka.server<type=(.+), name=(.+)><>OneMinuteRate
+      name: kafka_server_$1_$2_rate
+      type: GAUGE
+    - pattern: kafka.server<type=(.+), name=(.+)><>Count
+      name: kafka_server_$1_$2_total
+      type: COUNTER

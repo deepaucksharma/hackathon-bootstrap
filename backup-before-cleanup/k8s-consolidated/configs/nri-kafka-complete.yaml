@@ -1,0 +1,110 @@
+# Complete nri-kafka configuration with all features enabled
+# This is the ultimate configuration for maximum metric collection
+
+apiVersion: v1
+kind: ConfigMap
+metadata:
+  name: nri-kafka-config-complete
+  namespace: strimzi-kafka
+  labels:
+    app: nri-kafka
+    version: complete
+data:
+  kafka-config.yml: |
+    ---
+    integrations:
+      - name: nri-kafka
+        env:
+          # === CLUSTER IDENTIFICATION ===
+          CLUSTER_NAME: ${CLUSTER_NAME:-strimzi-production-kafka}
+          
+          # === DISCOVERY CONFIGURATION ===
+          # Use bootstrap discovery (more reliable than zookeeper)
+          AUTODISCOVER_STRATEGY: bootstrap
+          
+          # Bootstrap broker settings
+          BOOTSTRAP_BROKER_HOST: ${KAFKA_BOOTSTRAP_SERVICE:-production-kafka-kafka-bootstrap.strimzi-kafka.svc.cluster.local}
+          BOOTSTRAP_BROKER_KAFKA_PORT: ${KAFKA_PORT:-9092}
+          BOOTSTRAP_BROKER_JMX_PORT: ${JMX_PORT:-9999}
+          
+          # === JMX CONFIGURATION ===
+          # Default JMX settings (no auth for Strimzi)
+          DEFAULT_JMX_HOST: ${DEFAULT_JMX_HOST:-}
+          DEFAULT_JMX_PORT: ${DEFAULT_JMX_PORT:-9999}
+          DEFAULT_JMX_USER: ${JMX_USER:-}
+          DEFAULT_JMX_PASSWORD: ${JMX_PASSWORD:-}
+          
+          # JMX connection pool
+          MAX_JMX_CONNECTIONS: ${MAX_JMX_CONNECTIONS:-10}
+          TIMEOUT: ${TIMEOUT:-30000}
+          CONNECTION_TIMEOUT: ${CONNECTION_TIMEOUT:-30000}
+          
+          # === TOPIC COLLECTION ===
+          # CRITICAL: Enable comprehensive topic collection
+          TOPIC_MODE: ${TOPIC_MODE:-all}
+          TOPIC_LIST: ${TOPIC_LIST:-[]}
+          TOPIC_REGEX: ${TOPIC_REGEX:-[]}
+          TOPIC_BUCKET: ${TOPIC_BUCKET:-1/1}
+          TOPIC_SOURCE: ${TOPIC_SOURCE:-broker}
+          
+          # Topic metrics
+          COLLECT_TOPIC_SIZE: "true"
+          COLLECT_TOPIC_OFFSET: "true"
+          COLLECT_BROKER_TOPIC_DATA: "true"
+          FORCE_TOPIC_SAMPLE_COLLECTION: "true"
+          
+          # === CONSUMER GROUP MONITORING ===
+          # Enable all consumer offset features
+          CONSUMER_OFFSET: "true"
+          INACTIVE_CONSUMER_GROUP_OFFSET: "true"
+          CONSUMER_GROUP_OFFSET_BY_TOPIC: "true"
+          CONSUMER_GROUP_REGEX: ${CONSUMER_GROUP_REGEX:-.*}
+          
+          # === PRODUCER/CONSUMER COLLECTION ===
+          # Collect from all producers/consumers
+          PRODUCERS: ${PRODUCERS:-[]}
+          CONSUMERS: ${CONSUMERS:-[]}
+          
+          # === DATA TYPES ===
+          # Enable all data collection types
+          METRICS: "true"
+          INVENTORY: "true"
+          EVENTS: "true"
+          
+          # === KAFKA CONNECTION ===
+          # Protocol settings
+          BOOTSTRAP_BROKER_KAFKA_PROTOCOL: ${KAFKA_PROTOCOL:-PLAINTEXT}
+          PREFERRED_LISTENER: ${PREFERRED_LISTENER:-PLAIN}
+          
+          # SASL settings (if needed)
+          SASL_MECHANISM: ${SASL_MECHANISM:-}
+          SASL_USERNAME: ${SASL_USERNAME:-}
+          SASL_PASSWORD: ${SASL_PASSWORD:-}
+          
+          # TLS settings (if needed)
+          TLS_CA_FILE: ${TLS_CA_FILE:-}
+          TLS_CERT_FILE: ${TLS_CERT_FILE:-}
+          TLS_KEY_FILE: ${TLS_KEY_FILE:-}
+          TLS_INSECURE_SKIP_VERIFY: ${TLS_INSECURE_SKIP_VERIFY:-false}
+          
+          # === PERFORMANCE TUNING ===
+          # Local only collection (for distributed deployments)
+          LOCAL_ONLY_COLLECTION: ${LOCAL_ONLY_COLLECTION:-false}
+          
+          # === LOGGING ===
+          VERBOSE: ${VERBOSE:-true}
+          
+          # === METADATA ===
+          METADATA: ${METADATA:-true}
+          NRI_ADD_HOSTNAME: ${NRI_ADD_HOSTNAME:-true}
+          NRI_CLUSTER: ${NRI_CLUSTER:-$CLUSTER_NAME}
+          NRI_SERVICE: ${NRI_SERVICE:-kafka}
+          
+        interval: ${COLLECTION_INTERVAL:-30s}
+        timeout: ${COLLECTION_TIMEOUT:-30s}
+        inventory_source: config/kafka
+        labels:
+          env: ${ENVIRONMENT:-kubernetes}
+          cluster: ${CLUSTER_NAME:-strimzi-production-kafka}
+          integration: nri-kafka
+          version: complete
