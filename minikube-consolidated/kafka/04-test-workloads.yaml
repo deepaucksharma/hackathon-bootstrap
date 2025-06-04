@@ -1,0 +1,169 @@
+# Test Producer
+apiVersion: apps/v1
+kind: Deployment
+metadata:
+  name: kafka-producer
+  namespace: kafka
+  labels:
+    app: kafka-producer
+spec:
+  replicas: 1
+  selector:
+    matchLabels:
+      app: kafka-producer
+  template:
+    metadata:
+      labels:
+        app: kafka-producer
+    spec:
+      containers:
+      - name: producer
+        image: confluentinc/cp-kafka:7.7.2
+        env:
+        - name: BOOTSTRAP_SERVERS
+          value: "kafka-0.kafka-headless:9092"
+        command:
+        - /bin/bash
+        - -c
+        - |
+          echo "Waiting for Kafka to be ready..."
+          sleep 30
+          
+          # Create test topics
+          echo "Creating test topics..."
+          kafka-topics.sh --create --if-not-exists \
+            --bootstrap-server $BOOTSTRAP_SERVERS \
+            --topic events --partitions 3 --replication-factor 1
+          
+          kafka-topics.sh --create --if-not-exists \
+            --bootstrap-server $BOOTSTRAP_SERVERS \
+            --topic logs --partitions 5 --replication-factor 1
+          
+          kafka-topics.sh --create --if-not-exists \
+            --bootstrap-server $BOOTSTRAP_SERVERS \
+            --topic metrics --partitions 10 --replication-factor 1
+          
+          # Start producing messages
+          echo "Starting message producer..."
+          while true; do
+            TIMESTAMP=$(date +%s)
+            MESSAGE="Event-${TIMESTAMP}: Test message from Minikube Kafka producer"
+            echo "$MESSAGE" | kafka-console-producer \
+              --bootstrap-server $BOOTSTRAP_SERVERS \
+              --topic events
+            
+            # Also send to other topics occasionally
+            if [ $((TIMESTAMP % 3)) -eq 0 ]; then
+              echo "Log-${TIMESTAMP}: Application log entry" | kafka-console-producer \
+                --bootstrap-server $BOOTSTRAP_SERVERS \
+                --topic logs
+            fi
+            
+            if [ $((TIMESTAMP % 5)) -eq 0 ]; then
+              echo "Metric-${TIMESTAMP}: cpu.usage=45.2,memory.usage=78.5" | kafka-console-producer \
+                --bootstrap-server $BOOTSTRAP_SERVERS \
+                --topic metrics
+            fi
+            
+            sleep 5
+          done
+        resources:
+          requests:
+            memory: "256Mi"
+            cpu: "100m"
+          limits:
+            memory: "512Mi"
+            cpu: "200m"
+---
+# Test Consumer
+apiVersion: apps/v1
+kind: Deployment
+metadata:
+  name: kafka-consumer
+  namespace: kafka
+  labels:
+    app: kafka-consumer
+spec:
+  replicas: 1
+  selector:
+    matchLabels:
+      app: kafka-consumer
+  template:
+    metadata:
+      labels:
+        app: kafka-consumer
+    spec:
+      containers:
+      - name: consumer
+        image: confluentinc/cp-kafka:7.7.2
+        env:
+        - name: BOOTSTRAP_SERVERS
+          value: "kafka-0.kafka-headless:9092"
+        command:
+        - /bin/bash
+        - -c
+        - |
+          echo "Waiting for Kafka to be ready..."
+          sleep 45
+          
+          echo "Starting Kafka consumer for events topic..."
+          kafka-console-consumer \
+            --bootstrap-server $BOOTSTRAP_SERVERS \
+            --topic events \
+            --from-beginning \
+            --group minikube-consumer-group \
+            --property print.timestamp=true \
+            --property print.key=true
+        resources:
+          requests:
+            memory: "256Mi"
+            cpu: "100m"
+          limits:
+            memory: "512Mi"
+            cpu: "200m"
+---
+# Additional consumer for metrics topic
+apiVersion: apps/v1
+kind: Deployment
+metadata:
+  name: kafka-metrics-consumer
+  namespace: kafka
+  labels:
+    app: kafka-metrics-consumer
+spec:
+  replicas: 1
+  selector:
+    matchLabels:
+      app: kafka-metrics-consumer
+  template:
+    metadata:
+      labels:
+        app: kafka-metrics-consumer
+    spec:
+      containers:
+      - name: consumer
+        image: confluentinc/cp-kafka:7.7.2
+        env:
+        - name: BOOTSTRAP_SERVERS
+          value: "kafka-0.kafka-headless:9092"
+        command:
+        - /bin/bash
+        - -c
+        - |
+          echo "Waiting for Kafka to be ready..."
+          sleep 45
+          
+          echo "Starting Kafka consumer for metrics topic..."
+          kafka-console-consumer \
+            --bootstrap-server $BOOTSTRAP_SERVERS \
+            --topic metrics \
+            --from-beginning \
+            --group metrics-consumer-group \
+            --property print.timestamp=true
+        resources:
+          requests:
+            memory: "128Mi"
+            cpu: "50m"
+          limits:
+            memory: "256Mi"
+            cpu: "100m"

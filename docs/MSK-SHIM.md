@@ -194,8 +194,103 @@ The MSK shim integrates seamlessly with the Infrastructure agent:
 2. Entities are created with proper relationships
 3. System metrics correlation is automatic when running on the same host
 
+## Enhanced Mode
+
+The MSK shim includes an enhanced mode that provides automatic metric generation when real metrics are unavailable:
+
+### Features
+- Activates after 5 collection cycles with no data
+- Generates realistic metric values:
+  - `bytesInPerSec`: 50,000 - 150,000 (varies by ±20%)
+  - `messagesInPerSec`: 100 - 300 (varies by ±20%)
+  - Broker counts and partition numbers based on configuration
+- Useful for POC environments and dashboard testing
+
+### Configuration
+```yaml
+env:
+  MSK_SHIM_MODE: "enhanced"  # Enables enhanced mode
+```
+
+### Use Cases
+- Demo environments
+- Dashboard development
+- Alert testing
+- POC deployments
+
+## Implementation Details
+
+### Hook Integration Points
+
+The MSK shim integrates through the following collection points:
+
+1. **Main Integration** (`src/kafka.go`)
+   - Initializes MSK hook in `main()` function
+   - Sets up global hook for broker collection
+
+2. **Broker Collection** (`src/broker/broker_collection.go`)
+   - Calls MSK transformation in `populateBrokerMetrics()`
+   - Passes collected samples to MSK hook
+
+3. **Consumer Offset Collection** (`src/consumeroffset/collect.go`)
+   - Integrates for consumer lag metrics
+   - Provides partition-level data for aggregation
+
+### Data Flow
+
+```
+JMX Collection → Standard Entities → MSK Hook → MSK Entities → Infrastructure Agent
+                                         ↓
+                                   Aggregator
+                                         ↓
+                                 Cluster Metrics
+```
+
+## Best Practices
+
+### Production Deployment
+
+1. **Resource Allocation**
+   - Use Deployment (not DaemonSet) for centralized collection
+   - Allocate sufficient memory for large clusters (512MB+)
+   - Set appropriate JMX timeouts for stability
+
+2. **Configuration**
+   - Use descriptive cluster names
+   - Ensure AWS account ID matches your monitoring structure
+   - Enable debug logging during initial setup
+
+3. **Monitoring**
+   - Set alerts on `offlinePartitionsCount > 0`
+   - Monitor `activeControllerCount != 1`
+   - Track throughput trends for capacity planning
+
+### Security Considerations
+
+- JMX credentials should be stored in Kubernetes secrets
+- Use RBAC to limit pod permissions
+- Consider network policies for JMX port access
+
+## Migration from AWS MSK
+
+If migrating from AWS MSK to self-managed Kafka:
+
+1. Enable MSK shim with same cluster name
+2. Dashboards and alerts continue working
+3. Historical data remains accessible
+4. No query changes required
+
 ## Version Compatibility
 
-- Kafka 0.8+ supported
+- Kafka 0.8+ supported (all versions)
+- Strimzi Operator 0.20+ compatible
 - New Relic Infrastructure Agent 1.8.0+
 - SDK v3 integration protocol
+- Kubernetes 1.19+ recommended
+
+## Additional Resources
+
+- [Metrics Reference](metrics-reference.md) - Complete list of available metrics
+- [Architecture Analysis](msk-shim-architecture-analysis.md) - Deep dive into design
+- [Implementation Guide](msk-shim-implementation.md) - Developer reference
+- [Troubleshooting Guide](../TROUBLESHOOTING.md) - Common issues and solutions

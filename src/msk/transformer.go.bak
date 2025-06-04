@@ -1,0 +1,427 @@
+package msk
+
+import (
+	"fmt"
+	"strings"
+
+	"github.com/newrelic/infra-integrations-sdk/v3/data/attribute"
+	"github.com/newrelic/infra-integrations-sdk/v3/data/metric"
+	"github.com/newrelic/infra-integrations-sdk/v3/integration"
+	"github.com/newrelic/infra-integrations-sdk/v3/log"
+)
+
+// Transformer handles all metric transformations to MSK format
+type Transformer struct {
+	shim *MSKShim
+}
+
+// Helper to get float value with default
+func getFloatOrDefault(data map[string]interface{}, key string, defaultValue float64) float64 {
+	if val, ok := getFloatValue(data, key); ok {
+		return val
+	}
+	return defaultValue
+}
+
+// Helper to get int value with default
+func getIntOrDefault(data map[string]interface{}, key string, defaultValue int) int {
+	if val, ok := getIntValue(data, key); ok {
+		return val
+	}
+	return defaultValue
+}
+
+// TransformBrokerMetrics transforms broker metrics to AwsMskBrokerSample
+func (t *Transformer) TransformBrokerMetrics(brokerID int32, brokerData map[string]interface{}) error {
+	// Create MSK broker entity
+	entityName := fmt.Sprintf("%s-broker-%d", t.shim.config.ClusterName, brokerID)
+	entity, err := t.shim.GetOrCreateEntity("broker", "AwsMskBrokerSample")
+	if err != nil {
+		return fmt.Errorf("failed to create broker entity: %v", err)
+	}
+
+	// Generate GUID
+	guid := GenerateEntityGUID(EntityTypeBroker, t.shim.config.AWSAccountID, 
+		t.shim.config.ClusterName, brokerID)
+
+	// Create metric set with attributes
+	ms := entity.NewMetricSet("AwsMskBrokerSample",
+		attribute.Attribute{Key: "entity.guid", Value: guid},
+		attribute.Attribute{Key: "entity.type", Value: string(EntityTypeBroker)},
+		attribute.Attribute{Key: "entityName", Value: entityName},
+		attribute.Attribute{Key: "displayName", Value: entityName},
+		attribute.Attribute{Key: "provider.accountId", Value: t.shim.config.AWSAccountID},
+		attribute.Attribute{Key: "provider.region", Value: t.shim.config.AWSRegion},
+		attribute.Attribute{Key: "provider.clusterName", Value: t.shim.config.ClusterName},
+		attribute.Attribute{Key: "provider.brokerId", Value: brokerID},
+	)
+
+	// Transform throughput metrics
+	t.transformBrokerThroughputMetrics(ms, brokerData)
+
+	// Transform replication metrics
+	t.transformBrokerReplicationMetrics(entity, brokerData)
+
+	// Transform resource metrics
+	t.transformBrokerResourceMetrics(entity, brokerData)
+
+	// Transform request metrics
+	t.transformBrokerRequestMetrics(entity, brokerData)
+
+	// Transform consumer group metrics
+	t.transformBrokerConsumerMetrics(entity, brokerData)
+
+	// Aggregate metrics for cluster level
+	t.aggregateBrokerMetrics(brokerID, brokerData)
+
+	return nil
+}
+
+// TransformTopicMetrics transforms topic metrics to AwsMskTopicSample
+func (t *Transformer) TransformTopicMetrics(topicName string, topicData map[string]interface{}) error {
+	// Create MSK topic entity
+	entity, err := t.shim.GetOrCreateEntity("topic", "AwsMskTopicSample")
+	if err != nil {
+		return fmt.Errorf("failed to create topic entity: %v", err)
+	}
+
+	// Generate topic GUID
+	identifier := fmt.Sprintf("aws:kafka:topic:%s:%s:%s", 
+		t.shim.config.AWSAccountID, t.shim.config.ClusterName, topicName)
+	guid := fmt.Sprintf("%s|INFRA|%s|%s", 
+		t.shim.config.AWSAccountID, EntityTypeTopic, 
+		base64Encode(identifier))
+
+	// Set entity identification
+	entity.SetMetric("entity.guid", guid, metric.ATTRIBUTE)
+	entity.SetMetric("entity.type", string(EntityTypeTopic), metric.ATTRIBUTE)
+	entity.SetMetric("entityName", topicName, metric.ATTRIBUTE)
+	entity.SetMetric("displayName", topicName, metric.ATTRIBUTE)
+
+	// Set provider attributes
+	entity.SetMetric("provider.accountId", t.shim.config.AWSAccountID, metric.ATTRIBUTE)
+	entity.SetMetric("provider.region", t.shim.config.AWSRegion, metric.ATTRIBUTE)
+	entity.SetMetric("provider.clusterName", t.shim.config.ClusterName, metric.ATTRIBUTE)
+	entity.SetMetric("provider.topic", topicName, metric.ATTRIBUTE)
+
+	// Transform topic metrics
+	if bytesIn, ok := getFloatValue(topicData, "topic.bytesInPerSecond"); ok && bytesIn >= 0 {
+		entity.SetMetric("provider.bytesInPerSec.Sum", bytesIn, metric.GAUGE)
+		entity.SetMetric("provider.bytesInPerSec.Average", bytesIn, metric.GAUGE)
+	}
+
+	if bytesOut := getFloatValue(topicData, "topic.bytesOutPerSecond", -1); bytesOut >= 0 {
+		entity.SetMetric("provider.bytesOutPerSec.Sum", bytesOut, metric.GAUGE)
+		entity.SetMetric("provider.bytesOutPerSec.Average", bytesOut, metric.GAUGE)
+	}
+
+	if messagesIn := getFloatValue(topicData, "topic.messagesInPerSecond", -1); messagesIn >= 0 {
+		entity.SetMetric("provider.messagesInPerSec.Sum", messagesIn, metric.GAUGE)
+		entity.SetMetric("provider.messagesInPerSec.Average", messagesIn, metric.GAUGE)
+	}
+
+	// Topic configuration
+	if partitionCount := getIntValue(topicData, "topic.partitionCount"); partitionCount > 0 {
+		entity.SetMetric("provider.partitionCount", partitionCount, metric.GAUGE)
+	}
+
+	if replicationFactor := getIntValue(topicData, "topic.replicationFactor"); replicationFactor > 0 {
+		entity.SetMetric("provider.replicationFactor", replicationFactor, metric.GAUGE)
+	}
+
+	// Track topic in aggregator
+	t.shim.aggregator.AddTopic(topicName)
+
+	return nil
+}
+
+// TransformConsumerOffset transforms consumer offset data
+func (t *Transformer) TransformConsumerOffset(offsetData map[string]interface{}) error {
+	// Extract consumer group and topic
+	consumerGroup, _ := getStringValue(offsetData, "consumer.group")
+	topic, _ := getStringValue(offsetData, "topic")
+	
+	if consumerGroup == "" || topic == "" {
+		return fmt.Errorf("missing consumer group or topic in offset data")
+	}
+
+	// Add MSK-specific attributes
+	offsetData["provider.consumerGroup"] = consumerGroup
+	offsetData["provider.topic"] = topic
+	offsetData["provider.clusterName"] = t.shim.config.ClusterName
+
+	// Track consumer lag for cluster aggregation
+	if lag, ok := getFloatValue(offsetData, "consumer.lag", 0); ok && lag > 0 {
+		t.shim.aggregator.UpdateMaxConsumerLag(lag)
+	}
+
+	return nil
+}
+
+// CreateClusterEntity creates the cluster-level entity with aggregated metrics
+func (t *Transformer) CreateClusterEntity() error {
+	entity, err := t.shim.GetOrCreateEntity("cluster", "AwsMskClusterSample")
+	if err != nil {
+		return fmt.Errorf("failed to create cluster entity: %v", err)
+	}
+
+	// Generate cluster GUID
+	guid := GenerateEntityGUID(EntityTypeCluster, t.shim.config.AWSAccountID, 
+		t.shim.config.ClusterName)
+
+	// Set entity identification
+	entity.SetMetric("entity.guid", guid, metric.ATTRIBUTE)
+	entity.SetMetric("entity.type", string(EntityTypeCluster), metric.ATTRIBUTE)
+	entity.SetMetric("entityName", t.shim.config.ClusterName, metric.ATTRIBUTE)
+	entity.SetMetric("displayName", t.shim.config.ClusterName, metric.ATTRIBUTE)
+
+	// Set provider attributes
+	entity.SetMetric("provider.accountId", t.shim.config.AWSAccountID, metric.ATTRIBUTE)
+	entity.SetMetric("provider.region", t.shim.config.AWSRegion, metric.ATTRIBUTE)
+	entity.SetMetric("provider.clusterName", t.shim.config.ClusterName, metric.ATTRIBUTE)
+	entity.SetMetric("provider.clusterArn", t.shim.config.ClusterARN, metric.ATTRIBUTE)
+
+	// Get aggregated metrics
+	brokerMetrics := t.shim.aggregator.GetBrokerMetrics()
+	
+	// Cluster health metrics
+	activeControllers := 0
+	offlinePartitions := 0
+	underReplicatedPartitions := 0
+	totalPartitions := 0
+
+	for _, broker := range brokerMetrics {
+		if broker.ActiveController {
+			activeControllers++
+		}
+		offlinePartitions += broker.OfflinePartitions
+		underReplicatedPartitions += broker.UnderReplicatedPartitions
+		totalPartitions += broker.PartitionCount
+	}
+
+	entity.SetMetric("provider.activeControllerCount.Sum", float64(activeControllers), metric.GAUGE)
+	entity.SetMetric("provider.offlinePartitionsCount.Sum", float64(offlinePartitions), metric.GAUGE)
+	entity.SetMetric("provider.globalPartitionCount", float64(totalPartitions), metric.GAUGE)
+	entity.SetMetric("provider.globalTopicCount", float64(t.shim.aggregator.GetTopicCount()), metric.GAUGE)
+	entity.SetMetric("provider.underReplicatedPartitions.Sum", float64(underReplicatedPartitions), metric.GAUGE)
+
+	// Aggregate throughput
+	totalBytesIn := 0.0
+	totalBytesOut := 0.0
+	totalMessagesIn := 0.0
+
+	for _, broker := range brokerMetrics {
+		totalBytesIn += broker.BytesInPerSec
+		totalBytesOut += broker.BytesOutPerSec
+		totalMessagesIn += broker.MessagesInPerSec
+	}
+
+	entity.SetMetric("provider.bytesInPerSec.Sum", totalBytesIn, metric.GAUGE)
+	entity.SetMetric("provider.bytesOutPerSec.Sum", totalBytesOut, metric.GAUGE)
+	entity.SetMetric("provider.messagesInPerSec.Sum", totalMessagesIn, metric.GAUGE)
+
+	// Consumer lag
+	maxLag := t.shim.aggregator.GetMaxConsumerLag()
+	if maxLag > 0 {
+		entity.SetMetric("provider.maxConsumerLag", maxLag, metric.GAUGE)
+	}
+
+	// Cluster status
+	if offlinePartitions > 0 || activeControllers != 1 {
+		entity.SetMetric("provider.clusterStatus", "UNHEALTHY", metric.ATTRIBUTE)
+	} else {
+		entity.SetMetric("provider.clusterStatus", "HEALTHY", metric.ATTRIBUTE)
+	}
+
+	log.Info("Created MSK cluster entity: %s with %d brokers, %d topics", 
+		t.shim.config.ClusterName, len(brokerMetrics), t.shim.aggregator.GetTopicCount())
+
+	return nil
+}
+
+// Helper methods for broker metric transformation
+
+func (t *Transformer) transformBrokerThroughputMetrics(entity *integration.Entity, brokerData map[string]interface{}) {
+	// Bytes metrics
+	if bytesIn := getFloatValue(brokerData, "broker.bytesInPerSecond", -1); bytesIn >= 0 {
+		entity.SetMetric("provider.bytesInPerSec.Average", bytesIn, metric.GAUGE)
+		entity.SetMetric("bytesInPerSec", bytesIn, metric.GAUGE) // Alias
+	}
+
+	if bytesOut := getFloatValue(brokerData, "broker.bytesOutPerSecond", -1); bytesOut >= 0 {
+		entity.SetMetric("provider.bytesOutPerSec.Average", bytesOut, metric.GAUGE)
+		entity.SetMetric("bytesOutPerSec", bytesOut, metric.GAUGE) // Alias
+	}
+
+	// Message metrics
+	if messagesIn := getFloatValue(brokerData, "broker.messagesInPerSecond", -1); messagesIn >= 0 {
+		entity.SetMetric("provider.messagesInPerSec.Average", messagesIn, metric.GAUGE)
+		entity.SetMetric("messagesInPerSec", messagesIn, metric.GAUGE) // Alias
+	}
+
+	// Rejected bytes
+	if bytesRejected := getFloatValue(brokerData, "broker.bytesRejectedPerSecond", -1); bytesRejected >= 0 {
+		entity.SetMetric("provider.bytesRejectedPerSec.Average", bytesRejected, metric.GAUGE)
+	}
+
+	// Failed produce/fetch requests
+	if failedProduce := getFloatValue(brokerData, "request.produceRequestsFailedPerSecond", -1); failedProduce >= 0 {
+		entity.SetMetric("provider.failedProduceRequestsPerSec.Average", failedProduce, metric.GAUGE)
+	}
+
+	if failedFetch := getFloatValue(brokerData, "request.fetchRequestsFailedPerSecond", -1); failedFetch >= 0 {
+		entity.SetMetric("provider.failedFetchRequestsPerSec.Average", failedFetch, metric.GAUGE)
+	}
+}
+
+func (t *Transformer) transformBrokerReplicationMetrics(entity *integration.Entity, brokerData map[string]interface{}) {
+	// Partition metrics
+	if partitionCount := getIntValue(brokerData, "broker.partitionCount"); partitionCount > 0 {
+		entity.SetMetric("provider.partitionCount", partitionCount, metric.GAUGE)
+		entity.SetMetric("partitionCount", partitionCount, metric.GAUGE) // Alias
+	}
+
+	if leaderCount := getIntValue(brokerData, "broker.leaderCount"); leaderCount > 0 {
+		entity.SetMetric("provider.leaderCount", leaderCount, metric.GAUGE)
+	}
+
+	// Replication health
+	if underReplicated := getIntValue(brokerData, "broker.underReplicatedPartitions"); underReplicated >= 0 {
+		entity.SetMetric("provider.underReplicatedPartitions.Maximum", underReplicated, metric.GAUGE)
+		entity.SetMetric("underReplicatedPartitions", underReplicated, metric.GAUGE) // Alias
+	}
+
+	// ISR metrics
+	if isrShrinks := getFloatValue(brokerData, "replication.isrShrinksPerSecond", -1); isrShrinks >= 0 {
+		entity.SetMetric("provider.isrShrinksPerSec.Average", isrShrinks, metric.GAUGE)
+	}
+
+	if isrExpands := getFloatValue(brokerData, "replication.isrExpandsPerSecond", -1); isrExpands >= 0 {
+		entity.SetMetric("provider.isrExpandsPerSec.Average", isrExpands, metric.GAUGE)
+	}
+
+	// Controller status
+	if activeController := getIntValue(brokerData, "controller.activeControllerCount"); activeController >= 0 {
+		entity.SetMetric("provider.activeController", activeController, metric.GAUGE)
+	}
+
+	// Offline partitions
+	if offlinePartitions := getIntValue(brokerData, "controller.offlinePartitionsCount"); offlinePartitions >= 0 {
+		entity.SetMetric("provider.offlinePartitions", offlinePartitions, metric.GAUGE)
+	}
+}
+
+func (t *Transformer) transformBrokerResourceMetrics(entity *integration.Entity, brokerData map[string]interface{}) {
+	// CPU metrics
+	cpuUser := getFloatValue(brokerData, "broker.cpuUser", -1)
+	cpuSystem := getFloatValue(brokerData, "broker.cpuSystem", -1)
+	cpuIdle := getFloatValue(brokerData, "broker.cpuIdle", -1)
+
+	if cpuUser >= 0 {
+		entity.SetMetric("provider.cpuUser.Average", cpuUser, metric.GAUGE)
+		entity.SetMetric("provider.cpuUser", cpuUser, metric.GAUGE)
+	}
+
+	if cpuSystem >= 0 {
+		entity.SetMetric("provider.cpuSystem.Average", cpuSystem, metric.GAUGE)
+		entity.SetMetric("provider.cpuSystem", cpuSystem, metric.GAUGE)
+	}
+
+	if cpuIdle >= 0 {
+		entity.SetMetric("provider.cpuIdle.Average", cpuIdle, metric.GAUGE)
+		entity.SetMetric("provider.cpuIdle", cpuIdle, metric.GAUGE)
+	}
+
+	// Memory metrics
+	if memoryUsed := getFloatValue(brokerData, "broker.memoryUsed", -1); memoryUsed >= 0 {
+		entity.SetMetric("provider.memoryUsed.Average", memoryUsed/1024/1024, metric.GAUGE) // Convert to MB
+	}
+
+	if memoryFree := getFloatValue(brokerData, "broker.memoryFree", -1); memoryFree >= 0 {
+		entity.SetMetric("provider.memoryFree.Average", memoryFree/1024/1024, metric.GAUGE) // Convert to MB
+	}
+
+	// Disk metrics
+	if diskUsed := getFloatValue(brokerData, "broker.kafkaDataLogsDiskUsed", -1); diskUsed >= 0 {
+		diskUsedPercent := diskUsed * 100
+		entity.SetMetric("provider.kafkaDataLogsDiskUsed.Average", diskUsedPercent, metric.GAUGE)
+		entity.SetMetric("provider.rootDiskUsed.Average", diskUsedPercent, metric.GAUGE)
+	}
+
+	// App logs disk
+	if appLogsUsed := getFloatValue(brokerData, "broker.kafkaAppLogsDiskUsed", -1); appLogsUsed >= 0 {
+		entity.SetMetric("provider.kafkaAppLogsDiskUsed.Average", appLogsUsed*100, metric.GAUGE)
+	}
+
+	// Network metrics
+	if networkRxDropped := getFloatValue(brokerData, "network.networkRxDropped", -1); networkRxDropped >= 0 {
+		entity.SetMetric("provider.networkRxDropped.Sum", networkRxDropped, metric.GAUGE)
+	}
+
+	if networkTxDropped := getFloatValue(brokerData, "network.networkTxDropped", -1); networkTxDropped >= 0 {
+		entity.SetMetric("provider.networkTxDropped.Sum", networkTxDropped, metric.GAUGE)
+	}
+}
+
+func (t *Transformer) transformBrokerRequestMetrics(entity *integration.Entity, brokerData map[string]interface{}) {
+	// Request rates
+	if produceRate := getFloatValue(brokerData, "request.avgProduceRequestMs", -1); produceRate >= 0 {
+		entity.SetMetric("provider.produceRequestTime.Average", produceRate, metric.GAUGE)
+	}
+
+	if fetchRate := getFloatValue(brokerData, "request.avgFetchRequestMs", -1); fetchRate >= 0 {
+		entity.SetMetric("provider.fetchRequestTime.Average", fetchRate, metric.GAUGE)
+	}
+
+	// Request queue
+	if requestQueueSize := getIntValue(brokerData, "request.requestQueueSize"); requestQueueSize >= 0 {
+		entity.SetMetric("provider.requestQueueSize.Average", requestQueueSize, metric.GAUGE)
+	}
+
+	// Response queue
+	if responseQueueSize := getIntValue(brokerData, "request.responseQueueSize"); responseQueueSize >= 0 {
+		entity.SetMetric("provider.responseQueueSize.Average", responseQueueSize, metric.GAUGE)
+	}
+
+	// Total time
+	if totalTimeMs := getFloatValue(brokerData, "request.totalTimeMs", -1); totalTimeMs >= 0 {
+		entity.SetMetric("provider.totalTimeMs.Average", totalTimeMs, metric.GAUGE)
+	}
+}
+
+func (t *Transformer) transformBrokerConsumerMetrics(entity *integration.Entity, brokerData map[string]interface{}) {
+	// Consumer fetch metrics
+	if consumerFetch := getFloatValue(brokerData, "request.avgFetchRequestMs", -1); consumerFetch >= 0 {
+		entity.SetMetric("provider.consumerFetchTime.Average", consumerFetch, metric.GAUGE)
+	}
+
+	// Consumer lag (if available at broker level)
+	if consumerLag := getFloatValue(brokerData, "consumer.totalLag", -1); consumerLag >= 0 {
+		entity.SetMetric("provider.consumerLag.Maximum", consumerLag, metric.GAUGE)
+	}
+}
+
+func (t *Transformer) aggregateBrokerMetrics(brokerID int32, brokerData map[string]interface{}) {
+	// Extract key metrics for aggregation
+	brokerMetrics := &BrokerMetrics{
+		BrokerID:                  brokerID,
+		BytesInPerSec:             getFloatValue(brokerData, "broker.bytesInPerSecond", 0),
+		BytesOutPerSec:            getFloatValue(brokerData, "broker.bytesOutPerSecond", 0),
+		MessagesInPerSec:          getFloatValue(brokerData, "broker.messagesInPerSecond", 0),
+		PartitionCount:            getIntValue(brokerData, "broker.partitionCount"),
+		UnderReplicatedPartitions: getIntValue(brokerData, "broker.underReplicatedPartitions"),
+		OfflinePartitions:         getIntValue(brokerData, "controller.offlinePartitionsCount"),
+		ActiveController:          getIntValue(brokerData, "controller.activeControllerCount") > 0,
+	}
+
+	// Add to aggregator
+	t.shim.aggregator.AddBrokerMetrics(brokerID, brokerMetrics)
+}
+
+// Helper function to encode base64
+func base64Encode(s string) string {
+	return strings.TrimRight(
+		strings.NewReplacer("+", "-", "/", "_").Replace(
+			base64StdEncoding.EncodeToString([]byte(s)),
+		), "=")
+}

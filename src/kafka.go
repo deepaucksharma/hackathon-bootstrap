@@ -81,23 +81,30 @@ func main() {
 
 	jmxConnProvider := connection.NewJMXProviderWithLimit(context.Background(), args.GlobalArgs.MaxJMXConnections)
 
-	if !args.GlobalArgs.ConsumerOffset {
-		coreCollection(kafkaIntegration, jmxConnProvider, mskHook)
-	} else {
-		brokers, err := getBrokerList(args.GlobalArgs)
-		ExitOnErr(err)
+	// Always run core collection for metrics
+	coreCollection(kafkaIntegration, jmxConnProvider, mskHook)
 
-		client, err := connection.NewSaramaClientFromBrokerList(brokers)
-		ExitOnErr(err)
-		if err := consumeroffset.Collect(client, kafkaIntegration); err != nil {
-			log.Error("Failed collecting consumer offset data: %s", err.Error())
-			os.Exit(1)
+	// Additionally collect consumer offset data if enabled
+	if args.GlobalArgs.ConsumerOffset {
+		log.Info("Consumer offset collection enabled, collecting consumer offset data")
+		brokers, err := getBrokerList(args.GlobalArgs)
+		if err != nil {
+			log.Error("Failed to get broker list for consumer offset collection: %s", err.Error())
+		} else {
+			client, err := connection.NewSaramaClientFromBrokerList(brokers)
+			if err != nil {
+				log.Error("Failed to create client for consumer offset collection: %s", err.Error())
+			} else {
+				if err := consumeroffset.Collect(client, kafkaIntegration); err != nil {
+					log.Error("Failed collecting consumer offset data: %s", err.Error())
+				}
+			}
 		}
 	}
 
 	// Finalize MSK hook before publishing
 	if mskHook != nil {
-		if err := mskHook.Finalize(); err != nil {
+		if err := mskHook.Flush(); err != nil {
 			log.Error("Failed to finalize MSK hook: %s", err)
 		}
 	}

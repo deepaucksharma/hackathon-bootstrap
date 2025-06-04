@@ -1,0 +1,187 @@
+apiVersion: v1
+kind: ConfigMap
+metadata:
+  name: nri-kafka-config-msk
+  namespace: newrelic
+data:
+  nri-kafka-config.yml: |
+    integrations:
+      - name: nri-kafka
+        env:
+          # Cluster identification
+          CLUSTER_NAME: minikube-kafka
+          
+          # Discovery settings
+          AUTODISCOVER_STRATEGY: bootstrap
+          BOOTSTRAP_BROKER_HOST: kafka-0.kafka-headless.kafka.svc.cluster.local
+          BOOTSTRAP_BROKER_KAFKA_PORT: 9092
+          BOOTSTRAP_BROKER_JMX_PORT: 9999
+          DEFAULT_JMX_PORT: 9999
+          
+          # Collection settings
+          METRICS: "true"
+          INVENTORY: "true"
+          EVENTS: "true"
+          COLLECT_BROKER_TOPIC_DATA: "true"
+          COLLECT_TOPIC_SIZE: "true"
+          COLLECT_TOPIC_OFFSET: "true"
+          TOPIC_MODE: "all"
+          CONSUMER_OFFSET: "false"
+          CONSUMER_GROUPS_REGEX: ".*"
+          
+          # MSK Shim Configuration - CRITICAL FOR MSK METRICS
+          MSK_SHIM_ENABLED: "true"
+          AWS_ACCOUNT_ID: "123456789012"
+          AWS_REGION: "us-east-1"
+          KAFKA_CLUSTER_NAME: "minikube-kafka"
+          ENVIRONMENT: "minikube"
+          
+          # Connection settings
+          TIMEOUT: "30000"
+          
+          # Logging
+          VERBOSE: "true"
+          LOG_LEVEL: "debug"
+          
+        interval: 30s
+        timeout: 30s
+        inventory_source: config/kafka
+        labels:
+          env: minikube
+          cluster: minikube-kafka
+          integration: nri-kafka
+          msk_enabled: "true"
+---
+apiVersion: apps/v1
+kind: DaemonSet
+metadata:
+  name: nri-bundle-kafka-msk
+  namespace: newrelic
+  labels:
+    app: nri-bundle-kafka-msk
+spec:
+  selector:
+    matchLabels:
+      app: nri-bundle-kafka-msk
+  updateStrategy:
+    type: RollingUpdate
+    rollingUpdate:
+      maxUnavailable: 1
+  template:
+    metadata:
+      labels:
+        app: nri-bundle-kafka-msk
+    spec:
+      serviceAccountName: nri-kafka
+      hostNetwork: true
+      dnsPolicy: ClusterFirstWithHostNet
+      containers:
+      - name: newrelic-infrastructure
+        image: nri-kafka-bundle-msk:latest
+        imagePullPolicy: Never
+        securityContext:
+          privileged: true
+        env:
+        # New Relic License Key
+        - name: NRIA_LICENSE_KEY
+          value: "dfb79449d23acce4df582f2f5550abe4FFFFNRAL"
+        
+        # Infrastructure agent configuration
+        - name: NRIA_VERBOSE
+          value: "1"
+        - name: NRIA_LOG_LEVEL
+          value: "debug"
+        - name: NRIA_OVERRIDE_HOSTNAME_SHORT
+          valueFrom:
+            fieldRef:
+              fieldPath: spec.nodeName
+        
+        # Custom attributes
+        - name: NRIA_CUSTOM_ATTRIBUTES
+          value: '{"clusterName":"minikube","environment":"development","mskEnabled":"true"}'
+        
+        # Pass through environment variables for MSK shim
+        - name: NRIA_PASSTHROUGH_ENVIRONMENT
+          value: "KUBERNETES_SERVICE_HOST,KUBERNETES_SERVICE_PORT,MSK_SHIM_ENABLED,AWS_ACCOUNT_ID,AWS_REGION,KAFKA_CLUSTER_NAME,ENVIRONMENT"
+        
+        # Disable unneeded features to reduce overhead
+        - name: DISABLE_KUBE_STATE_METRICS
+          value: "true"
+        - name: NRIA_DISABLE_CLOUD_METADATA
+          value: "true"
+        
+        # Kubernetes metadata
+        - name: NEW_RELIC_METADATA_KUBERNETES_CLUSTER_NAME
+          value: "minikube"
+        - name: NEW_RELIC_METADATA_KUBERNETES_NODE_NAME
+          valueFrom:
+            fieldRef:
+              fieldPath: spec.nodeName
+        - name: NEW_RELIC_METADATA_KUBERNETES_NAMESPACE_NAME
+          valueFrom:
+            fieldRef:
+              fieldPath: metadata.namespace
+        - name: NEW_RELIC_METADATA_KUBERNETES_POD_NAME
+          valueFrom:
+            fieldRef:
+              fieldPath: metadata.name
+        
+        # MSK Shim environment variables (for passthrough)
+        - name: MSK_SHIM_ENABLED
+          value: "true"
+        - name: AWS_ACCOUNT_ID
+          value: "123456789012"
+        - name: AWS_REGION
+          value: "us-east-1"
+        - name: KAFKA_CLUSTER_NAME
+          value: "minikube-kafka"
+        - name: ENVIRONMENT
+          value: "minikube"
+        
+        resources:
+          requests:
+            memory: "256Mi"
+            cpu: "100m"
+          limits:
+            memory: "512Mi"
+            cpu: "200m"
+        
+        volumeMounts:
+        - name: config
+          mountPath: /etc/newrelic-infra/integrations.d/
+          readOnly: true
+        - name: host-docker-socket
+          mountPath: /var/run/docker.sock
+        - name: log
+          mountPath: /var/log
+        - name: host-volume
+          mountPath: /host
+          readOnly: true
+        - name: agent-tmpfs
+          mountPath: /var/db/newrelic-infra/data
+        
+      volumes:
+      - name: config
+        configMap:
+          name: nri-kafka-config-msk
+          items:
+          - key: nri-kafka-config.yml
+            path: nri-kafka-config.yml
+      - name: host-docker-socket
+        hostPath:
+          path: /var/run/docker.sock
+      - name: log
+        hostPath:
+          path: /var/log
+      - name: host-volume
+        hostPath:
+          path: /
+      - name: agent-tmpfs
+        emptyDir: {}
+      
+      # Tolerations to run on all nodes
+      tolerations:
+      - operator: Exists
+        effect: NoSchedule
+      - operator: Exists
+        effect: NoExecute

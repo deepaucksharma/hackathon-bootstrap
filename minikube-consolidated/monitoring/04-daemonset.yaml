@@ -1,0 +1,137 @@
+apiVersion: apps/v1
+kind: DaemonSet
+metadata:
+  name: nri-kafka
+  namespace: newrelic
+  labels:
+    app: nri-kafka
+spec:
+  selector:
+    matchLabels:
+      app: nri-kafka
+  updateStrategy:
+    type: RollingUpdate
+    rollingUpdate:
+      maxUnavailable: 1
+  template:
+    metadata:
+      labels:
+        app: nri-kafka
+    spec:
+      serviceAccountName: nri-kafka
+      hostNetwork: true
+      dnsPolicy: ClusterFirstWithHostNet
+      containers:
+      - name: nri-kafka
+        image: newrelic/nri-kafka:latest
+        imagePullPolicy: Always
+        securityContext:
+          privileged: true
+        env:
+        # New Relic License Key
+        - name: NRIA_LICENSE_KEY
+          value: "dfb79449d23acce4df582f2f5550abe4FFFFNRAL" # Replace with your license key
+        
+        # Infrastructure agent configuration
+        - name: NRIA_OVERRIDE_HOSTNAME_SHORT
+          valueFrom:
+            fieldRef:
+              fieldPath: spec.nodeName
+        
+        # Custom attributes
+        - name: NRIA_CUSTOM_ATTRIBUTES
+          value: '{"clusterName":"minikube","environment":"development","deployment":"kafka-msk-monitoring"}'
+        
+        # Logging
+        - name: NRIA_LOG_LEVEL
+          value: "info"
+        - name: NRIA_VERBOSE
+          value: "1"
+        
+        # Pass through environment variables for MSK shim
+        - name: NRIA_PASSTHROUGH_ENVIRONMENT
+          value: "KUBERNETES_SERVICE_HOST,KUBERNETES_SERVICE_PORT,MSK_SHIM_ENABLED,AWS_ACCOUNT_ID,AWS_REGION,KAFKA_CLUSTER_NAME,ENVIRONMENT"
+        
+        # Disable Kubernetes integration to reduce overhead
+        - name: DISABLE_KUBE_STATE_METRICS
+          value: "true"
+        - name: NRIA_DISABLE_CLOUD_METADATA
+          value: "true"
+        
+        # MSK Shim defaults (can be overridden in configmap)
+        - name: MSK_SHIM_ENABLED
+          value: "true"
+        - name: AWS_ACCOUNT_ID
+          value: "123456789012"
+        - name: AWS_REGION
+          value: "us-east-1"
+        - name: ENVIRONMENT
+          value: "minikube"
+        
+        # Kubernetes metadata
+        - name: NEW_RELIC_METADATA_KUBERNETES_CLUSTER_NAME
+          value: "minikube"
+        - name: NEW_RELIC_METADATA_KUBERNETES_NODE_NAME
+          valueFrom:
+            fieldRef:
+              fieldPath: spec.nodeName
+        - name: NEW_RELIC_METADATA_KUBERNETES_NAMESPACE_NAME
+          valueFrom:
+            fieldRef:
+              fieldPath: metadata.namespace
+        - name: NEW_RELIC_METADATA_KUBERNETES_POD_NAME
+          valueFrom:
+            fieldRef:
+              fieldPath: metadata.name
+        - name: NEW_RELIC_METADATA_KUBERNETES_CONTAINER_NAME
+          value: "nri-kafka"
+        
+        resources:
+          requests:
+            memory: "256Mi"
+            cpu: "100m"
+          limits:
+            memory: "512Mi"
+            cpu: "200m"
+        
+        volumeMounts:
+        - name: config
+          mountPath: /etc/newrelic-infra/integrations.d/
+          readOnly: true
+        - name: host-root
+          mountPath: /host
+          readOnly: true
+        - name: host-var
+          mountPath: /var
+          readOnly: false
+        - name: agent-data
+          mountPath: /var/db/newrelic-infra
+        - name: host-sys
+          mountPath: /sys
+          readOnly: true
+        
+      volumes:
+      - name: config
+        configMap:
+          name: nri-kafka-config
+          items:
+          - key: kafka-config.yml
+            path: kafka-config.yml
+      - name: host-root
+        hostPath:
+          path: /
+      - name: host-var
+        hostPath:
+          path: /var
+      - name: host-sys
+        hostPath:
+          path: /sys
+      - name: agent-data
+        emptyDir: {}
+      
+      # Tolerations to run on all nodes
+      tolerations:
+      - operator: Exists
+        effect: NoSchedule
+      - operator: Exists
+        effect: NoExecute

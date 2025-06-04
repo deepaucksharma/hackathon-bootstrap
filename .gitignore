@@ -71,3 +71,14 @@ CHANGELOG.partial.md
 *.env
 config.local.yml
 config.local.yaml
+
+# Archive directories
+archive-*/
+docs/archive/
+
+# Old consolidated files (removed)
+backup-before-cleanup/
+k8s-deploy/
+k8s-validation/
+k8s-fixes/
+strimzi-kafka-setup/

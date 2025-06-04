@@ -1,22 +1,19 @@
 package msk
 
 import (
+	"encoding/base64"
 	"fmt"
-	"sync"
-
-	"github.com/newrelic/infra-integrations-sdk/v3/integration"
 )
 
-// EntityCache caches entities to avoid recreation
-type EntityCache struct {
-	mu       sync.RWMutex
-	entities map[string]*integration.Entity
-}
 
 // InfrastructureAPI defines the interface for accessing infrastructure data
 type InfrastructureAPI interface {
 	GetSystemSample(hostname string) (map[string]interface{}, error)
 }
+
+
+// Helper variables
+var base64StdEncoding = base64.StdEncoding
 
 // Helper functions for extracting values from maps
 func getStringValue(data map[string]interface{}, key string) (string, bool) {
@@ -33,6 +30,8 @@ func getIntValue(data map[string]interface{}, key string) (int, bool) {
 		switch v := val.(type) {
 		case int:
 			return v, true
+		case int32:
+			return int(v), true
 		case int64:
 			return int(v), true
 		case float64:
@@ -62,4 +61,19 @@ func getFloatValue(data map[string]interface{}, key string) (float64, bool) {
 		}
 	}
 	return 0, false
+}
+
+// Overloaded version with default value
+func getFloatValueWithDefault(data map[string]interface{}, key string, defaultValue float64) float64 {
+	if val, ok := getFloatValue(data, key); ok {
+		return val
+	}
+	return defaultValue
+}
+
+func getIntValueWithDefault(data map[string]interface{}, key string, defaultValue int) int {
+	if val, ok := getIntValue(data, key); ok {
+		return val
+	}
+	return defaultValue
 }

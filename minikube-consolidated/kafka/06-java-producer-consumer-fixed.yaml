@@ -1,0 +1,123 @@
+apiVersion: apps/v1
+kind: Deployment
+metadata:
+  name: java-kafka-producer
+  namespace: kafka
+spec:
+  replicas: 1
+  selector:
+    matchLabels:
+      app: java-kafka-producer
+  template:
+    metadata:
+      labels:
+        app: java-kafka-producer
+    spec:
+      containers:
+      - name: producer
+        image: confluentinc/cp-kafka:7.7.2
+        ports:
+        - containerPort: 9995
+          name: jmx
+        env:
+        - name: KAFKA_JMX_OPTS
+          value: "-Dcom.sun.management.jmxremote -Dcom.sun.management.jmxremote.authenticate=false -Dcom.sun.management.jmxremote.ssl=false -Dcom.sun.management.jmxremote.local.only=false -Dcom.sun.management.jmxremote.port=9995 -Dcom.sun.management.jmxremote.rmi.port=9995 -Djava.rmi.server.hostname=0.0.0.0"
+        - name: JMX_PORT
+          value: "9995"
+        command:
+        - /bin/bash
+        - -c
+        - |
+          echo "Starting Java Kafka Producer with JMX on port 9995"
+          
+          # Wait for Kafka to be ready
+          sleep 30
+          
+          while true; do
+            echo "Producing messages to events topic..."
+            kafka-producer-perf-test \
+              --topic events \
+              --num-records 100 \
+              --record-size 100 \
+              --throughput 5 \
+              --producer-props \
+                bootstrap.servers=kafka-0.kafka-headless.kafka.svc.cluster.local:9092 \
+                client.id=java-producer-events \
+                acks=all
+            
+            echo "Producing messages to metrics topic..."
+            kafka-producer-perf-test \
+              --topic metrics \
+              --num-records 100 \
+              --record-size 100 \
+              --throughput 5 \
+              --producer-props \
+                bootstrap.servers=kafka-0.kafka-headless.kafka.svc.cluster.local:9092 \
+                client.id=java-producer-metrics \
+                acks=all
+            
+            echo "Batch complete, sleeping 60s..."
+            sleep 60
+          done
+        resources:
+          requests:
+            memory: "256Mi"
+            cpu: "100m"
+          limits:
+            memory: "512Mi"
+            cpu: "200m"
+---
+apiVersion: apps/v1
+kind: Deployment
+metadata:
+  name: java-kafka-consumer
+  namespace: kafka
+spec:
+  replicas: 1
+  selector:
+    matchLabels:
+      app: java-kafka-consumer
+  template:
+    metadata:
+      labels:
+        app: java-kafka-consumer
+    spec:
+      containers:
+      - name: consumer
+        image: confluentinc/cp-kafka:7.7.2
+        ports:
+        - containerPort: 9996
+          name: jmx
+        env:
+        - name: KAFKA_JMX_OPTS
+          value: "-Dcom.sun.management.jmxremote -Dcom.sun.management.jmxremote.authenticate=false -Dcom.sun.management.jmxremote.ssl=false -Dcom.sun.management.jmxremote.local.only=false -Dcom.sun.management.jmxremote.port=9996 -Dcom.sun.management.jmxremote.rmi.port=9996 -Djava.rmi.server.hostname=0.0.0.0"
+        - name: JMX_PORT
+          value: "9996"
+        command:
+        - /bin/bash
+        - -c
+        - |
+          echo "Starting Java Kafka Consumer with JMX on port 9996"
+          
+          # Wait for Kafka and producer to be ready
+          sleep 60
+          
+          echo "Starting consumer for events topic..."
+          kafka-consumer-perf-test \
+            --topic events \
+            --bootstrap-server kafka-0.kafka-headless.kafka.svc.cluster.local:9092 \
+            --messages 100000 \
+            --consumer-props \
+              group.id=java-consumer-group \
+              client.id=java-consumer-events \
+              auto.offset.reset=earliest &
+          
+          # Keep container running
+          tail -f /dev/null
+        resources:
+          requests:
+            memory: "256Mi"
+            cpu: "100m"
+          limits:
+            memory: "512Mi"
+            cpu: "200m"
