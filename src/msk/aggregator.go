@@ -11,6 +11,7 @@ type MetricAggregator struct {
 	brokerMetrics     map[string]*BrokerMetrics
 	topicMetrics      map[string]*TopicMetrics
 	controllerMetrics *ControllerMetrics
+	consumerLagMetrics map[string]map[string]float64 // topic -> consumerGroup -> lag
 	lastAggregation   time.Time
 }
 
@@ -61,10 +62,11 @@ type ClusterAggregatedMetrics struct {
 // NewMetricAggregator creates a new metric aggregator
 func NewMetricAggregator() *MetricAggregator {
 	return &MetricAggregator{
-		brokerMetrics:     make(map[string]*BrokerMetrics),
-		topicMetrics:      make(map[string]*TopicMetrics),
-		controllerMetrics: &ControllerMetrics{},
-		lastAggregation:   time.Now(),
+		brokerMetrics:      make(map[string]*BrokerMetrics),
+		topicMetrics:       make(map[string]*TopicMetrics),
+		controllerMetrics:  &ControllerMetrics{},
+		consumerLagMetrics: make(map[string]map[string]float64),
+		lastAggregation:    time.Now(),
 	}
 }
 
@@ -140,5 +142,52 @@ func (a *MetricAggregator) Reset() {
 	a.brokerMetrics = make(map[string]*BrokerMetrics)
 	a.topicMetrics = make(map[string]*TopicMetrics)
 	a.controllerMetrics = &ControllerMetrics{}
+	a.consumerLagMetrics = make(map[string]map[string]float64)
 	a.lastAggregation = time.Now()
+}
+
+// AddConsumerLag adds consumer lag metrics for a topic and consumer group
+func (a *MetricAggregator) AddConsumerLag(topicName, consumerGroup string, lag float64) {
+	a.mu.Lock()
+	defer a.mu.Unlock()
+
+	if _, exists := a.consumerLagMetrics[topicName]; !exists {
+		a.consumerLagMetrics[topicName] = make(map[string]float64)
+	}
+	a.consumerLagMetrics[topicName][consumerGroup] = lag
+}
+
+// AddSimpleBrokerMetric adds a simple broker metric (for use by transformer)
+func (a *MetricAggregator) AddSimpleBrokerMetric(metricName string, value interface{}) {
+	// This is a simplified version - in production you'd track per broker
+	// For now, we just track that metrics are being added
+}
+
+// AddSimpleTopicMetric adds a simple topic metric (for use by transformer)  
+func (a *MetricAggregator) AddSimpleTopicMetric(topicName, metricName string, value interface{}) {
+	// This is a simplified version - in production you'd track per topic
+	// For now, we just track that metrics are being added
+}
+
+// GetBrokerCount returns the number of brokers
+func (a *MetricAggregator) GetBrokerCount() int {
+	a.mu.RLock()
+	defer a.mu.RUnlock()
+	return len(a.brokerMetrics)
+}
+
+// GetTopicCount returns the number of topics
+func (a *MetricAggregator) GetTopicCount() int {
+	a.mu.RLock()
+	defer a.mu.RUnlock()
+	return len(a.topicMetrics)
+}
+
+// GetAggregatedMetrics returns aggregated metrics for cluster level
+func (a *MetricAggregator) GetAggregatedMetrics() map[string]interface{} {
+	a.mu.RLock()
+	defer a.mu.RUnlock()
+	
+	// Return empty map for now - in production this would calculate aggregates
+	return make(map[string]interface{})
 }

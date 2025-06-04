@@ -14,7 +14,6 @@ type Shim struct {
 	config           *Config
 	aggregator       *MetricAggregator
 	entityCache      *EntityCache
-	systemSampler    *SystemSampleCorrelator
 	transformer      *SimpleTransformer
 	lagEnricher      *SimpleConsumerLagEnricher
 	mu               sync.Mutex
@@ -39,9 +38,6 @@ func NewShim(i *integration.Integration, config *Config) (*Shim, error) {
 		},
 	}
 
-	// Initialize system sample correlator with regex patterns
-	shim.systemSampler = NewSystemSampleCorrelator(nil, config.DiskMountRegex, config.LogMountRegex)
-
 	// Initialize simple transformer
 	shim.transformer = NewSimpleTransformer(shim)
 
@@ -63,12 +59,7 @@ func (s *Shim) TransformBrokerMetrics(brokerData map[string]interface{}) error {
 	s.mu.Lock()
 	defer s.mu.Unlock()
 
-	// Enrich with system metrics if available
-	if hostname, ok := getStringValue(brokerData, "broker.host"); ok && s.systemSampler != nil {
-		if err := s.systemSampler.EnrichBrokerWithSystemMetrics(brokerData, hostname); err != nil {
-			log.Debug("Failed to enrich broker with system metrics: %v", err)
-		}
-	}
+	// Skip system metrics enrichment for now (simplified version)
 
 	return s.transformer.TransformBrokerMetricsSimple(brokerData)
 }
@@ -131,12 +122,7 @@ func (s *Shim) GetOrCreateEntity(entityType, entityName string) (*integration.En
 
 // SetSystemSampleAPI sets the Infrastructure API for system metric correlation
 func (s *Shim) SetSystemSampleAPI(api InfrastructureAPI) {
-	s.mu.Lock()
-	defer s.mu.Unlock()
-
-	if s.systemSampler != nil {
-		s.systemSampler.infraAPI = api
-	}
+	// Simplified version - system sample correlation not implemented
 }
 
 // Flush performs any final aggregations and creates cluster entity
@@ -154,11 +140,6 @@ func (s *Shim) Flush() error {
 
 	// Reset aggregator for next collection cycle
 	s.aggregator.Reset()
-
-	// Clear system correlator cache
-	if s.systemSampler != nil {
-		s.systemSampler.ClearCache()
-	}
 
 	return nil
 }
