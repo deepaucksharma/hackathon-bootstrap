@@ -1,7 +1,11 @@
 FROM newrelic/infrastructure-bundle:latest
 
-# Copy our custom nri-kafka binary
-COPY --from=newrelic/nri-kafka:msk-enabled-v4 /var/db/newrelic-infra/newrelic-integrations/bin/nri-kafka /var/db/newrelic-infra/newrelic-integrations/bin/nri-kafka
+# First, backup the original nri-kafka
+RUN mv /var/db/newrelic-infra/newrelic-integrations/bin/nri-kafka /var/db/newrelic-infra/newrelic-integrations/bin/nri-kafka.original
 
-# Set permissions
-RUN chmod 755 /var/db/newrelic-infra/newrelic-integrations/bin/nri-kafka
+# Copy our custom nri-kafka binary
+COPY --chmod=755 nri-kafka /var/db/newrelic-infra/newrelic-integrations/bin/nri-kafka
+
+# Verify the binary
+RUN ls -la /var/db/newrelic-infra/newrelic-integrations/bin/nri-kafka && \
+    echo "Binary copied successfully"
