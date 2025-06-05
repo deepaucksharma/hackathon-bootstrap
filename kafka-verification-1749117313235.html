@@ -1,0 +1,617 @@
+
+<!DOCTYPE html>
+<html>
+<head>
+    <title>Kafka Metrics Verification Report</title>
+    <style>
+        body { font-family: Arial, sans-serif; margin: 20px; background: #f5f5f5; }
+        .container { max-width: 1200px; margin: 0 auto; background: white; padding: 20px; border-radius: 8px; box-shadow: 0 2px 4px rgba(0,0,0,0.1); }
+        h1, h2, h3 { color: #333; }
+        .summary { display: grid; grid-template-columns: repeat(auto-fit, minmax(200px, 1fr)); gap: 20px; margin: 20px 0; }
+        .metric-card { background: #f8f9fa; padding: 15px; border-radius: 4px; text-align: center; }
+        .metric-value { font-size: 2em; font-weight: bold; color: #0066cc; }
+        .score { padding: 10px; margin: 5px 0; border-radius: 4px; }
+        .score-good { background: #d4edda; color: #155724; }
+        .score-warning { background: #fff3cd; color: #856404; }
+        .score-bad { background: #f8d7da; color: #721c24; }
+        .category { margin: 20px 0; padding: 15px; background: #f8f9fa; border-radius: 4px; }
+        .query-result { margin: 10px 0; padding: 10px; background: white; border-left: 3px solid #0066cc; }
+        .failed { border-left-color: #dc3545; }
+        .no-data { border-left-color: #ffc107; }
+        .recommendation { margin: 10px 0; padding: 10px; border-radius: 4px; }
+        .rec-critical { background: #f8d7da; color: #721c24; }
+        .rec-warning { background: #fff3cd; color: #856404; }
+        table { width: 100%; border-collapse: collapse; margin: 20px 0; }
+        th, td { padding: 10px; text-align: left; border-bottom: 1px solid #ddd; }
+        th { background: #f8f9fa; font-weight: bold; }
+    </style>
+</head>
+<body>
+    <div class="container">
+        <h1>Kafka Metrics Verification Report</h1>
+        <p><strong>Generated:</strong> 2025-06-05T09:55:13.215Z</p>
+        <p><strong>Account ID:</strong> 3630072</p>
+        <p><strong>Time Range:</strong> 1 hour ago</p>
+        
+        
+        <h2>Summary</h2>
+        <div class="summary">
+            <div class="metric-card">
+                <div class="metric-value">55</div>
+                <div>Total Queries</div>
+            </div>
+            <div class="metric-card">
+                <div class="metric-value">53</div>
+                <div>With Data</div>
+            </div>
+            <div class="metric-card">
+                <div class="metric-value">0</div>
+                <div>Failed</div>
+            </div>
+            <div class="metric-card">
+                <div class="metric-value">98.9%</div>
+                <div>Overall Score</div>
+            </div>
+        </div>
+
+        <h2>Health Scores</h2>
+        
+            <div class="score score-good">
+                <strong>data Availability:</strong> 100.0%
+            </div>
+        
+            <div class="score score-good">
+                <strong>metric Completeness:</strong> 96.4%
+            </div>
+        
+            <div class="score score-good">
+                <strong>data Freshness:</strong> 100.0%
+            </div>
+        
+            <div class="score score-good">
+                <strong>entity Relationships:</strong> 100.0%
+            </div>
+        
+
+        
+
+        <h2>Category Details</h2>
+        
+            <div class="category">
+                <h3>MSK Polling Data (9/9)</h3>
+                <table>
+                    <tr>
+                        <th>Query</th>
+                        <th>Status</th>
+                        <th>Result Count</th>
+                    </tr>
+                    
+                        <tr class="">
+                            <td>Cluster Sample Data Exists</td>
+                            <td>✅</td>
+                            <td>191</td>
+                        </tr>
+                    
+                        <tr class="">
+                            <td>All Cluster Metrics Present</td>
+                            <td>✅</td>
+                            <td>1</td>
+                        </tr>
+                    
+                        <tr class="">
+                            <td>Broker Sample Data Exists</td>
+                            <td>✅</td>
+                            <td>97</td>
+                        </tr>
+                    
+                        <tr class="">
+                            <td>All Broker Metrics Present</td>
+                            <td>✅</td>
+                            <td>1</td>
+                        </tr>
+                    
+                        <tr class="">
+                            <td>Topic Sample Data Exists</td>
+                            <td>✅</td>
+                            <td>774</td>
+                        </tr>
+                    
+                        <tr class="">
+                            <td>Topic Metrics Present</td>
+                            <td>✅</td>
+                            <td>1</td>
+                        </tr>
+                    
+                        <tr class="">
+                            <td>Cluster Attributes Present</td>
+                            <td>✅</td>
+                            <td>1</td>
+                        </tr>
+                    
+                        <tr class="">
+                            <td>Broker Attributes Present</td>
+                            <td>✅</td>
+                            <td>1</td>
+                        </tr>
+                    
+                        <tr class="">
+                            <td>Topic Attributes Present</td>
+                            <td>✅</td>
+                            <td>1</td>
+                        </tr>
+                    
+                </table>
+            </div>
+        
+            <div class="category">
+                <h3>Metric Streams Data (5/5)</h3>
+                <table>
+                    <tr>
+                        <th>Query</th>
+                        <th>Status</th>
+                        <th>Result Count</th>
+                    </tr>
+                    
+                        <tr class="">
+                            <td>Metric Events Exist</td>
+                            <td>✅</td>
+                            <td>4523</td>
+                        </tr>
+                    
+                        <tr class="">
+                            <td>Cluster-Level Metrics</td>
+                            <td>✅</td>
+                            <td>1</td>
+                        </tr>
+                    
+                        <tr class="">
+                            <td>Broker-Level Metrics</td>
+                            <td>✅</td>
+                            <td>1</td>
+                        </tr>
+                    
+                        <tr class="">
+                            <td>Topic-Level Metrics</td>
+                            <td>✅</td>
+                            <td>1</td>
+                        </tr>
+                    
+                        <tr class="">
+                            <td>Metric Streams Attributes</td>
+                            <td>✅</td>
+                            <td>1</td>
+                        </tr>
+                    
+                </table>
+            </div>
+        
+            <div class="category">
+                <h3>Standard Kafka Integration (3/5)</h3>
+                <table>
+                    <tr>
+                        <th>Query</th>
+                        <th>Status</th>
+                        <th>Result Count</th>
+                    </tr>
+                    
+                        <tr class="">
+                            <td>Broker Sample Data</td>
+                            <td>✅</td>
+                            <td>582</td>
+                        </tr>
+                    
+                        <tr class="">
+                            <td>Topic Sample Data</td>
+                            <td>✅</td>
+                            <td>774</td>
+                        </tr>
+                    
+                        <tr class="">
+                            <td>Offset Sample Data</td>
+                            <td>✅</td>
+                            <td>1470</td>
+                        </tr>
+                    
+                        <tr class="no-data">
+                            <td>Producer Sample Data</td>
+                            <td>⚪</td>
+                            <td>-</td>
+                        </tr>
+                    
+                        <tr class="no-data">
+                            <td>Consumer Sample Data</td>
+                            <td>⚪</td>
+                            <td>-</td>
+                        </tr>
+                    
+                </table>
+            </div>
+        
+            <div class="category">
+                <h3>Data Quality (5/5)</h3>
+                <table>
+                    <tr>
+                        <th>Query</th>
+                        <th>Status</th>
+                        <th>Result Count</th>
+                    </tr>
+                    
+                        <tr class="">
+                            <td>Check for Null Values</td>
+                            <td>✅</td>
+                            <td>1</td>
+                        </tr>
+                    
+                        <tr class="">
+                            <td>Data Freshness (Polling)</td>
+                            <td>✅</td>
+                            <td>1</td>
+                        </tr>
+                    
+                        <tr class="">
+                            <td>Data Freshness (Metric Streams)</td>
+                            <td>✅</td>
+                            <td>2</td>
+                        </tr>
+                    
+                        <tr class="">
+                            <td>Tag Completeness</td>
+                            <td>✅</td>
+                            <td>2</td>
+                        </tr>
+                    
+                        <tr class="">
+                            <td>Data Consistency Check</td>
+                            <td>✅</td>
+                            <td>2</td>
+                        </tr>
+                    
+                </table>
+            </div>
+        
+            <div class="category">
+                <h3>Throughput Calculations (4/4)</h3>
+                <table>
+                    <tr>
+                        <th>Query</th>
+                        <th>Status</th>
+                        <th>Result Count</th>
+                    </tr>
+                    
+                        <tr class="">
+                            <td>Cluster Throughput Summary</td>
+                            <td>✅</td>
+                            <td>1</td>
+                        </tr>
+                    
+                        <tr class="">
+                            <td>Throughput Aggregation</td>
+                            <td>✅</td>
+                            <td>1</td>
+                        </tr>
+                    
+                        <tr class="">
+                            <td>Topic Throughput</td>
+                            <td>✅</td>
+                            <td>4</td>
+                        </tr>
+                    
+                        <tr class="">
+                            <td>Message Rates</td>
+                            <td>✅</td>
+                            <td>1174.5038441440497</td>
+                        </tr>
+                    
+                </table>
+            </div>
+        
+            <div class="category">
+                <h3>Entity Relationships (3/3)</h3>
+                <table>
+                    <tr>
+                        <th>Query</th>
+                        <th>Status</th>
+                        <th>Result Count</th>
+                    </tr>
+                    
+                        <tr class="">
+                            <td>Brokers per Cluster</td>
+                            <td>✅</td>
+                            <td>1</td>
+                        </tr>
+                    
+                        <tr class="">
+                            <td>Topics per Cluster</td>
+                            <td>✅</td>
+                            <td>1</td>
+                        </tr>
+                    
+                        <tr class="">
+                            <td>Entity GUIDs Present</td>
+                            <td>✅</td>
+                            <td>1</td>
+                        </tr>
+                    
+                </table>
+            </div>
+        
+            <div class="category">
+                <h3>Health Metrics (3/3)</h3>
+                <table>
+                    <tr>
+                        <th>Query</th>
+                        <th>Status</th>
+                        <th>Result Count</th>
+                    </tr>
+                    
+                        <tr class="">
+                            <td>Cluster Health Status</td>
+                            <td>✅</td>
+                            <td>2</td>
+                        </tr>
+                    
+                        <tr class="">
+                            <td>Broker Health Status</td>
+                            <td>✅</td>
+                            <td>1</td>
+                        </tr>
+                    
+                        <tr class="">
+                            <td>Unhealthy Cluster Count</td>
+                            <td>✅</td>
+                            <td>1</td>
+                        </tr>
+                    
+                </table>
+            </div>
+        
+            <div class="category">
+                <h3>Time Series Data (3/3)</h3>
+                <table>
+                    <tr>
+                        <th>Query</th>
+                        <th>Status</th>
+                        <th>Result Count</th>
+                    </tr>
+                    
+                        <tr class="">
+                            <td>Throughput Time Series</td>
+                            <td>✅</td>
+                            <td>12</td>
+                        </tr>
+                    
+                        <tr class="">
+                            <td>Message Rate Time Series</td>
+                            <td>✅</td>
+                            <td>12</td>
+                        </tr>
+                    
+                        <tr class="">
+                            <td>Partition Count Trend</td>
+                            <td>✅</td>
+                            <td>6</td>
+                        </tr>
+                    
+                </table>
+            </div>
+        
+            <div class="category">
+                <h3>Account Aggregation (2/2)</h3>
+                <table>
+                    <tr>
+                        <th>Query</th>
+                        <th>Status</th>
+                        <th>Result Count</th>
+                    </tr>
+                    
+                        <tr class="">
+                            <td>Account Summary</td>
+                            <td>✅</td>
+                            <td>1</td>
+                        </tr>
+                    
+                        <tr class="">
+                            <td>Account Health Summary</td>
+                            <td>✅</td>
+                            <td>1</td>
+                        </tr>
+                    
+                </table>
+            </div>
+        
+            <div class="category">
+                <h3>Performance Metrics (2/2)</h3>
+                <table>
+                    <tr>
+                        <th>Query</th>
+                        <th>Status</th>
+                        <th>Result Count</th>
+                    </tr>
+                    
+                        <tr class="">
+                            <td>Data Volume Check</td>
+                            <td>✅</td>
+                            <td>1</td>
+                        </tr>
+                    
+                        <tr class="">
+                            <td>Large Dataset Check</td>
+                            <td>✅</td>
+                            <td>1</td>
+                        </tr>
+                    
+                </table>
+            </div>
+        
+            <div class="category">
+                <h3>Edge Cases (3/3)</h3>
+                <table>
+                    <tr>
+                        <th>Query</th>
+                        <th>Status</th>
+                        <th>Result Count</th>
+                    </tr>
+                    
+                        <tr class="">
+                            <td>Idle Topics</td>
+                            <td>✅</td>
+                            <td>1</td>
+                        </tr>
+                    
+                        <tr class="">
+                            <td>Stale Data Detection</td>
+                            <td>✅</td>
+                            <td>2</td>
+                        </tr>
+                    
+                        <tr class="">
+                            <td>Partial Data Check</td>
+                            <td>✅</td>
+                            <td>1</td>
+                        </tr>
+                    
+                </table>
+            </div>
+        
+            <div class="category">
+                <h3>Top N Analysis (2/2)</h3>
+                <table>
+                    <tr>
+                        <th>Query</th>
+                        <th>Status</th>
+                        <th>Result Count</th>
+                    </tr>
+                    
+                        <tr class="">
+                            <td>Top 10 Topics by Throughput</td>
+                            <td>✅</td>
+                            <td>4</td>
+                        </tr>
+                    
+                        <tr class="">
+                            <td>Top 5 Clusters by Size</td>
+                            <td>✅</td>
+                            <td>1</td>
+                        </tr>
+                    
+                </table>
+            </div>
+        
+            <div class="category">
+                <h3>Confluent Cloud Compatibility (2/2)</h3>
+                <table>
+                    <tr>
+                        <th>Query</th>
+                        <th>Status</th>
+                        <th>Result Count</th>
+                    </tr>
+                    
+                        <tr class="">
+                            <td>Common Throughput Pattern</td>
+                            <td>✅</td>
+                            <td>1</td>
+                        </tr>
+                    
+                        <tr class="">
+                            <td>Common Message Pattern</td>
+                            <td>✅</td>
+                            <td>1</td>
+                        </tr>
+                    
+                </table>
+            </div>
+        
+            <div class="category">
+                <h3>Filter Validation (2/2)</h3>
+                <table>
+                    <tr>
+                        <th>Query</th>
+                        <th>Status</th>
+                        <th>Result Count</th>
+                    </tr>
+                    
+                        <tr class="">
+                            <td>Available Clusters</td>
+                            <td>✅</td>
+                            <td>191</td>
+                        </tr>
+                    
+                        <tr class="">
+                            <td>Available Topics</td>
+                            <td>✅</td>
+                            <td>774</td>
+                        </tr>
+                    
+                </table>
+            </div>
+        
+            <div class="category">
+                <h3>Metric Calculations (2/2)</h3>
+                <table>
+                    <tr>
+                        <th>Query</th>
+                        <th>Status</th>
+                        <th>Result Count</th>
+                    </tr>
+                    
+                        <tr class="">
+                            <td>Throughput Range</td>
+                            <td>✅</td>
+                            <td>1</td>
+                        </tr>
+                    
+                        <tr class="">
+                            <td>Percentage Calculations</td>
+                            <td>✅</td>
+                            <td>1</td>
+                        </tr>
+                    
+                </table>
+            </div>
+        
+            <div class="category">
+                <h3>Summary Verification (1/1)</h3>
+                <table>
+                    <tr>
+                        <th>Query</th>
+                        <th>Status</th>
+                        <th>Result Count</th>
+                    </tr>
+                    
+                        <tr class="">
+                            <td>Complete Data Check</td>
+                            <td>✅</td>
+                            <td>1</td>
+                        </tr>
+                    
+                </table>
+            </div>
+        
+            <div class="category">
+                <h3>Standard vs MSK Comparison (2/2)</h3>
+                <table>
+                    <tr>
+                        <th>Query</th>
+                        <th>Status</th>
+                        <th>Result Count</th>
+                    </tr>
+                    
+                        <tr class="">
+                            <td>Entity Count Comparison</td>
+                            <td>✅</td>
+                            <td>1</td>
+                        </tr>
+                    
+                        <tr class="">
+                            <td>Metric Coverage Comparison</td>
+                            <td>✅</td>
+                            <td>1</td>
+                        </tr>
+                    
+                </table>
+            </div>
+        
+    </div>
+</body>
+</html>
+    

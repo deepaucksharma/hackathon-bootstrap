@@ -32,9 +32,15 @@ data:
           
           # MSK Shim Configuration
           MSK_SHIM_ENABLED: "true"
-          AWS_ACCOUNT_ID: "3630072"
+          AWS_ACCOUNT_ID: "123456789012"  # Use real AWS account ID format
           AWS_REGION: "us-east-1"
           KAFKA_CLUSTER_NAME: "minikube-kafka"
+          MSK_USE_DIMENSIONAL: "true"  # Enable dimensional metrics
+          NEW_RELIC_API_KEY:
+            valueFrom:
+              secretKeyRef:
+                name: newrelic-credentials
+                key: license-key
         interval: 30s
         timeout: 30s
         inventory_source: config/kafka
@@ -60,7 +66,7 @@ spec:
       dnsPolicy: ClusterFirstWithHostNet
       containers:
       - name: nri-kafka
-        image: nri-kafka-msk-bundle:v1.2
+        image: custom-nri-kafka:latest
         imagePullPolicy: Never
         securityContext:
           privileged: true

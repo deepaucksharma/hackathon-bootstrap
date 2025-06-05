@@ -1,0 +1,110 @@
+{
+  "provider": "awsMsk",
+  "awsAccountId": "123456789012",
+  "nrAccountId": "3630072",
+  "startTime": "2025-06-05T09:54:49.226Z",
+  "suites": {
+    "CRITICAL_FOUNDATION": {
+      "name": "🔨 Critical Foundation Tests",
+      "critical": true,
+      "tests": [
+        {
+          "id": "1.1",
+          "name": "Entity Type Existence",
+          "query": "\n                    SELECT count(*) as 'count'\n                    FROM AwsMskClusterSample\n                    WHERE awsAccountId = '123456789012'\n                    SINCE 1 hour ago\n                ",
+          "passed": false,
+          "message": "No Kafka entities found in the system",
+          "duration": 475,
+          "result": [
+            {
+              "count": 3
+            }
+          ]
+        },
+        {
+          "id": "1.2",
+          "name": "UI Visibility Fields",
+          "query": "\n                    SELECT \n                      count(*) as 'samples',\n                      filter(count(*), WHERE provider IS NOT NULL) * 100.0 / count(*) as 'providerField',\n                      filter(count(*), WHERE awsAccountId IS NOT NULL) * 100.0 / count(*) as 'awsAccountId',\n                      filter(count(*), WHERE awsRegion IS NOT NULL) * 100.0 / count(*) as 'awsRegion',\n                      filter(count(*), WHERE `instrumentation.provider` IS NOT NULL) * 100.0 / count(*) as 'instrumentationProvider',\n                      filter(count(*), WHERE entityName IS NOT NULL) * 100.0 / count(*) as 'entityName',\n                      filter(count(*), WHERE entity.guid IS NOT NULL) * 100.0 / count(*) as 'entityGuid'\n                    FROM AwsMskClusterSample\n                    WHERE awsAccountId = '123456789012'\n                    SINCE 1 hour ago\n                ",
+          "passed": true,
+          "message": "✅ All UI visibility fields present",
+          "duration": 446,
+          "result": [
+            {
+              "awsAccountId": 100,
+              "awsRegion": 100,
+              "entityGuid": 0,
+              "entityName": 100,
+              "instrumentationProvider": 100,
+              "providerField": 100,
+              "samples": 3
+            }
+          ]
+        },
+        {
+          "id": "1.3",
+          "name": "Dimensional Metrics",
+          "query": "\n                    FROM Metric \n                    SELECT \n                      count(*) as 'total',\n                      uniqueCount(metricName) as 'uniqueMetrics',\n                      uniqueCount(entity.type) as 'entityTypes'\n                    WHERE metricName LIKE 'kafka.%' \n                      AND entity.type IN ('AWS_KAFKA_CLUSTER', 'AWS_KAFKA_BROKER', 'AWS_KAFKA_TOPIC', 'CONFLUENT_CLOUD_KAFKA_CLUSTER', 'CONFLUENT_CLOUD_KAFKA_TOPIC')\n                    SINCE 5 minutes ago\n                ",
+          "passed": false,
+          "message": "❌ No dimensional metrics found - queries won't work!",
+          "duration": 459,
+          "result": [
+            {
+              "entityTypes": 0,
+              "total": 0,
+              "uniqueMetrics": 0
+            }
+          ]
+        },
+        {
+          "id": "1.4",
+          "name": "Data Freshness",
+          "query": "\n                    SELECT \n                      max(timestamp) as 'latest',\n                      max(timestamp) as 'latest'\n                    FROM AwsMskClusterSample\n                    WHERE awsAccountId = '123456789012'\n                    SINCE 1 hour ago\n                ",
+          "passed": false,
+          "message": "No recent data found",
+          "duration": 484,
+          "result": [
+            {
+              "latest": 1749117180000
+            }
+          ]
+        }
+      ]
+    },
+    "HOME_PAGE": {
+      "name": "🏠 Home Page Verification",
+      "critical": false,
+      "tests": []
+    },
+    "SUMMARY_PAGE": {
+      "name": "📊 Summary Page Verification",
+      "critical": false,
+      "tests": []
+    },
+    "ENTITY_HEALTH": {
+      "name": "🏥 Entity Health Verification",
+      "critical": false,
+      "tests": []
+    },
+    "DATA_QUALITY": {
+      "name": "🔍 Data Quality Verification",
+      "critical": false,
+      "tests": []
+    },
+    "PERFORMANCE": {
+      "name": "⚡ Performance Verification",
+      "critical": false,
+      "tests": []
+    }
+  },
+  "summary": {
+    "total": 4,
+    "passed": 1,
+    "failed": 3,
+    "critical": {
+      "total": 4,
+      "passed": 1
+    }
+  },
+  "endTime": "2025-06-05T09:54:53.023Z",
+  "duration": 3797
+}

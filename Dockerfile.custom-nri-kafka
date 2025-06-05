@@ -1,0 +1,10 @@
+# Use the latest infrastructure bundle as base
+FROM newrelic/infrastructure-bundle:3.2.52
+
+# Copy our custom nri-kafka binary (Linux version)
+COPY nri-kafka-linux /var/db/newrelic-infra/newrelic-integrations/bin/nri-kafka
+
+# Make it executable
+RUN chmod +x /var/db/newrelic-infra/newrelic-integrations/bin/nri-kafka
+
+# The infrastructure bundle already has the correct entrypoint

@@ -1,0 +1,96 @@
+{
+  "provider": "awsMsk",
+  "awsAccountId": "3630072",
+  "nrAccountId": "3630072",
+  "startTime": "2025-06-05T09:06:47.700Z",
+  "suites": {
+    "CRITICAL_FOUNDATION": {
+      "name": "🔨 Critical Foundation Tests",
+      "critical": true,
+      "tests": [
+        {
+          "id": "1.1",
+          "name": "Entity Type Existence",
+          "query": "\n                    FROM NrdbQuery \n                    SELECT uniqueCount(entity.guid) as 'count'\n                    WHERE query = 'SELECT * FROM AWSMSKCLUSTER, AWSMSKBROKER, AWSMSKTOPIC WHERE nr.accountId = 3630072'\n                ",
+          "passed": false,
+          "message": "No Kafka entities found in the system",
+          "duration": 508,
+          "result": [
+            {
+              "count": 0
+            }
+          ]
+        },
+        {
+          "id": "1.2",
+          "name": "UI Visibility Fields",
+          "query": "\n                    SELECT \n                      count(*) as 'samples',\n                      percentage(count(provider), count(*)) as 'providerField',\n                      percentage(count(awsAccountId), count(*)) as 'awsAccountId',\n                      percentage(count(awsRegion), count(*)) as 'awsRegion',\n                      percentage(count(`instrumentation.provider`), count(*)) as 'instrumentationProvider',\n                      percentage(count(entityName), count(*)) as 'entityName',\n                      percentage(count(entity.guid), count(*)) as 'entityGuid'\n                    FROM AwsMskClusterSample\n                    WHERE nr.accountId = 3630072\n                      AND awsAccountId = '3630072'\n                    SINCE 1 hour ago\n                ",
+          "passed": false,
+          "message": "Query failed: Unknown filter: count",
+          "error": "Unknown filter: count",
+          "duration": 409
+        },
+        {
+          "id": "1.3",
+          "name": "Dimensional Metrics",
+          "query": "\n                    FROM Metric \n                    SELECT \n                      count(*) as 'total',\n                      uniqueCount(metricName) as 'uniqueMetrics',\n                      uniqueCount(entity.type) as 'entityTypes'\n                    WHERE metricName LIKE 'kafka.%' \n                      AND entity.type IN ('AWS_KAFKA_CLUSTER', 'AWS_KAFKA_BROKER', 'AWS_KAFKA_TOPIC', 'CONFLUENT_CLOUD_KAFKA_CLUSTER', 'CONFLUENT_CLOUD_KAFKA_TOPIC')\n                      AND nr.accountId = 3630072\n                    SINCE 5 minutes ago\n                ",
+          "passed": false,
+          "message": "❌ No dimensional metrics found - queries won't work!",
+          "duration": 453,
+          "result": [
+            {
+              "entityTypes": 0,
+              "total": 0,
+              "uniqueMetrics": 0
+            }
+          ]
+        },
+        {
+          "id": "1.4",
+          "name": "Data Freshness",
+          "query": "\n                    SELECT \n                      max(timestamp) as 'latest',\n                      (now() - max(timestamp))/1000/60 as 'minutesOld'\n                    FROM AwsMskClusterSample\n                    WHERE nr.accountId = 3630072\n                      AND awsAccountId = '3630072'\n                    SINCE 1 hour ago\n                ",
+          "passed": false,
+          "message": "Query failed: Unknown function now()",
+          "error": "Unknown function now()",
+          "duration": 355
+        }
+      ]
+    },
+    "HOME_PAGE": {
+      "name": "🏠 Home Page Verification",
+      "critical": false,
+      "tests": []
+    },
+    "SUMMARY_PAGE": {
+      "name": "📊 Summary Page Verification",
+      "critical": false,
+      "tests": []
+    },
+    "ENTITY_HEALTH": {
+      "name": "🏥 Entity Health Verification",
+      "critical": false,
+      "tests": []
+    },
+    "DATA_QUALITY": {
+      "name": "🔍 Data Quality Verification",
+      "critical": false,
+      "tests": []
+    },
+    "PERFORMANCE": {
+      "name": "⚡ Performance Verification",
+      "critical": false,
+      "tests": []
+    }
+  },
+  "summary": {
+    "total": 4,
+    "passed": 0,
+    "failed": 4,
+    "critical": {
+      "total": 4,
+      "passed": 0
+    }
+  },
+  "endTime": "2025-06-05T09:06:51.536Z",
+  "duration": 3836
+}

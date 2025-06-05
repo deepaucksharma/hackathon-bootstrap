@@ -830,6 +830,14 @@ func (dt *DimensionalTransformer) buildBrokerAttributes(sample map[string]interf
 	attrs["entity.name"] = fmt.Sprintf("%s:broker-%s", clusterName, brokerId)
 	attrs["entity.guid"] = dt.generateBrokerGUID(clusterName, brokerId)
 	
+	// Critical AWS fields for UI visibility
+	attrs["provider"] = "AwsMskBroker"
+	attrs["awsAccountId"] = dt.config.AWSAccountID
+	attrs["awsRegion"] = dt.config.AWSRegion
+	attrs["providerAccountId"] = dt.config.AWSAccountID
+	attrs["providerExternalId"] = dt.config.AWSAccountID // Required for AWS account mapping
+	attrs["instrumentation.provider"] = "aws"
+	
 	// Optional but recommended
 	if host := getStringValueWithDefault(sample, "host", ""); host != "" {
 		attrs["host"] = host
@@ -865,6 +873,14 @@ func (dt *DimensionalTransformer) buildTopicAttributes(sample map[string]interfa
 	attrs["entity.name"] = fmt.Sprintf("topic:%s", topicName)
 	attrs["entity.guid"] = dt.generateTopicGUID(attrs["cluster.name"].(string), topicName)
 	
+	// Critical AWS fields for UI visibility
+	attrs["provider"] = "AwsMskTopic"
+	attrs["awsAccountId"] = dt.config.AWSAccountID
+	attrs["awsRegion"] = dt.config.AWSRegion
+	attrs["providerAccountId"] = dt.config.AWSAccountID
+	attrs["providerExternalId"] = dt.config.AWSAccountID // Required for AWS account mapping
+	attrs["instrumentation.provider"] = "aws"
+	
 	// Include broker that reported this metric
 	if brokerId := extractBrokerId(sample); brokerId != "unknown" {
 		attrs["broker.id"] = brokerId
@@ -883,6 +899,14 @@ func (dt *DimensionalTransformer) buildConsumerGroupAttributes(groupId string, s
 	attrs["entity.name"] = fmt.Sprintf("consumer-group:%s", groupId)
 	attrs["entity.guid"] = dt.generateConsumerGroupGUID(attrs["cluster.name"].(string), groupId)
 	
+	// Critical AWS fields for UI visibility
+	attrs["provider"] = "AwsMskConsumerGroup"
+	attrs["awsAccountId"] = dt.config.AWSAccountID
+	attrs["awsRegion"] = dt.config.AWSRegion
+	attrs["providerAccountId"] = dt.config.AWSAccountID
+	attrs["providerExternalId"] = dt.config.AWSAccountID // Required for AWS account mapping
+	attrs["instrumentation.provider"] = "aws"
+	
 	if topic := getStringValueWithDefault(sample, "topic", ""); topic != "" {
 		attrs["topic"] = topic
 	}
@@ -899,6 +923,14 @@ func (dt *DimensionalTransformer) buildClusterAttributes(sample map[string]inter
 	attrs["cluster.name"] = clusterName
 	attrs["entity.name"] = fmt.Sprintf("aws-msk-cluster:%s", clusterName)
 	attrs["entity.guid"] = dt.generateClusterGUID(clusterName)
+	
+	// Critical AWS fields for UI visibility
+	attrs["provider"] = "AwsMskCluster"
+	attrs["awsAccountId"] = dt.config.AWSAccountID
+	attrs["awsRegion"] = dt.config.AWSRegion
+	attrs["providerAccountId"] = dt.config.AWSAccountID
+	attrs["providerExternalId"] = dt.config.AWSAccountID // Required for AWS account mapping
+	attrs["instrumentation.provider"] = "aws"
 	
 	// Add AWS-specific attributes if available
 	if arn := getStringValueWithDefault(sample, "clusterArn", ""); arn != "" {

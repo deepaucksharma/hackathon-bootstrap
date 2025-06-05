@@ -39,6 +39,7 @@ func (s *MSKShim) SimpleTransformBrokerMetrics(brokerData map[string]interface{}
 		attribute.Attribute{Key: "awsRegion", Value: s.config.AWSRegion},
 		attribute.Attribute{Key: "instrumentation.provider", Value: "aws"},
 		attribute.Attribute{Key: "providerAccountId", Value: s.config.AWSAccountID},
+		attribute.Attribute{Key: "providerExternalId", Value: s.config.AWSAccountID}, // Required for AWS account mapping
 		attribute.Attribute{Key: "providerAccountName", Value: "MSK Shim Account"},
 		attribute.Attribute{Key: "collector.name", Value: "nri-kafka-msk"},
 		attribute.Attribute{Key: "collector.version", Value: "1.0.0"},
@@ -169,6 +170,7 @@ func (s *MSKShim) SimpleTransformBrokerMetrics(brokerData map[string]interface{}
 		awsMskSample["awsRegion"] = s.config.AWSRegion
 		awsMskSample["instrumentation.provider"] = "aws"
 		awsMskSample["providerAccountId"] = s.config.AWSAccountID
+		awsMskSample["providerExternalId"] = s.config.AWSAccountID // Required for AWS account mapping
 		awsMskSample["providerAccountName"] = "MSK Shim Account"
 		awsMskSample["collector.name"] = "nri-kafka-msk"
 		awsMskSample["collector.version"] = "1.0.0"
@@ -213,6 +215,7 @@ func (s *MSKShim) SimpleTransformClusterMetrics() error {
 		attribute.Attribute{Key: "awsRegion", Value: s.config.AWSRegion},
 		attribute.Attribute{Key: "instrumentation.provider", Value: "aws"},
 		attribute.Attribute{Key: "providerAccountId", Value: s.config.AWSAccountID},
+		attribute.Attribute{Key: "providerExternalId", Value: s.config.AWSAccountID}, // Required for AWS account mapping
 		attribute.Attribute{Key: "providerAccountName", Value: "MSK Shim Account"},
 		attribute.Attribute{Key: "collector.name", Value: "nri-kafka-msk"},
 		attribute.Attribute{Key: "collector.version", Value: "1.0.0"},
@@ -330,6 +333,7 @@ func (s *MSKShim) SimpleTransformClusterMetrics() error {
 		awsMskSample["awsRegion"] = s.config.AWSRegion
 		awsMskSample["instrumentation.provider"] = "aws"
 		awsMskSample["providerAccountId"] = s.config.AWSAccountID
+		awsMskSample["providerExternalId"] = s.config.AWSAccountID // Required for AWS account mapping
 		awsMskSample["providerAccountName"] = "MSK Shim Account"
 		awsMskSample["collector.name"] = "nri-kafka-msk"
 		awsMskSample["collector.version"] = "1.0.0"
