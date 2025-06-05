@@ -25,7 +25,10 @@ spec:
           privileged: true
         env:
         - name: NRIA_LICENSE_KEY
-          value: "YOUR_LICENSE_KEY_HERE" # Replace with your New Relic license key
+          valueFrom:
+            secretKeyRef:
+              name: newrelic-credentials
+              key: license-key
         - name: NRIA_VERBOSE
           value: "1"
         - name: NRIA_LOG_LEVEL

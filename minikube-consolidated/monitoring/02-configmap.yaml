@@ -44,7 +44,7 @@ data:
           
           # MSK Shim Configuration - Always Enabled
           MSK_SHIM_ENABLED: "true"
-          AWS_ACCOUNT_ID: "123456789012"
+          AWS_ACCOUNT_ID: "3630072"
           AWS_REGION: "us-east-1"
           KAFKA_CLUSTER_NAME: "minikube-kafka"
           
@@ -105,7 +105,7 @@ data:
           
           # MSK Shim Configuration
           MSK_SHIM_ENABLED: "true"
-          AWS_ACCOUNT_ID: "123456789012"
+          AWS_ACCOUNT_ID: "3630072"
           AWS_REGION: "us-west-2"
           KAFKA_CLUSTER_NAME: "minikube-strimzi-kafka"
           
