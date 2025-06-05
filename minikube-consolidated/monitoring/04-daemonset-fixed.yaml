@@ -59,7 +59,10 @@ spec:
         
         # New Relic configuration
         - name: NEW_RELIC_LICENSE_KEY
-          value: "YOUR_LICENSE_KEY_HERE" # Replace with your New Relic license key
+          valueFrom:
+            secretKeyRef:
+              name: newrelic-credentials
+              key: license-key
         - name: NEW_RELIC_LOG_LEVEL
           value: "debug"
         - name: NEW_RELIC_VERBOSE

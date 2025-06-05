@@ -32,7 +32,7 @@ data:
           
           # MSK Shim Configuration
           MSK_SHIM_ENABLED: "true"
-          AWS_ACCOUNT_ID: "123456789012"
+          AWS_ACCOUNT_ID: "3630072"
           AWS_REGION: "us-east-1"
           KAFKA_CLUSTER_NAME: "minikube-kafka"
         interval: 30s
@@ -66,7 +66,10 @@ spec:
           privileged: true
         env:
         - name: NRIA_LICENSE_KEY
-          value: "YOUR_LICENSE_KEY_HERE" # Replace with your New Relic license key
+          valueFrom:
+            secretKeyRef:
+              name: newrelic-credentials
+              key: license-key
         - name: NRIA_VERBOSE
           value: "1"
         - name: NRIA_LOG_LEVEL

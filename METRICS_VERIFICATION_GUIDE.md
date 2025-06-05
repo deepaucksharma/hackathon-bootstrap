@@ -1104,3 +1104,460 @@ WHERE timestamp > now() - 3600
 ```
 
 If all counts are > 0 and 'Minutes Since Last Update' < 10, the feature is ready for use.
+
+## 18. Critical Gaps and Limitations Discovered Through Research
+
+### 18.1 UI Visibility Requirements (CRITICAL GAP)
+
+The guide completely misses the critical AWS fields required for entities to appear in the New Relic UI:
+
+```sql
+-- MISSING: Verify critical UI visibility fields
+SELECT 
+  count(provider) as 'Has Provider Field',
+  count(awsAccountId) as 'Has AWS Account ID Field',
+  count(awsRegion) as 'Has AWS Region Field',
+  count(`instrumentation.provider`) as 'Has Instrumentation Provider',
+  count(providerAccountId) as 'Has Provider Account ID',
+  count(providerAccountName) as 'Has Provider Account Name',
+  count(`collector.name`) as 'Has Collector Name',
+  count(`collector.version`) as 'Has Collector Version'
+FROM AwsMskClusterSample
+SINCE 1 hour ago
+```
+
+**Required fields for UI visibility:**
+- `provider`: Must be "AwsMskCluster", "AwsMskBroker", or "AwsMskTopic"
+- `awsAccountId`: AWS account identifier
+- `awsRegion`: AWS region (e.g., "us-east-1")
+- `instrumentation.provider`: Must be "aws"
+- `providerAccountId`: Same as awsAccountId
+- `providerAccountName`: Human-readable account name
+- `collector.name`: Integration identifier
+- `collector.version`: Integration version
+
+### 18.2 Dimensional Metrics Transformation Verification
+
+The guide lacks verification for dimensional metrics transformation:
+
+```sql
+-- Verify dimensional metrics are being created
+FROM Metric 
+SELECT count(*), uniques(metricName) 
+WHERE metricName LIKE 'kafka.%' 
+  AND entity.type IN ('AWS_KAFKA_CLUSTER', 'AWS_KAFKA_BROKER', 'AWS_KAFKA_TOPIC')
+SINCE 5 minutes ago
+
+-- Verify specific dimensional metrics
+FROM Metric
+SELECT 
+  filter(count(*), WHERE metricName = 'kafka.broker.BytesInPerSec') as 'Broker Bytes In',
+  filter(count(*), WHERE metricName = 'kafka.broker.BytesOutPerSec') as 'Broker Bytes Out',
+  filter(count(*), WHERE metricName = 'kafka.broker.MessagesInPerSec') as 'Messages In',
+  filter(count(*), WHERE metricName = 'kafka.broker.TotalFetchRequestsPerSec') as 'Fetch Requests',
+  filter(count(*), WHERE metricName = 'kafka.broker.TotalProduceRequestsPerSec') as 'Produce Requests'
+WHERE entity.type = 'AWS_KAFKA_BROKER'
+SINCE 5 minutes ago
+```
+
+### 18.3 Entity Type Validation
+
+Missing verification that entity types are correctly set:
+
+```sql
+-- Verify entity types are AWS_KAFKA_* not just KAFKA_*
+FROM Metric
+SELECT uniques(entity.type), count(*)
+WHERE entity.type LIKE '%KAFKA%'
+FACET entity.type
+SINCE 1 hour ago
+
+-- This should show AWS_KAFKA_BROKER, AWS_KAFKA_CLUSTER, AWS_KAFKA_TOPIC
+-- NOT just KAFKA_BROKER, KAFKA_CLUSTER, KAFKA_TOPIC
+```
+
+### 18.4 Provider Field Transformation Verification
+
+No verification that provider.* fields are properly handled:
+
+```sql
+-- Verify provider.* fields in AwsMsk samples are being used
+SELECT 
+  keyset() 
+FROM AwsMskBrokerSample 
+WHERE provider.bytesInPerSec.Average IS NOT NULL
+SINCE 1 hour ago 
+LIMIT 1
+
+-- List all provider.* metrics
+SELECT 
+  uniques(capture(keyset(), r'provider\..*')) as 'Provider Metrics'
+FROM AwsMskBrokerSample
+SINCE 1 hour ago
+```
+
+### 18.5 Automatic NRQL Query Mapping Verification
+
+Missing verification that NRQL queries automatically map to dimensional metrics:
+
+```sql
+-- Test 1: Query event samples (may return 0)
+SELECT count(*) FROM AwsMskBrokerSample SINCE 5 minutes ago
+
+-- Test 2: Query with metric aggregation (should return data from dimensional metrics)
+SELECT average(provider.bytesInPerSec.Average) 
+FROM AwsMskBrokerSample 
+FACET provider.clusterName 
+SINCE 5 minutes ago
+
+-- If Test 1 returns 0 but Test 2 returns data, automatic mapping is working
+```
+
+### 18.6 Cross-Account Comparison Methodology
+
+No framework for comparing implementations across accounts:
+
+```sql
+-- Compare dimensional metrics across accounts
+WITH 
+  account1 AS (FROM Metric SELECT count(*) WHERE entity.type LIKE 'AWS_KAFKA_%' AND nr.accountId = 1),
+  account3001033 AS (FROM Metric SELECT count(*) WHERE entity.type LIKE 'AWS_KAFKA_%' AND nr.accountId = 3001033),
+  account3026020 AS (FROM Metric SELECT count(*) WHERE entity.type LIKE 'AWS_KAFKA_%' AND nr.accountId = 3026020)
+SELECT 
+  account1.count as 'Account 1 Metrics',
+  account3001033.count as 'Account 3001033 Metrics',
+  account3026020.count as 'Account 3026020 Metrics'
+FROM account1, account3001033, account3026020
+SINCE 1 hour ago
+```
+
+### 18.7 Environment Variable and Configuration Validation
+
+Missing comprehensive environment variable checks:
+
+```sql
+-- Verify MSK configuration attributes
+SELECT 
+  uniques(MSK_USE_DIMENSIONAL) as 'MSK Use Dimensional',
+  uniques(NRI_KAFKA_USE_DIMENSIONAL) as 'NRI Kafka Use Dimensional',
+  uniques(NRIA_LICENSE_KEY) as 'License Key Present',
+  uniques(AWS_ACCOUNT_ID) as 'AWS Account ID',
+  uniques(AWS_REGION) as 'AWS Region'
+FROM SystemSample
+WHERE hostname LIKE '%kafka%'
+SINCE 1 hour ago
+```
+
+### 18.8 Entity Name Format Validation
+
+No verification of proper entity name formatting:
+
+```sql
+-- Verify entity name format matches expected pattern
+SELECT 
+  entityName,
+  CASE 
+    WHEN entityName RLIKE '^[^:]+:broker-[0-9]+$' THEN 'Valid Broker Name'
+    WHEN entityName RLIKE '^[^:]+:topic-.+$' THEN 'Valid Topic Name'
+    WHEN entityName RLIKE '^[^:]+$' AND eventType() = 'AwsMskClusterSample' THEN 'Valid Cluster Name'
+    ELSE 'Invalid Format'
+  END as 'Name Validation'
+FROM AwsMskBrokerSample, AwsMskTopicSample, AwsMskClusterSample
+WHERE entityName IS NOT NULL
+SINCE 1 hour ago
+LIMIT 100
+```
+
+### 18.9 Timestamp Format Validation
+
+Missing verification of proper timestamp formatting:
+
+```sql
+-- Verify timestamps are in milliseconds (13 digits)
+FROM Metric
+SELECT 
+  timestamp,
+  length(toString(timestamp)) as 'Timestamp Length',
+  CASE 
+    WHEN length(toString(timestamp)) = 13 THEN 'Valid (Milliseconds)'
+    WHEN length(toString(timestamp)) = 10 THEN 'Invalid (Seconds)'
+    ELSE 'Invalid (Unknown)'
+  END as 'Timestamp Format'
+WHERE metricName LIKE 'kafka.%'
+SINCE 5 minutes ago
+LIMIT 10
+```
+
+### 18.10 Binary Deployment Verification
+
+No checks for proper binary deployment:
+
+```sql
+-- Verify nri-kafka binary version and architecture
+SELECT 
+  uniques(`collector.version`) as 'Collector Versions',
+  uniques(`collector.name`) as 'Collector Names',
+  uniques(architecture) as 'Architectures'
+FROM SystemSample
+WHERE processDisplayName LIKE '%nri-kafka%'
+SINCE 1 hour ago
+```
+
+### 18.11 Metric API vs Event API Distinction
+
+Guide doesn't distinguish between these critical data paths:
+
+```sql
+-- Compare Event API vs Metric API data
+SELECT 
+  filter(count(*), WHERE eventType() LIKE 'AwsMsk%Sample') as 'Event API Records',
+  filter(count(*), WHERE eventType() = 'Metric' AND metricName LIKE 'kafka.%') as 'Metric API Records'
+FROM AwsMskClusterSample, AwsMskBrokerSample, AwsMskTopicSample, Metric
+SINCE 1 hour ago
+```
+
+### 18.12 Consumer Group Metrics Validation
+
+Missing comprehensive consumer group verification:
+
+```sql
+-- Verify consumer group dimensional metrics
+FROM Metric
+SELECT 
+  count(*) as 'Total Metrics',
+  uniques(metricName) as 'Consumer Metrics'
+WHERE metricName LIKE 'kafka.consumerGroup.%'
+  OR metricName LIKE 'kafka.consumer.%'
+SINCE 1 hour ago
+
+-- Verify consumer group attributes
+FROM Metric
+SELECT 
+  uniques(`consumer.group.id`) as 'Consumer Groups',
+  uniques(topic) as 'Topics',
+  uniques(`cluster.name`) as 'Clusters'
+WHERE entity.type = 'AWS_KAFKA_CONSUMER_GROUP'
+SINCE 1 hour ago
+```
+
+### 18.13 Batch Processing and Flush Verification
+
+No verification of metric batching:
+
+```sql
+-- Check metric batch patterns
+FROM Metric
+SELECT 
+  count(*) as 'Metrics in Batch',
+  uniqueCount(timestamp) as 'Unique Timestamps',
+  min(timestamp) as 'Batch Start',
+  max(timestamp) as 'Batch End',
+  max(timestamp) - min(timestamp) as 'Batch Duration (ms)'
+WHERE metricName LIKE 'kafka.%'
+FACET `cluster.name`, capture(toString(timestamp), r'^(\d{10})')
+SINCE 5 minutes ago
+```
+
+### 18.14 Error Detection and Troubleshooting
+
+Missing comprehensive error detection:
+
+```sql
+-- Detect transformation errors
+SELECT 
+  count(*) as 'Error Count',
+  latest(error.message) as 'Latest Error',
+  latest(error.class) as 'Error Type'
+FROM NrIntegrationError
+WHERE category = 'kafka' 
+  OR message LIKE '%kafka%' 
+  OR message LIKE '%msk%'
+  OR message LIKE '%dimensional%'
+SINCE 1 hour ago
+
+-- Check for metric validation failures
+FROM Log
+SELECT count(*), message
+WHERE message LIKE '%Invalid%metric%' 
+  OR message LIKE '%Failed to transform%'
+  OR message LIKE '%MSK shim%error%'
+FACET message
+SINCE 1 hour ago
+```
+
+### 18.15 GUID Consistency Verification
+
+No verification of consistent entity GUIDs:
+
+```sql
+-- Verify GUID consistency across samples
+SELECT 
+  provider.clusterName,
+  provider.brokerId,
+  uniqueCount(entity.guid) as 'Unique GUIDs',
+  latest(entity.guid) as 'Latest GUID'
+FROM AwsMskBrokerSample
+FACET provider.clusterName, provider.brokerId
+HAVING uniqueCount(entity.guid) > 1
+SINCE 1 hour ago
+```
+
+### 18.16 Integration Health Score Calculation
+
+Missing detailed health score breakdown:
+
+```sql
+-- Calculate detailed health scores
+WITH
+  availability AS (
+    SELECT 
+      filter(count(*), WHERE eventType() = 'AwsMskClusterSample') > 0 as hasCluster,
+      filter(count(*), WHERE eventType() = 'AwsMskBrokerSample') > 0 as hasBroker,
+      filter(count(*), WHERE eventType() = 'AwsMskTopicSample') > 0 as hasTopic
+    FROM AwsMskClusterSample, AwsMskBrokerSample, AwsMskTopicSample
+    SINCE 1 hour ago
+  ),
+  completeness AS (
+    SELECT 
+      percentage(count(provider.bytesInPerSec.Average), count(*)) as brokerMetrics,
+      percentage(count(provider.messagesInPerSec.Average), count(*)) as messageMetrics
+    FROM AwsMskBrokerSample
+    SINCE 1 hour ago
+  ),
+  freshness AS (
+    SELECT 
+      max(now() - timestamp) / 1000 / 60 as minutesSinceUpdate
+    FROM AwsMskClusterSample
+    SINCE 1 hour ago
+  )
+SELECT 
+  (availability.hasCluster + availability.hasBroker + availability.hasTopic) / 3 * 100 as 'Availability Score',
+  (completeness.brokerMetrics + completeness.messageMetrics) / 2 as 'Completeness Score',
+  CASE 
+    WHEN freshness.minutesSinceUpdate < 5 THEN 100
+    WHEN freshness.minutesSinceUpdate < 10 THEN 80
+    ELSE 0
+  END as 'Freshness Score'
+FROM availability, completeness, freshness
+```
+
+### 18.17 Standard Kafka vs MSK Format Validation
+
+No validation of format differences:
+
+```sql
+-- Compare standard Kafka vs MSK formatted data
+SELECT 
+  'Standard Kafka' as 'Format',
+  count(broker.messagesInPerSecond) as 'Standard Metric Count'
+FROM KafkaBrokerSample
+SINCE 1 hour ago
+UNION
+SELECT 
+  'AWS MSK' as 'Format',
+  count(provider.messagesInPerSec.Average) as 'MSK Metric Count'
+FROM AwsMskBrokerSample
+SINCE 1 hour ago
+```
+
+### 18.18 Multi-Cluster Isolation Verification
+
+Missing verification of cluster isolation:
+
+```sql
+-- Verify metrics are properly isolated by cluster
+SELECT 
+  provider.clusterName,
+  uniqueCount(provider.brokerId) as 'Brokers',
+  uniqueCount(displayName) as 'Topics from Broker Sample'
+FROM AwsMskBrokerSample
+FACET provider.clusterName
+SINCE 1 hour ago
+
+-- Cross-check with topic samples
+SELECT 
+  provider.clusterName,
+  uniqueCount(displayName) as 'Topics from Topic Sample'
+FROM AwsMskTopicSample  
+FACET provider.clusterName
+SINCE 1 hour ago
+```
+
+### 18.19 Metric Value Validation
+
+No validation of metric value ranges:
+
+```sql
+-- Validate metric values are within reasonable ranges
+SELECT 
+  metricName,
+  min(value) as 'Min Value',
+  max(value) as 'Max Value',
+  average(value) as 'Avg Value',
+  CASE 
+    WHEN min(value) < 0 THEN 'Has Negative Values'
+    WHEN max(value) > 1e12 THEN 'Suspiciously Large'
+    WHEN max(value) = 0 AND min(value) = 0 THEN 'All Zeros'
+    ELSE 'Normal Range'
+  END as 'Value Assessment'
+FROM Metric
+WHERE metricName LIKE 'kafka.%'
+FACET metricName
+SINCE 1 hour ago
+```
+
+### 18.20 Complete Implementation Verification Framework
+
+```sql
+-- Master verification query that checks all critical aspects
+WITH 
+  ui_fields AS (
+    SELECT 
+      sum(CASE WHEN provider IS NOT NULL THEN 1 ELSE 0 END) / count(*) * 100 as providerField,
+      sum(CASE WHEN awsAccountId IS NOT NULL THEN 1 ELSE 0 END) / count(*) * 100 as awsAccountField,
+      sum(CASE WHEN `instrumentation.provider` = 'aws' THEN 1 ELSE 0 END) / count(*) * 100 as instrumentationProvider
+    FROM AwsMskClusterSample
+    SINCE 1 hour ago
+  ),
+  dimensional AS (
+    SELECT count(*) as dimensionalCount
+    FROM Metric
+    WHERE metricName LIKE 'kafka.%' AND entity.type LIKE 'AWS_KAFKA_%'
+    SINCE 1 hour ago
+  ),
+  events AS (
+    SELECT count(*) as eventCount
+    FROM AwsMskClusterSample, AwsMskBrokerSample, AwsMskTopicSample
+    SINCE 1 hour ago
+  )
+SELECT 
+  ui_fields.providerField as 'UI Provider Field %',
+  ui_fields.awsAccountField as 'UI AWS Account Field %',
+  ui_fields.instrumentationProvider as 'UI Instrumentation Provider %',
+  dimensional.dimensionalCount as 'Dimensional Metrics',
+  events.eventCount as 'Event Samples',
+  CASE 
+    WHEN ui_fields.providerField < 100 THEN 'CRITICAL: Missing UI fields - clusters won\'t appear in UI'
+    WHEN dimensional.dimensionalCount = 0 THEN 'WARNING: No dimensional metrics'
+    WHEN events.eventCount = 0 THEN 'WARNING: No event samples'
+    ELSE 'OK: All systems operational'
+  END as 'Status'
+FROM ui_fields, dimensional, events
+```
+
+## Summary of Critical Gaps
+
+1. **UI Visibility Requirements** - The most critical gap. Without proper AWS fields, entities won't appear in the UI
+2. **Dimensional Metrics** - No verification of Event API to Metric API transformation
+3. **Entity Type Format** - Must be AWS_KAFKA_* not KAFKA_*
+4. **Provider Field Handling** - No verification of provider.* field transformation
+5. **Cross-Account Comparison** - No methodology for comparing implementations
+6. **Environment Variables** - Missing comprehensive configuration validation
+7. **Error Detection** - No systematic error checking framework
+8. **Binary Deployment** - No verification of proper binary architecture and deployment
+9. **Metric Batching** - No verification of batch processing and flushing
+10. **GUID Consistency** - No checks for consistent entity GUIDs
+11. **Health Score Details** - Missing breakdown of health score calculation
+12. **Multi-Cluster Support** - No verification of proper cluster isolation
+
+These gaps explain why issues like "clusters not showing in UI" weren't caught by the original guide.

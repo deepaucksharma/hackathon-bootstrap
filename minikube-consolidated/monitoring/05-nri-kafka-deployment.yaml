@@ -23,7 +23,10 @@ spec:
         env:
         # Infrastructure agent config
         - name: NRIA_LICENSE_KEY
-          value: "YOUR_LICENSE_KEY_HERE" # Replace with your New Relic license key
+          valueFrom:
+            secretKeyRef:
+              name: newrelic-credentials
+              key: license-key
         
         # Kafka configuration
         - name: CLUSTER_NAME
@@ -59,7 +62,10 @@ spec:
         - name: MSK_SHIM_ENABLED
           value: "true"
         - name: AWS_ACCOUNT_ID
-          value: "123456789012"
+          valueFrom:
+            secretKeyRef:
+              name: newrelic-credentials
+              key: account-id
         - name: AWS_REGION
           value: "us-east-1"
         - name: KAFKA_CLUSTER_NAME
