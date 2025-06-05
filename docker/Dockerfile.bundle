@@ -1,0 +1,11 @@
+FROM newrelic/infrastructure-bundle:latest
+
+# First, backup the original nri-kafka
+RUN mv /var/db/newrelic-infra/newrelic-integrations/bin/nri-kafka /var/db/newrelic-infra/newrelic-integrations/bin/nri-kafka.original
+
+# Copy our custom nri-kafka binary
+COPY --chmod=755 nri-kafka /var/db/newrelic-infra/newrelic-integrations/bin/nri-kafka
+
+# Verify the binary
+RUN ls -la /var/db/newrelic-infra/newrelic-integrations/bin/nri-kafka && \
+    echo "Binary copied successfully"

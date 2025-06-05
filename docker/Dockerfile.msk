@@ -1,0 +1,23 @@
+# Build stage
+FROM golang:1.23-alpine AS builder
+
+RUN apk add --no-cache git make
+
+WORKDIR /src
+COPY . .
+
+RUN go mod download
+RUN go build -o bin/nri-kafka ./src
+
+# Runtime stage - Use infrastructure bundle as base
+FROM newrelic/infrastructure-bundle:latest
+
+# Copy our custom nri-kafka binary
+COPY --from=builder /src/bin/nri-kafka /var/db/newrelic-infra/newrelic-integrations/bin/nri-kafka
+COPY config-samples/kafka-msk-config.yml.sample /etc/newrelic-infra/integrations.d/kafka-config.yml.sample
+
+# Set default environment variables
+ENV MSK_SHIM_ENABLED=true
+ENV VERBOSE=1
+
+ENTRYPOINT ["/var/db/newrelic-infra/newrelic-integrations/bin/nri-kafka"]

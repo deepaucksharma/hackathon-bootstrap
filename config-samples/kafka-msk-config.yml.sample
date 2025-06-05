@@ -1,0 +1,91 @@
+# New Relic Infrastructure Integration configuration for Kafka with MSK Shim
+#
+# This configuration enables the MSK shim that transforms on-premises Kafka metrics
+# to be compatible with the AWS MSK Message Queues & Streams UI in New Relic.
+#
+integrations:
+  - name: nri-kafka
+    env:
+      # Standard Kafka Configuration
+      CLUSTER_NAME: "${KAFKA_CLUSTER_NAME}"
+      KAFKA_VERSION: "2.6.0"
+      AUTODISCOVER_STRATEGY: "bootstrap"
+      BOOTSTRAP_BROKER_HOST: "${KAFKA_BROKER_HOST}"
+      BOOTSTRAP_BROKER_KAFKA_PORT: 9092
+      BOOTSTRAP_BROKER_JMX_PORT: 9999
+      
+      # Uncomment for SASL authentication
+      # BOOTSTRAP_BROKER_KAFKA_PROTOCOL: "SASL_PLAINTEXT"
+      # SASL_MECHANISM: "SCRAM-SHA-256"
+      # SASL_USERNAME: "${KAFKA_USERNAME}"
+      # SASL_PASSWORD: "${KAFKA_PASSWORD}"
+
+      # MSK Shim Configuration (Required for Message Queues UI)
+      MSK_SHIM_ENABLED: "true"
+      AWS_ACCOUNT_ID: "${AWS_ACCOUNT_ID}"          # Your AWS account ID (or use any 12-digit identifier)
+      AWS_REGION: "${AWS_REGION}"                  # AWS region (e.g., us-east-1)
+      ENVIRONMENT: "${ENVIRONMENT}"                # Optional: Environment tag (dev, staging, prod)
+      
+      # Optional: Set your MSK cluster ARN if you have one
+      # MSK_CLUSTER_ARN: "arn:aws:kafka:us-east-1:123456789012:cluster/my-cluster/abc-123"
+      
+      # Feature Flags
+      CONSUMER_LAG_ENRICHMENT: "true"             # Enable consumer lag metrics
+      SYSTEM_SAMPLE_CORRELATION: "true"           # Correlate with Infrastructure agent metrics
+      
+      # Performance Tuning
+      MSK_BATCH_SIZE: "1000"                      # Number of metrics to batch
+      MSK_FLUSH_INTERVAL: "5s"                    # How often to flush metrics
+      MSK_AGGREGATION_METHOD: "max"               # Method for aggregating controller metrics
+      
+      # Disk Mount Patterns (for correlating disk usage)
+      DISK_MOUNT_REGEX: "data|kafka|log"
+      LOG_MOUNT_REGEX: "logs|kafka-logs"
+      
+      # Collection Settings
+      METRICS: "true"
+      INVENTORY: "true"
+      CONSUMER_OFFSET: "false"
+
+    # Integration configuration
+    config:
+      # Collect all broker and topic data
+      collect_broker_topic_data: true
+      collect_topic_size: true
+      topic_mode: "all"
+      collect_topic_offset: true
+      
+      # Topic filtering (optional)
+      # topic_whitelist:
+      #   - "important-topic-.*"
+      #   - "production-.*"
+      
+      # Consumer/Producer monitoring
+      producers:
+        - name: "my-producer-app"
+          host: "${PRODUCER_HOST}"
+          port: 9999
+          # username: "${JMX_USERNAME}"
+          # password: "${JMX_PASSWORD}"
+          
+      consumers:
+        - name: "my-consumer-app"
+          host: "${CONSUMER_HOST}"
+          port: 9999
+          # username: "${JMX_USERNAME}"
+          # password: "${JMX_PASSWORD}"
+      
+      # JMX connection settings
+      timeout: 10000
+      max_jmx_connections: 10
+      
+    # How often to run the integration
+    interval: 30s
+    
+    # Timeout for the integration
+    timeout: 120s
+    
+    labels:
+      env: "${ENVIRONMENT}"
+      role: kafka
+      kafka_cluster: "${KAFKA_CLUSTER_NAME}"

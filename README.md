@@ -46,6 +46,10 @@ export NRI_KAFKA_DEBUG=true
 
 See [MSK Shim Documentation](./docs/MSK-SHIM.md) for complete setup and configuration.
 
+## Project Structure
+
+See [PROJECT_STRUCTURE.md](./PROJECT_STRUCTURE.md) for detailed information about the repository organization.
+
 ## Installation and usage
 
 For installation and usage instructions, see our [documentation web site](https://docs.newrelic.com/docs/integrations/host-integrations/host-integrations-list/kafka-monitoring-integration).

@@ -1,0 +1,29 @@
+# Build stage for our custom nri-kafka with MSK shim
+FROM golang:1.23-alpine AS builder
+
+RUN apk add --no-cache git make
+
+WORKDIR /src
+COPY . .
+
+# Download dependencies
+RUN go mod download
+
+# Build our custom nri-kafka binary with MSK shim support
+RUN go build -o bin/nri-kafka ./src
+
+# Runtime stage - Use infrastructure bundle as base
+FROM newrelic/infrastructure-bundle:3.2.73
+
+# Replace the default nri-kafka binary with our custom build that includes MSK shim
+COPY --from=builder /src/bin/nri-kafka /var/db/newrelic-infra/newrelic-integrations/bin/nri-kafka
+
+# Make sure it's executable
+RUN chmod +x /var/db/newrelic-infra/newrelic-integrations/bin/nri-kafka
+
+# Set environment variables for MSK shim
+ENV MSK_SHIM_ENABLED=true
+ENV VERBOSE=1
+
+# The infrastructure agent will be the main process
+ENTRYPOINT ["/usr/bin/newrelic-infra"]

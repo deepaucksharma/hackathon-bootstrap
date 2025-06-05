@@ -1,0 +1,17 @@
+apiVersion: batch/v1
+kind: Job
+metadata:
+  name: kafka-test-consumer
+  namespace: kafka
+spec:
+  template:
+    spec:
+      containers:
+      - name: consumer
+        image: confluentinc/cp-kafka:latest
+        command:
+        - bash
+        - -c
+        - |
+          timeout 60s kafka-console-consumer --bootstrap-server kafka-0.kafka-headless.kafka.svc.cluster.local:9092 --topic events --group test-consumer-group --from-beginning || true
+      restartPolicy: Never

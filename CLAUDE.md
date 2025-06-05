@@ -16,7 +16,7 @@ Before proceeding with ANY task, ensure alignment with these goals:
 
 1. **Metric Coverage**: MSK entity types are REQUIRED (AwsMskClusterSample, AwsMskBrokerSample, AwsMskTopicSample). Standard Kafka metrics (KafkaBrokerSample, KafkaTopicSample, KafkaOffsetSample) are OPTIONAL.
 2. **Health Scores**: Achieve 99%+ in all categories (Data Availability, Metric Completeness, Data Freshness, Entity Relationships)
-3. **Validation**: Use `verify-kafka-metrics.js` after EVERY change to measure progress
+3. **Validation**: Use `verification-scripts/verify-kafka-metrics.js` after EVERY change to measure progress
 4. **Documentation**: Document every learning, fix, and configuration that works
 
 ## CRITICAL LEARNINGS FROM USER

@@ -1,0 +1,14 @@
+FROM golang:1.23.6 AS builder-kafka
+COPY . /go/src/github.com/newrelic/nri-kafka/
+RUN cd /go/src/github.com/newrelic/nri-kafka && \
+    make compile && \
+    strip ./bin/nri-kafka
+
+FROM newrelic/infrastructure:latest
+ENV NRIA_IS_FORWARD_ONLY=true
+ENV NRIA_K8S_INTEGRATION=true
+
+COPY --from=builder-kafka /go/src/github.com/newrelic/nri-kafka/bin/nri-kafka /var/db/newrelic-infra/newrelic-integrations/bin/nri-kafka
+COPY --from=builder-kafka /go/src/github.com/newrelic/nri-kafka/config-samples/kafka-config.yml.sample /var/db/newrelic-infra/newrelic-integrations/kafka-config.yml.sample
+
+USER 1000
