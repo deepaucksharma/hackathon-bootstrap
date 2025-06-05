@@ -1,0 +1,424 @@
+name: Kafka UI Verification - Complete Pipeline
+
+on:
+  # Trigger on infrastructure changes
+  push:
+    paths:
+      - 'infrastructure/kafka/**'
+      - 'terraform/msk/**'
+      - '.github/workflows/kafka-ui-verification.yml'
+  
+  # Trigger on integration config changes
+  pull_request:
+    paths:
+      - '**/kafka-config.yml'
+      - '**/nri-kafka/**'
+  
+  # Scheduled verification
+  schedule:
+    - cron: '0 */4 * * *'  # Every 4 hours
+    - cron: '0 9 * * 1'    # Weekly comprehensive check
+  
+  # Manual trigger with inputs
+  workflow_dispatch:
+    inputs:
+      environment:
+        description: 'Environment to verify'
+        required: true
+        default: 'staging'
+        type: choice
+        options:
+          - development
+          - staging
+          - production
+      provider:
+        description: 'Provider type'
+        required: true
+        default: 'awsMsk'
+        type: choice
+        options:
+          - awsMsk
+          - confluentCloud
+      verboseOutput:
+        description: 'Enable verbose output'
+        required: false
+        default: false
+        type: boolean
+
+env:
+  NODE_VERSION: '18'
+  VERIFICATION_TIMEOUT: 300  # 5 minutes
+
+jobs:
+  # Job 1: Validate configuration syntax
+  validate-config:
+    name: Validate Configuration
+    runs-on: ubuntu-latest
+    steps:
+      - name: Checkout code
+        uses: actions/checkout@v4
+      
+      - name: Validate YAML configs
+        run: |
+          # Install yamllint
+          pip install yamllint
+          
+          # Validate all Kafka config files
+          find . -name "kafka-config.yml" -type f | while read config; do
+            echo "Validating: $config"
+            yamllint -d relaxed "$config"
+          done
+      
+      - name: Check required fields
+        run: |
+          # Check for critical configuration fields
+          for config in $(find . -name "kafka-config.yml" -type f); do
+            echo "Checking $config for required fields..."
+            
+            # Check for dimensional metrics flag
+            if ! grep -q "NRI_KAFKA_USE_DIMENSIONAL: true" "$config"; then
+              echo "❌ ERROR: Missing NRI_KAFKA_USE_DIMENSIONAL in $config"
+              exit 1
+            fi
+            
+            # Check for provider labels (AWS MSK)
+            if grep -q "awsMsk" "$config" || grep -q "AwsMsk" "$config"; then
+              if ! grep -q "instrumentation.provider: aws" "$config"; then
+                echo "❌ ERROR: Missing instrumentation.provider label in $config"
+                exit 1
+              fi
+            fi
+          done
+          
+          echo "✅ All configurations valid"
+
+  # Job 2: Run verification for each environment
+  verify-environment:
+    name: Verify ${{ matrix.environment }} Environment
+    runs-on: ubuntu-latest
+    needs: validate-config
+    strategy:
+      matrix:
+        environment: [development, staging, production]
+        provider: [awsMsk]
+      fail-fast: false
+    
+    # Only run production on schedule or manual trigger
+    if: |
+      matrix.environment != 'production' || 
+      github.event_name == 'schedule' || 
+      github.event_name == 'workflow_dispatch'
+    
+    env:
+      ENVIRONMENT: ${{ matrix.environment }}
+      PROVIDER: ${{ matrix.provider }}
+    
+    steps:
+      - name: Checkout code
+        uses: actions/checkout@v4
+      
+      - name: Setup Node.js
+        uses: actions/setup-node@v4
+        with:
+          node-version: ${{ env.NODE_VERSION }}
+          cache: 'npm'
+          cache-dependency-path: ultimate-verification-system/package-lock.json
+      
+      - name: Install dependencies
+        run: |
+          cd ultimate-verification-system
+          npm ci --production
+      
+      - name: Configure AWS credentials
+        if: matrix.provider == 'awsMsk'
+        uses: aws-actions/configure-aws-credentials@v4
+        with:
+          aws-access-key-id: ${{ secrets[format('AWS_ACCESS_KEY_ID_{0}', matrix.environment)] }}
+          aws-secret-access-key: ${{ secrets[format('AWS_SECRET_ACCESS_KEY_{0}', matrix.environment)] }}
+          aws-region: ${{ vars[format('AWS_REGION_{0}', matrix.environment)] }}
+      
+      - name: Get environment config
+        id: config
+        run: |
+          # Set environment-specific variables
+          case "$ENVIRONMENT" in
+            development)
+              echo "account_id=${{ vars.DEV_AWS_ACCOUNT_ID }}" >> $GITHUB_OUTPUT
+              echo "nr_account_id=${{ vars.DEV_NR_ACCOUNT_ID }}" >> $GITHUB_OUTPUT
+              echo "clusters=${{ vars.DEV_CLUSTER_NAMES }}" >> $GITHUB_OUTPUT
+              ;;
+            staging)
+              echo "account_id=${{ vars.STAGING_AWS_ACCOUNT_ID }}" >> $GITHUB_OUTPUT
+              echo "nr_account_id=${{ vars.STAGING_NR_ACCOUNT_ID }}" >> $GITHUB_OUTPUT
+              echo "clusters=${{ vars.STAGING_CLUSTER_NAMES }}" >> $GITHUB_OUTPUT
+              ;;
+            production)
+              echo "account_id=${{ vars.PROD_AWS_ACCOUNT_ID }}" >> $GITHUB_OUTPUT
+              echo "nr_account_id=${{ vars.PROD_NR_ACCOUNT_ID }}" >> $GITHUB_OUTPUT
+              echo "clusters=${{ vars.PROD_CLUSTER_NAMES }}" >> $GITHUB_OUTPUT
+              ;;
+          esac
+      
+      - name: Run comprehensive verification
+        id: verification
+        timeout-minutes: 5
+        run: |
+          cd ultimate-verification-system
+          
+          # Run verification with output capture
+          if node verification/test-runners/ultimate-verification-runner.js \
+            --apiKey="${{ secrets[format('NR_API_KEY_{0}', matrix.environment)] }}" \
+            --accountId="${{ steps.config.outputs.account_id }}" \
+            --nrAccountId="${{ steps.config.outputs.nr_account_id }}" \
+            --provider="${{ matrix.provider }}" \
+            --output=json > verification-output.json 2>&1; then
+            
+            echo "verification_status=passed" >> $GITHUB_OUTPUT
+          else
+            echo "verification_status=failed" >> $GITHUB_OUTPUT
+          fi
+          
+          # Extract summary for output
+          PASSED=$(jq -r '.summary.passed // 0' verification-output.json)
+          FAILED=$(jq -r '.summary.failed // 0' verification-output.json)
+          TOTAL=$(jq -r '.summary.total // 0' verification-output.json)
+          CRITICAL_PASSED=$(jq -r '.summary.critical.passed // 0' verification-output.json)
+          CRITICAL_TOTAL=$(jq -r '.summary.critical.total // 0' verification-output.json)
+          
+          echo "tests_passed=$PASSED" >> $GITHUB_OUTPUT
+          echo "tests_failed=$FAILED" >> $GITHUB_OUTPUT
+          echo "tests_total=$TOTAL" >> $GITHUB_OUTPUT
+          echo "critical_passed=$CRITICAL_PASSED" >> $GITHUB_OUTPUT
+          echo "critical_total=$CRITICAL_TOTAL" >> $GITHUB_OUTPUT
+          
+          # Generate summary
+          echo "## Verification Results - $ENVIRONMENT" >> $GITHUB_STEP_SUMMARY
+          echo "" >> $GITHUB_STEP_SUMMARY
+          echo "- **Total Tests**: $TOTAL" >> $GITHUB_STEP_SUMMARY
+          echo "- **Passed**: $PASSED ✅" >> $GITHUB_STEP_SUMMARY
+          echo "- **Failed**: $FAILED ❌" >> $GITHUB_STEP_SUMMARY
+          echo "- **Critical Tests**: $CRITICAL_PASSED/$CRITICAL_TOTAL" >> $GITHUB_STEP_SUMMARY
+          echo "" >> $GITHUB_STEP_SUMMARY
+          
+          if [ $FAILED -gt 0 ]; then
+            echo "### Failed Tests:" >> $GITHUB_STEP_SUMMARY
+            jq -r '.suites | to_entries[] | .value.tests[] | select(.passed == false) | "- \(.name): \(.message)"' verification-output.json >> $GITHUB_STEP_SUMMARY
+          fi
+      
+      - name: Run cluster-specific verification
+        if: steps.config.outputs.clusters != ''
+        run: |
+          cd ultimate-verification-system
+          
+          # Verify each cluster individually
+          IFS=',' read -ra CLUSTERS <<< "${{ steps.config.outputs.clusters }}"
+          for cluster in "${CLUSTERS[@]}"; do
+            echo "Verifying cluster: $cluster"
+            
+            ./verification/test-runners/verify-single-cluster.sh \
+              "${{ secrets[format('NR_API_KEY_{0}', matrix.environment)] }}" \
+              "${{ steps.config.outputs.nr_account_id }}" \
+              "$cluster" || true
+          done
+      
+      - name: Upload verification artifacts
+        if: always()
+        uses: actions/upload-artifact@v4
+        with:
+          name: verification-results-${{ matrix.environment }}-${{ matrix.provider }}
+          path: |
+            ultimate-verification-system/verification-output.json
+            ultimate-verification-system/ultimate-verification-*.json
+          retention-days: 30
+      
+      - name: Comment PR with results
+        if: github.event_name == 'pull_request'
+        uses: actions/github-script@v7
+        with:
+          script: |
+            const environment = '${{ matrix.environment }}';
+            const provider = '${{ matrix.provider }}';
+            const status = '${{ steps.verification.outputs.verification_status }}';
+            const passed = ${{ steps.verification.outputs.tests_passed }};
+            const failed = ${{ steps.verification.outputs.tests_failed }};
+            const total = ${{ steps.verification.outputs.tests_total }};
+            const criticalPassed = ${{ steps.verification.outputs.critical_passed }};
+            const criticalTotal = ${{ steps.verification.outputs.critical_total }};
+            
+            const emoji = status === 'passed' ? '✅' : '❌';
+            const statusText = status === 'passed' ? 'PASSED' : 'FAILED';
+            
+            const comment = `### Kafka UI Verification ${emoji} ${statusText}
+            
+            **Environment**: ${environment}
+            **Provider**: ${provider}
+            
+            | Metric | Value |
+            |--------|-------|
+            | Total Tests | ${total} |
+            | Passed | ${passed} |
+            | Failed | ${failed} |
+            | Critical Tests | ${criticalPassed}/${criticalTotal} |
+            
+            ${failed > 0 ? '⚠️ **Action Required**: Please check the verification report for details.' : '✨ All tests passed!'}
+            
+            [View Full Report](https://github.com/${{ github.repository }}/actions/runs/${{ github.run_id }})`;
+            
+            github.rest.issues.createComment({
+              issue_number: context.issue.number,
+              owner: context.repo.owner,
+              repo: context.repo.repo,
+              body: comment
+            });
+      
+      - name: Fail job if verification failed
+        if: steps.verification.outputs.verification_status == 'failed'
+        run: |
+          echo "❌ Verification failed for ${{ matrix.environment }} environment"
+          exit 1
+
+  # Job 3: Generate comprehensive report
+  generate-report:
+    name: Generate Comprehensive Report
+    runs-on: ubuntu-latest
+    needs: verify-environment
+    if: always()
+    
+    steps:
+      - name: Download all artifacts
+        uses: actions/download-artifact@v4
+        with:
+          path: verification-artifacts
+      
+      - name: Generate consolidated report
+        run: |
+          echo "# Kafka UI Verification Report" > report.md
+          echo "**Date**: $(date)" >> report.md
+          echo "**Trigger**: ${{ github.event_name }}" >> report.md
+          echo "" >> report.md
+          
+          # Process each environment's results
+          for artifact in verification-artifacts/*/verification-output.json; do
+            if [ -f "$artifact" ]; then
+              ENV_NAME=$(basename $(dirname "$artifact") | sed 's/verification-results-//' | sed 's/-awsMsk//')
+              
+              echo "## Environment: $ENV_NAME" >> report.md
+              
+              PASSED=$(jq -r '.summary.passed // 0' "$artifact")
+              FAILED=$(jq -r '.summary.failed // 0' "$artifact")
+              TOTAL=$(jq -r '.summary.total // 0' "$artifact")
+              
+              if [ $FAILED -eq 0 ]; then
+                echo "✅ **Status**: All tests passed ($PASSED/$TOTAL)" >> report.md
+              else
+                echo "❌ **Status**: $FAILED tests failed ($PASSED/$TOTAL passed)" >> report.md
+                echo "" >> report.md
+                echo "### Failed Tests:" >> report.md
+                jq -r '.suites | to_entries[] | .value.tests[] | select(.passed == false) | "- **\(.name)**: \(.message)"' "$artifact" >> report.md
+              fi
+              
+              echo "" >> report.md
+            fi
+          done
+          
+          # Upload as artifact
+          cp report.md $GITHUB_STEP_SUMMARY
+      
+      - name: Upload final report
+        uses: actions/upload-artifact@v4
+        with:
+          name: comprehensive-verification-report
+          path: report.md
+          retention-days: 90
+
+  # Job 4: Send notifications
+  notify:
+    name: Send Notifications
+    runs-on: ubuntu-latest
+    needs: [verify-environment, generate-report]
+    if: always()
+    
+    steps:
+      - name: Determine overall status
+        id: status
+        run: |
+          if [ "${{ needs.verify-environment.result }}" == "success" ]; then
+            echo "overall_status=success" >> $GITHUB_OUTPUT
+            echo "emoji=✅" >> $GITHUB_OUTPUT
+            echo "color=good" >> $GITHUB_OUTPUT
+          else
+            echo "overall_status=failure" >> $GITHUB_OUTPUT
+            echo "emoji=❌" >> $GITHUB_OUTPUT
+            echo "color=danger" >> $GITHUB_OUTPUT
+          fi
+      
+      - name: Send Slack notification
+        if: vars.SLACK_NOTIFICATIONS_ENABLED == 'true'
+        uses: 8398a7/action-slack@v3
+        with:
+          status: custom
+          fields: workflow,repo,ref,author
+          custom_payload: |
+            {
+              "attachments": [{
+                "color": "${{ steps.status.outputs.color }}",
+                "title": "${{ steps.status.outputs.emoji }} Kafka UI Verification ${{ steps.status.outputs.overall_status }}",
+                "text": "Verification completed for ${{ github.event_name }} trigger",
+                "fields": [
+                  {
+                    "title": "Triggered by",
+                    "value": "${{ github.actor }}",
+                    "short": true
+                  },
+                  {
+                    "title": "Branch",
+                    "value": "${{ github.ref_name }}",
+                    "short": true
+                  }
+                ],
+                "actions": [
+                  {
+                    "type": "button",
+                    "text": "View Results",
+                    "url": "https://github.com/${{ github.repository }}/actions/runs/${{ github.run_id }}"
+                  }
+                ]
+              }]
+            }
+        env:
+          SLACK_WEBHOOK_URL: ${{ secrets.SLACK_WEBHOOK_URL }}
+      
+      - name: Create issue for failures
+        if: |
+          steps.status.outputs.overall_status == 'failure' && 
+          github.event_name == 'schedule'
+        uses: actions/github-script@v7
+        with:
+          script: |
+            const title = `🚨 Kafka UI Verification Failed - ${new Date().toISOString().split('T')[0]}`;
+            const body = `## Automated Verification Failure
+            
+            The scheduled Kafka UI verification has failed.
+            
+            **Run ID**: ${{ github.run_id }}
+            **Trigger**: ${{ github.event_name }}
+            
+            ### Action Required
+            1. Review the [verification results](https://github.com/${{ github.repository }}/actions/runs/${{ github.run_id }})
+            2. Check the failed tests and apply fixes
+            3. Re-run verification manually
+            
+            ### Common Issues
+            - Missing UI fields (check MSK_USE_DIMENSIONAL flag)
+            - Stale data (check integration status)
+            - JMX connectivity (check security groups)
+            
+            cc: @kafka-team`;
+            
+            await github.rest.issues.create({
+              owner: context.repo.owner,
+              repo: context.repo.repo,
+              title: title,
+              body: body,
+              labels: ['bug', 'kafka-ui', 'automated']
+            });
