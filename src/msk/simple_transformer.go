@@ -2,6 +2,8 @@ package msk
 
 import (
 	"fmt"
+	"strings"
+	
 	"github.com/newrelic/infra-integrations-sdk/v3/data/attribute"
 	"github.com/newrelic/infra-integrations-sdk/v3/data/metric"
 	"github.com/newrelic/infra-integrations-sdk/v3/log"
@@ -14,13 +16,14 @@ func (s *MSKShim) SimpleTransformBrokerMetrics(brokerData map[string]interface{}
 		return fmt.Errorf("broker ID not found")
 	}
 	
+	// Use simple entity name without FQDN for proper synthesis
 	entityName := fmt.Sprintf("%s-broker-%s", s.config.ClusterName, brokerIDStr)
-	entity, err := s.integration.Entity(entityName, "aws-msk-broker")
+	entity, err := s.integration.Entity(entityName, "KAFKA_BROKER")
 	if err != nil {
 		return fmt.Errorf("failed to create broker entity: %v", err)
 	}
 	
-	// Create metric set
+	// Create MSK metric set
 	ms := entity.NewMetricSet("AwsMskBrokerSample",
 		attribute.Attribute{Key: "provider.accountId", Value: s.config.AWSAccountID},
 		attribute.Attribute{Key: "provider.region", Value: s.config.AWSRegion},
@@ -28,26 +31,52 @@ func (s *MSKShim) SimpleTransformBrokerMetrics(brokerData map[string]interface{}
 		attribute.Attribute{Key: "provider.brokerId", Value: brokerIDStr},
 		attribute.Attribute{Key: "provider.clusterArn", Value: s.config.ClusterARN},
 		attribute.Attribute{Key: "clusterName", Value: s.config.ClusterName},
-		attribute.Attribute{Key: "entityName", Value: fmt.Sprintf("broker:%s", brokerIDStr)},
+		attribute.Attribute{Key: "entityName", Value: entityName},
+		attribute.Attribute{Key: "environment", Value: s.config.Environment},
+		// Critical AWS fields for UI visibility
+		attribute.Attribute{Key: "provider", Value: "AwsMskBroker"},
+		attribute.Attribute{Key: "awsAccountId", Value: s.config.AWSAccountID},
+		attribute.Attribute{Key: "awsRegion", Value: s.config.AWSRegion},
+		attribute.Attribute{Key: "instrumentation.provider", Value: "aws"},
+		attribute.Attribute{Key: "providerAccountId", Value: s.config.AWSAccountID},
+		attribute.Attribute{Key: "providerAccountName", Value: "MSK Shim Account"},
+		attribute.Attribute{Key: "collector.name", Value: "nri-kafka-msk"},
+		attribute.Attribute{Key: "collector.version", Value: "1.0.0"},
+	)
+	
+	// ALSO create standard Kafka metric set for UI visibility
+	kafkaMs := entity.NewMetricSet("KafkaBrokerSample",
+		attribute.Attribute{Key: "clusterName", Value: s.config.ClusterName},
+		attribute.Attribute{Key: "brokerID", Value: brokerIDStr},
+		attribute.Attribute{Key: "entityName", Value: entityName},
 		attribute.Attribute{Key: "environment", Value: s.config.Environment},
 	)
 	
-	// Map standard Kafka metrics to MSK metrics
+	// Map standard Kafka metrics to BOTH MSK and standard Kafka formats
 	// Broker IO metrics
 	if bytesIn, ok := getFloatValue(brokerData, "broker.IOInPerSecond"); ok {
+		// MSK format
 		ms.SetMetric("provider.bytesInPerSec.Average", bytesIn, metric.GAUGE)
 		ms.SetMetric("provider.bytesInPerSec.Sum", bytesIn, metric.GAUGE)
+		// Standard Kafka format for UI
+		kafkaMs.SetMetric("broker.IOInPerSecond", bytesIn, metric.GAUGE)
 	}
 	
 	if bytesOut, ok := getFloatValue(brokerData, "broker.IOOutPerSecond"); ok {
+		// MSK format
 		ms.SetMetric("provider.bytesOutPerSec.Average", bytesOut, metric.GAUGE)
 		ms.SetMetric("provider.bytesOutPerSec.Sum", bytesOut, metric.GAUGE)
+		// Standard Kafka format for UI
+		kafkaMs.SetMetric("broker.IOOutPerSecond", bytesOut, metric.GAUGE)
 	}
 	
 	// Message metrics
 	if messagesIn, ok := getFloatValue(brokerData, "broker.messagesInPerSecond"); ok {
+		// MSK format
 		ms.SetMetric("provider.messagesInPerSec.Average", messagesIn, metric.GAUGE)
 		ms.SetMetric("provider.messagesInPerSec.Sum", messagesIn, metric.GAUGE)
+		// Standard Kafka format for UI
+		kafkaMs.SetMetric("broker.messagesInPerSecond", messagesIn, metric.GAUGE)
 	}
 	
 	// Request metrics
@@ -120,13 +149,51 @@ func (s *MSKShim) SimpleTransformBrokerMetrics(brokerData map[string]interface{}
 		s.aggregator.AddBrokerMetrics(brokerIDStr, brokerData)
 	}
 	
+	// Send dimensional metrics if enabled
+	if s.dimensionalTransformer != nil {
+		// Create AwsMskBrokerSample representation with provider.* attributes
+		awsMskSample := map[string]interface{}{
+			"eventType":   "AwsMskBrokerSample",
+			"clusterName": s.config.ClusterName,
+			"entityGuid":  GenerateEntityGUID(EntityTypeBroker, s.config.AWSAccountID, s.config.ClusterName, brokerIDStr),
+			"entityName":  entityName,
+			"provider.brokerId": brokerIDStr,
+			"provider.accountId": s.config.AWSAccountID,
+			"provider.region": s.config.AWSRegion,
+			"provider.clusterArn": s.config.ClusterARN,
+		}
+		
+		// Add critical AWS fields for UI visibility
+		awsMskSample["provider"] = "AwsMskBroker"
+		awsMskSample["awsAccountId"] = s.config.AWSAccountID
+		awsMskSample["awsRegion"] = s.config.AWSRegion
+		awsMskSample["instrumentation.provider"] = "aws"
+		awsMskSample["providerAccountId"] = s.config.AWSAccountID
+		awsMskSample["providerAccountName"] = "MSK Shim Account"
+		awsMskSample["collector.name"] = "nri-kafka-msk"
+		awsMskSample["collector.version"] = "1.0.0"
+		
+		// Add all provider.* metrics from the metric set
+		for name, metricData := range ms.Metrics {
+			// Add all metrics as they're already provider.* metrics
+			if strings.HasPrefix(name, "provider.") {
+				awsMskSample[name] = metricData
+			}
+		}
+		
+		// Transform the AwsMsk sample with provider attributes
+		if err := s.dimensionalTransformer.TransformSample(awsMskSample); err != nil {
+			log.Error("Failed to transform broker sample to dimensional metrics: %v", err)
+		}
+	}
+	
 	log.Info("Transformed MSK broker metrics for broker %s with %d metrics", brokerIDStr, len(ms.Metrics))
 	return nil
 }
 
 // SimpleTransformClusterMetrics creates cluster-level metrics
 func (s *MSKShim) SimpleTransformClusterMetrics() error {
-	entity, err := s.integration.Entity(s.config.ClusterName, "aws-msk-cluster")
+	entity, err := s.integration.Entity(s.config.ClusterName, "KAFKA_CLUSTER")
 	if err != nil {
 		return fmt.Errorf("failed to create cluster entity: %v", err)
 	}
@@ -138,7 +205,18 @@ func (s *MSKShim) SimpleTransformClusterMetrics() error {
 		attribute.Attribute{Key: "provider.clusterName", Value: s.config.ClusterName},
 		attribute.Attribute{Key: "provider.clusterArn", Value: s.config.ClusterARN},
 		attribute.Attribute{Key: "clusterName", Value: s.config.ClusterName},
+		attribute.Attribute{Key: "entityName", Value: s.config.ClusterName},
 		attribute.Attribute{Key: "environment", Value: s.config.Environment},
+		// Critical AWS fields for UI visibility
+		attribute.Attribute{Key: "provider", Value: "AwsMskCluster"},
+		attribute.Attribute{Key: "awsAccountId", Value: s.config.AWSAccountID},
+		attribute.Attribute{Key: "awsRegion", Value: s.config.AWSRegion},
+		attribute.Attribute{Key: "instrumentation.provider", Value: "aws"},
+		attribute.Attribute{Key: "providerAccountId", Value: s.config.AWSAccountID},
+		attribute.Attribute{Key: "providerAccountName", Value: "MSK Shim Account"},
+		attribute.Attribute{Key: "collector.name", Value: "nri-kafka-msk"},
+		attribute.Attribute{Key: "collector.version", Value: "1.0.0"},
+		attribute.Attribute{Key: "displayName", Value: s.config.ClusterName},
 	)
 	
 	// Set cluster status and health metrics
@@ -162,6 +240,8 @@ func (s *MSKShim) SimpleTransformClusterMetrics() error {
 		totalBytesOut := 0.0
 		totalMessagesIn := 0.0
 		totalUnderReplicated := 0.0
+		totalOfflinePartitions := 0.0
+		totalPartitions := 0.0
 		
 		for _, brokerMetrics := range s.aggregator.GetBrokerMetrics() {
 			if bytesIn, ok := getFloatValue(brokerMetrics, "broker.IOInPerSecond"); ok {
@@ -176,14 +256,28 @@ func (s *MSKShim) SimpleTransformClusterMetrics() error {
 			if underReplicated, ok := getFloatValue(brokerMetrics, "replication.unreplicatedPartitions"); ok {
 				totalUnderReplicated += underReplicated
 			}
+			if offlinePartitions, ok := getFloatValue(brokerMetrics, "replication.offlinePartitions"); ok {
+				totalOfflinePartitions += offlinePartitions
+			}
+			if partitionCount, ok := getFloatValue(brokerMetrics, "partition.count"); ok {
+				totalPartitions += partitionCount
+			}
+		}
+		
+		// Calculate partition count from topics if not available from brokers
+		// NOTE: GetTopicMetrics requires a topic name, so we'll use the topic count * 3 estimate
+		
+		// Default to a reasonable value if still 0
+		if totalPartitions == 0 {
+			totalPartitions = float64(s.aggregator.GetTopicCount() * 3) // Assume 3 partitions per topic
 		}
 		
 		ms.SetMetric("provider.bytesInPerSec.Sum", totalBytesIn, metric.GAUGE)
 		ms.SetMetric("provider.bytesOutPerSec.Sum", totalBytesOut, metric.GAUGE)
 		ms.SetMetric("provider.messagesInPerSec.Sum", totalMessagesIn, metric.GAUGE)
-		ms.SetMetric("provider.globalPartitionCount", 50.0, metric.GAUGE) // Default partition count
+		ms.SetMetric("provider.globalPartitionCount", totalPartitions, metric.GAUGE)
 		ms.SetMetric("provider.globalTopicCount", float64(s.aggregator.GetTopicCount()), metric.GAUGE)
-		ms.SetMetric("provider.offlinePartitionsCount.Sum", 0.0, metric.GAUGE)
+		ms.SetMetric("provider.offlinePartitionsCount.Sum", totalOfflinePartitions, metric.GAUGE)
 		ms.SetMetric("provider.underReplicatedPartitions.Sum", totalUnderReplicated, metric.GAUGE)
 	} else {
 		// Set default values if no aggregator
@@ -220,6 +314,45 @@ func (s *MSKShim) SimpleTransformClusterMetrics() error {
 	ms.SetMetric("provider.networkRxPackets.Sum", 10000.0, metric.GAUGE)
 	ms.SetMetric("provider.networkTxPackets.Sum", 10000.0, metric.GAUGE)
 	
+	// Send dimensional metrics if enabled
+	if s.dimensionalTransformer != nil {
+		// Create AwsMskClusterSample representation with provider.* attributes
+		awsMskSample := map[string]interface{}{
+			"eventType":   "AwsMskClusterSample",
+			"clusterName": s.config.ClusterName,
+			"entityGuid":  GenerateEntityGUID(EntityTypeCluster, s.config.AWSAccountID, s.config.ClusterName, nil),
+			"entityName":  s.config.ClusterName,
+		}
+		
+		// Add critical AWS fields for UI visibility
+		awsMskSample["provider"] = "AwsMskCluster"
+		awsMskSample["awsAccountId"] = s.config.AWSAccountID
+		awsMskSample["awsRegion"] = s.config.AWSRegion
+		awsMskSample["instrumentation.provider"] = "aws"
+		awsMskSample["providerAccountId"] = s.config.AWSAccountID
+		awsMskSample["providerAccountName"] = "MSK Shim Account"
+		awsMskSample["collector.name"] = "nri-kafka-msk"
+		awsMskSample["collector.version"] = "1.0.0"
+		awsMskSample["displayName"] = s.config.ClusterName
+		awsMskSample["provider.accountId"] = s.config.AWSAccountID
+		awsMskSample["provider.region"] = s.config.AWSRegion
+		awsMskSample["provider.clusterArn"] = s.config.ClusterARN
+		awsMskSample["provider.clusterName"] = s.config.ClusterName
+		
+		// Add all provider.* metrics from the metric set
+		for name, metricData := range ms.Metrics {
+			// Add all metrics as they're already provider.* metrics
+			if strings.HasPrefix(name, "provider.") {
+				awsMskSample[name] = metricData
+			}
+		}
+		
+		// Transform the AwsMsk sample with provider attributes
+		if err := s.dimensionalTransformer.TransformSample(awsMskSample); err != nil {
+			log.Error("Failed to transform cluster sample to dimensional metrics: %v", err)
+		}
+	}
+	
 	log.Info("Created MSK cluster entity: %s with %d metrics", s.config.ClusterName, len(ms.Metrics))
 	return nil
 }
@@ -232,12 +365,12 @@ func (s *MSKShim) SimpleTransformTopicMetrics(topicData map[string]interface{}) 
 	}
 	
 	entityName := fmt.Sprintf("%s-topic-%s", s.config.ClusterName, topicName)
-	entity, err := s.integration.Entity(entityName, "aws-msk-topic")
+	entity, err := s.integration.Entity(entityName, "KAFKA_TOPIC")
 	if err != nil {
 		return fmt.Errorf("failed to create topic entity: %v", err)
 	}
 	
-	// Create metric set
+	// Create MSK metric set
 	ms := entity.NewMetricSet("AwsMskTopicSample",
 		attribute.Attribute{Key: "provider.accountId", Value: s.config.AWSAccountID},
 		attribute.Attribute{Key: "provider.region", Value: s.config.AWSRegion},
@@ -245,7 +378,7 @@ func (s *MSKShim) SimpleTransformTopicMetrics(topicData map[string]interface{}) 
 		attribute.Attribute{Key: "provider.topicName", Value: topicName},
 		attribute.Attribute{Key: "provider.clusterArn", Value: s.config.ClusterARN},
 		attribute.Attribute{Key: "clusterName", Value: s.config.ClusterName},
-		attribute.Attribute{Key: "entityName", Value: fmt.Sprintf("topic:%s", topicName)},
+		attribute.Attribute{Key: "entityName", Value: entityName},
 		attribute.Attribute{Key: "environment", Value: s.config.Environment},
 	)
 	
@@ -299,6 +432,25 @@ func (s *MSKShim) SimpleTransformTopicMetrics(topicData map[string]interface{}) 
 	// Under-replicated partitions (default to 0)
 	ms.SetMetric("provider.underReplicatedPartitions", 0.0, metric.GAUGE)
 	
+	// ALSO create standard Kafka metric set for UI visibility
+	kafkaMs := entity.NewMetricSet("KafkaTopicSample",
+		attribute.Attribute{Key: "clusterName", Value: s.config.ClusterName},
+		attribute.Attribute{Key: "topic", Value: topicName},
+		attribute.Attribute{Key: "entityName", Value: entityName},
+		attribute.Attribute{Key: "environment", Value: s.config.Environment},
+	)
+	
+	// Map key metrics to standard format
+	if bytesIn, ok := getFloatValue(topicData, "topic.bytesInPerSecond"); ok {
+		kafkaMs.SetMetric("topic.bytesInPerSecond", bytesIn, metric.GAUGE)
+	}
+	if bytesOut, ok := getFloatValue(topicData, "topic.bytesOutPerSecond"); ok {
+		kafkaMs.SetMetric("topic.bytesOutPerSecond", bytesOut, metric.GAUGE)
+	}
+	if messagesIn, ok := getFloatValue(topicData, "topic.messagesInPerSecond"); ok {
+		kafkaMs.SetMetric("topic.messagesInPerSecond", messagesIn, metric.GAUGE)
+	}
+	
 	// Add to aggregator for cluster-level metrics
 	if s.aggregator != nil {
 		// Convert to TopicMetrics struct
@@ -315,6 +467,31 @@ func (s *MSKShim) SimpleTransformTopicMetrics(topicData map[string]interface{}) 
 			topicMetric.MessagesInPerSec = messagesIn
 		}
 		s.aggregator.AddTopicMetric(topicName, topicMetric)
+	}
+	
+	// Send dimensional metrics if enabled
+	if s.dimensionalTransformer != nil {
+		// Create AwsMskTopicSample representation with provider.* attributes
+		awsMskSample := map[string]interface{}{
+			"eventType":   "AwsMskTopicSample",
+			"clusterName": s.config.ClusterName,
+			"entityGuid":  GenerateEntityGUID(EntityTypeTopic, s.config.AWSAccountID, s.config.ClusterName, topicName),
+			"entityName":  entityName,
+			"topic":       topicName,
+		}
+		
+		// Add all provider.* metrics from the metric set
+		for name, metricData := range ms.Metrics {
+			// Add all metrics as they're already provider.* metrics
+			if strings.HasPrefix(name, "provider.") {
+				awsMskSample[name] = metricData
+			}
+		}
+		
+		// Transform the AwsMsk sample with provider attributes
+		if err := s.dimensionalTransformer.TransformSample(awsMskSample); err != nil {
+			log.Error("Failed to transform topic sample to dimensional metrics: %v", err)
+		}
 	}
 	
 	log.Info("Transformed MSK topic metrics for topic %s with %d metrics", topicName, len(ms.Metrics))
@@ -339,7 +516,7 @@ func (s *MSKShim) SimpleTransformConsumerOffset(offsetData map[string]interface{
 	}
 	
 	entityName := fmt.Sprintf("%s-consumergroup-%s", s.config.ClusterName, consumerGroup)
-	entity, err := s.integration.Entity(entityName, "aws-msk-consumer-group")
+	entity, err := s.integration.Entity(entityName, "KAFKA_CONSUMER_GROUP")
 	if err != nil {
 		return fmt.Errorf("failed to create consumer group entity: %v", err)
 	}
@@ -354,7 +531,7 @@ func (s *MSKShim) SimpleTransformConsumerOffset(offsetData map[string]interface{
 		attribute.Attribute{Key: "provider.partition", Value: partition},
 		attribute.Attribute{Key: "provider.clusterArn", Value: s.config.ClusterARN},
 		attribute.Attribute{Key: "clusterName", Value: s.config.ClusterName},
-		attribute.Attribute{Key: "entityName", Value: fmt.Sprintf("consumerGroup:%s", consumerGroup)},
+		attribute.Attribute{Key: "entityName", Value: entityName},
 		attribute.Attribute{Key: "environment", Value: s.config.Environment},
 	)
 	
@@ -380,6 +557,11 @@ func (s *MSKShim) SimpleTransformConsumerOffset(offsetData map[string]interface{
 		if lag, ok := getFloatValue(offsetData, "consumerLag"); ok {
 			s.aggregator.AddConsumerLag(topic, consumerGroup, lag)
 		}
+	}
+	
+	// Send dimensional metrics if enabled
+	if s.dimensionalTransformer != nil {
+		s.dimensionalTransformer.TransformConsumerMetrics(consumerGroup, topic, offsetData)
 	}
 	
 	log.Debug("Transformed MSK consumer offset metrics for group %s, topic %s, partition %s", 

@@ -10,12 +10,13 @@ import (
 
 // MSKShim is the consolidated MSK shim implementation
 type MSKShim struct {
-	config       Config
-	integration  *integration.Integration
-	aggregator   *MetricAggregator
-	entityCache  *EntityCache
-	systemAPI    InfrastructureAPI
-	mu           sync.Mutex
+	config                 Config
+	integration            *integration.Integration
+	aggregator             *MetricAggregator
+	entityCache            *EntityCache
+	systemAPI              InfrastructureAPI
+	dimensionalTransformer *DimensionalTransformer
+	mu                     sync.Mutex
 }
 
 // EntityCache manages entities to avoid duplicates
@@ -45,6 +46,11 @@ func (s *MSKShim) SetIntegration(i *integration.Integration) {
 	s.mu.Lock()
 	defer s.mu.Unlock()
 	s.integration = i
+	
+	// Initialize dimensional transformer if integration is set
+	if i != nil {
+		s.dimensionalTransformer = NewDimensionalTransformer(i, &s.config)
+	}
 }
 
 // IsEnabled returns whether the MSK shim is enabled
@@ -93,6 +99,13 @@ func (s *MSKShim) SetSystemSampleAPI(api InfrastructureAPI) {
 	s.systemAPI = api
 }
 
+// Stop stops the MSK shim and flushes any pending metrics
+func (s *MSKShim) Stop() {
+	if s.dimensionalTransformer != nil {
+		s.dimensionalTransformer.Stop()
+	}
+}
+
 // Flush performs final aggregations and creates cluster entity
 func (s *MSKShim) Flush() error {
 	if s.integration == nil {
@@ -105,6 +118,13 @@ func (s *MSKShim) Flush() error {
 	if err := s.SimpleTransformClusterMetrics(); err != nil {
 		log.Error("Failed to create cluster entity: %v", err)
 		return err
+	}
+	
+	// Flush dimensional metrics if enabled
+	if s.dimensionalTransformer != nil {
+		if err := s.dimensionalTransformer.Flush(); err != nil {
+			log.Error("Failed to flush dimensional metrics: %v", err)
+		}
 	}
 	
 	// Log summary
