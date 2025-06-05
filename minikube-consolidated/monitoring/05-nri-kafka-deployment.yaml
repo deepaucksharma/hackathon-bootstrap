@@ -23,7 +23,7 @@ spec:
         env:
         # Infrastructure agent config
         - name: NRIA_LICENSE_KEY
-          value: "dfb79449d23acce4df582f2f5550abe4FFFFNRAL"
+          value: "YOUR_LICENSE_KEY_HERE" # Replace with your New Relic license key
         
         # Kafka configuration
         - name: CLUSTER_NAME

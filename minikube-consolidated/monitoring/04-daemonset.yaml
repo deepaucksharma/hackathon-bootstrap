@@ -30,7 +30,7 @@ spec:
         env:
         # New Relic License Key
         - name: NRIA_LICENSE_KEY
-          value: "dfb79449d23acce4df582f2f5550abe4FFFFNRAL" # Replace with your license key
+          value: "YOUR_LICENSE_KEY_HERE" # Replace with your New Relic license key
         
         # Infrastructure agent configuration
         - name: NRIA_OVERRIDE_HOSTNAME_SHORT
