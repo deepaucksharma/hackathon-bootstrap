@@ -11,8 +11,9 @@ const https = require('https');
 const fs = require('fs');
 
 // Load environment variables
-if (fs.existsSync('.env')) {
-  const envContent = fs.readFileSync('.env', 'utf8');
+const envPath = fs.existsSync('.env') ? '.env' : '../.env';
+if (fs.existsSync(envPath)) {
+  const envContent = fs.readFileSync(envPath, 'utf8');
   envContent.split('\n').forEach(line => {
     const trimmedLine = line.trim();
     if (trimmedLine && !trimmedLine.startsWith('#')) {

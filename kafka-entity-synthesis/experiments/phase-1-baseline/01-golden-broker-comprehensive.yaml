@@ -1,0 +1,94 @@
+name: Comprehensive Golden Broker Payload
+description: Test with all required fields based on entity-definitions insights
+phase: baseline
+category: positive-control
+
+baseTemplate: awsmskbroker
+entityType: broker
+
+# Variables with proper constraints
+clusterName: test-cluster-{{timestamp}}  # Max 36 chars
+brokerId: "1"
+awsAccountId: "123456789012"
+region: us-east-1
+accountId: "{{accountId}}"
+
+# Additional required fields from comprehensive guide
+modifications:
+  - action: set
+    field: broker.id
+    value: "{{brokerId}}"
+  - action: set
+    field: providerAccountId
+    value: "{{accountId}}"
+  - action: set
+    field: providerExternalId
+    value: "arn:aws:kafka:{{region}}:{{awsAccountId}}:broker/{{clusterName}}/{{uniqueId}}/{{brokerId}}"
+
+verification:
+  waitTime: 30000
+  checks:
+    # Entity existence and type
+    - type: entityShouldExist
+      params:
+        name: "{{entityName}}"
+        type: AWS_KAFKA_BROKER
+      retries: 3
+      
+    - type: entityShouldHaveCorrectType
+      params:
+        name: "{{entityName}}"
+        expectedType: KAFKA_BROKER
+        expectedDomain: INFRA
+      
+    # UI visibility - the critical check
+    - type: entityShouldBeInUi
+      params:
+        guid: "{{entityGuid}}"
+      retries: 5
+      
+    # Message Queue visibility
+    - type: shouldAppearInMessageQueues
+      params:
+        clusterName: "{{clusterName}}"
+      retries: 5
+      
+    # Field requirements
+    - type: fieldShouldExist
+      params:
+        eventType: AwsMskBrokerSample
+        field: collector.name
+        where: "entityName = '{{entityName}}'"
+        
+    - type: fieldShouldExist
+      params:
+        eventType: AwsMskBrokerSample
+        field: broker.id
+        where: "entityName = '{{entityName}}'"
+        
+    # Golden metrics
+    - type: metricShouldBePopulated
+      params:
+        entityName: "{{entityName}}"
+        metricName: provider.bytesInPerSec.Average
+        eventType: AwsMskBrokerSample
+      retries: 3
+      
+    - type: metricShouldBePopulated
+      params:
+        entityName: "{{entityName}}"
+        metricName: provider.messagesInPerSec.Average
+        eventType: AwsMskBrokerSample
+        
+    # All aggregations required
+    - type: allAggregationsShouldExist
+      params:
+        entityName: "{{entityName}}"
+        metricBase: provider.bytesInPerSec
+        eventType: AwsMskBrokerSample
+        
+    # Custom validation for collector.name
+    - type: customQuery
+      params:
+        query: "FROM AwsMskBrokerSample SELECT latest(collector.name), count(*) WHERE entityName = '{{entityName}}' SINCE 30 minutes ago"
+        validation: "result['latest.collector.name'] === 'cloudwatch-metric-streams'"

@@ -1,0 +1,38 @@
+name: "Phase 2 / Test 2.1: Remove providerExternalId"
+description: "Test if providerExternalId is required for UI visibility"
+baseTemplate: "reference/working-account-samples/broker-events.json"
+
+modifications:
+  - action: "set"
+    path: "entityName"
+    value: "p2-no-extid-broker-${timestamp}"
+  - action: "set"
+    path: "_experimentId"
+    value: "${experimentId}"
+  - action: "set"
+    path: "timestamp"
+    value: "${timestamp}"
+  - action: "remove"
+    path: "providerExternalId"
+
+verification:
+  timeout: 300
+  initialDelay: 30
+  checks:
+    - type: "entityExists"
+      details: 
+        entityName: "p2-no-extid-broker-${timestamp}"
+        entityType: "AWS_KAFKA_BROKER"
+    
+    - type: "uiQuery"
+      details:
+        query: "FROM AwsMskBrokerSample SELECT count(*) WHERE entityName = 'p2-no-extid-broker-${timestamp}' SINCE 30 minutes ago"
+    
+    - type: "entityIsVisibleInUi"
+      details:
+        entityName: "p2-no-extid-broker-${timestamp}"
+        uiContext: "queuesAndStreams"
+
+expectedOutcome: "entityIsVisibleInUi_FAIL"
+keyInsight: "providerExternalId is MANDATORY_FOR_UI"
+fieldClassification: "MANDATORY_FOR_UI"

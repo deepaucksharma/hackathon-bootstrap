@@ -1,0 +1,38 @@
+name: "Phase 2 / Test 2.3: Remove dataSourceName"
+description: "Test if dataSourceName is required"
+baseTemplate: "reference/working-account-samples/broker-events.json"
+
+modifications:
+  - action: "set"
+    path: "entityName"
+    value: "p2-no-datasource-broker-${timestamp}"
+  - action: "set"
+    path: "_experimentId"
+    value: "${experimentId}"
+  - action: "set"
+    path: "timestamp"
+    value: "${timestamp}"
+  - action: "remove"
+    path: "dataSourceName"
+
+verification:
+  timeout: 300
+  initialDelay: 30
+  checks:
+    - type: "entityExists"
+      details: 
+        entityName: "p2-no-datasource-broker-${timestamp}"
+        entityType: "AWS_KAFKA_BROKER"
+    
+    - type: "uiQuery"
+      details:
+        query: "FROM AwsMskBrokerSample SELECT count(*) WHERE entityName = 'p2-no-datasource-broker-${timestamp}' SINCE 30 minutes ago"
+    
+    - type: "entityIsVisibleInUi"
+      details:
+        entityName: "p2-no-datasource-broker-${timestamp}"
+        uiContext: "queuesAndStreams"
+
+expectedOutcome: "ALL_PASS"
+keyInsight: "dataSourceName is OPTIONAL"
+fieldClassification: "OPTIONAL"

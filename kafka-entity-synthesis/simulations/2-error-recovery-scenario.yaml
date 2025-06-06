@@ -1,0 +1,81 @@
+name: Error Recovery Scenario
+description: Test entity behavior during errors and recovery
+clusterName: error-test-cluster
+
+sequence:
+  - step: 1
+    action: send
+    payload:
+      eventType: AwsMskClusterSample
+      entityName: "{{clusterName}}"
+      entityGuid: "error-cluster-guid"
+      provider: AwsMsk
+      collector.name: cloudwatch-metric-streams
+      
+  - step: 2
+    action: send
+    payload:
+      eventType: AwsMskBrokerSample
+      entityName: "{{clusterName}}-broker-1"
+      entityGuid: "error-broker-1-guid"
+      provider: AwsMsk
+      provider.brokerId: "1"
+      provider.bytesInPerSec.Average: 1000000
+      
+  - step: 3
+    action: wait
+    duration: 30
+    
+  - step: 4
+    action: verify
+    check: entityShouldBeHealthy
+    params:
+      guid: "error-broker-1-guid"
+    continueOnError: true
+    
+  - step: 5
+    action: update
+    entity: broker-1
+    updates:
+      provider.cpuUser.Average: 95
+      provider.diskUsed.Average: 98
+      healthStatus: "UNHEALTHY"
+      
+  - step: 6
+    action: wait
+    duration: 30
+    
+  - step: 7
+    action: verify
+    check: entityShouldBeUnhealthy
+    params:
+      guid: "error-broker-1-guid"
+    continueOnError: true
+    
+  - step: 8
+    action: update
+    entity: broker-1
+    updates:
+      provider.cpuUser.Average: 45
+      provider.diskUsed.Average: 60
+      healthStatus: "HEALTHY"
+      
+  - step: 9
+    action: wait
+    duration: 30
+
+verification:
+  checks:
+    - name: Entity recovered
+      type: entityShouldBeHealthy
+      params:
+        guid: "error-broker-1-guid"
+      retries: 5
+      
+    - name: Metrics normal
+      type: metricShouldHaveValue
+      params:
+        entityName: "{{clusterName}}-broker-1"
+        metricName: provider.cpuUser.Average
+        value: 80
+        operator: "<"

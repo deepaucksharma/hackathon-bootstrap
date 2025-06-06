@@ -82,3 +82,4 @@ k8s-deploy/
 k8s-validation/
 k8s-fixes/
 strimzi-kafka-setup/
+kafka-entity-synthesis/node_modules/

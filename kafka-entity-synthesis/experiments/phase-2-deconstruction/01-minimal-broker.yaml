@@ -1,0 +1,44 @@
+name: Minimal Broker Payload
+description: Test with only the absolute minimum required fields for broker synthesis
+phase: deconstruction
+category: minimal-required
+
+baseTemplate: awsmskbroker
+entityType: broker
+
+# Start with golden, then remove everything except essentials
+modifications:
+  # Remove all non-essential metrics
+  - action: remove
+    field: provider.bytesOutPerSec
+  - action: remove
+    field: provider.messagesInPerSec
+  - action: remove
+    field: provider.cpuUser
+  - action: remove
+    field: provider.cpuSystem
+  - action: remove
+    field: provider.diskUsed
+  - action: remove
+    field: provider.diskFree
+  - action: remove
+    field: provider.networkRxPackets
+  - action: remove
+    field: provider.networkTxPackets
+  
+  # Keep only essential identifiers
+  # entityName, entityGuid, provider, eventType should remain
+
+verification:
+  waitTime: 45000
+  checks:
+    - type: entityShouldExist
+      params:
+        name: "{{entityName}}"
+        type: AWS_KAFKA_BROKER
+      retries: 5
+      
+    - type: entityShouldBeInUi
+      params:
+        guid: "{{entityGuid}}"
+      retries: 5

@@ -23,7 +23,7 @@ if (fs.existsSync(envPath)) {
 }
 
 const API_KEY = process.env.UKEY || process.env.NRAK_API_KEY;
-const ACCOUNTS = [3630072, 1, 3001033, 3026020];
+const ACCOUNTS = [parseInt(process.env.ACC || process.env.NR_ACCOUNT_ID || '3630072'), 1, 3001033, 3026020];
 
 async function executeQuery(accountId, nrql) {
   const graphqlQuery = `

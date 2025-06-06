@@ -1,0 +1,167 @@
+name: "Phase 4 / Simulation 2: Test Relationship Formation"
+description: "Verify MANAGES relationships form correctly between cluster, brokers, and topics"
+steps:
+  - step: 1
+    name: "Create MSK Cluster with specific naming"
+    payload:
+      eventType: "AwsMskClusterSample"
+      timestamp: ${timestamp}
+      entityName: "relationship-test-cluster-${timestamp}"
+      entityGuid: "${generatedGuid}"
+      entityId: ${entityIdHash}
+      
+      # Required fields
+      collector.name: "cloud-integrations"
+      instrumentation.provider: "aws"
+      provider: "AwsMskCluster"
+      providerAccountId: "${accountId}"
+      providerAccountName: "Relationship Test"
+      providerExternalId: "123456789012"
+      awsAccountId: "123456789012"
+      awsRegion: "us-east-1"
+      
+      # Cluster specific
+      provider.clusterName: "relationship-test-cluster-${timestamp}"
+      provider.clusterSize: 3
+      provider.kafkaVersion: "2.8.1"
+      
+      # Cluster metrics
+      provider.activeControllerCount.Sum: 1
+      provider.activeControllerCount.Average: 1
+      provider.activeControllerCount.Maximum: 1
+      provider.activeControllerCount.Minimum: 1
+      provider.activeControllerCount.SampleCount: 1
+      
+    waitAfter: 60  # Give time for entity synthesis
+
+  - step: 2
+    name: "Create Broker with matching cluster name"
+    payload:
+      eventType: "AwsMskBrokerSample"
+      timestamp: ${timestamp}
+      entityName: "1:relationship-test-cluster-${timestamp}"
+      entityGuid: "${generatedGuid}"
+      entityId: ${entityIdHash}
+      
+      # Required fields - same as cluster
+      collector.name: "cloud-integrations"
+      instrumentation.provider: "aws"
+      provider: "AwsMskBroker"
+      providerAccountId: "${accountId}"
+      providerAccountName: "Relationship Test"
+      providerExternalId: "123456789012"
+      awsAccountId: "123456789012"
+      awsRegion: "us-east-1"
+      
+      # Broker specific - CRITICAL for relationship
+      provider.brokerId: "1"
+      provider.clusterName: "relationship-test-cluster-${timestamp}"  # Must match cluster
+      
+      # Broker metrics
+      provider.bytesInPerSec.Sum: 100000
+      provider.bytesInPerSec.Average: 1667
+      provider.bytesInPerSec.Maximum: 3000
+      provider.bytesInPerSec.Minimum: 500
+      provider.bytesInPerSec.SampleCount: 60
+      
+    waitAfter: 30
+
+  - step: 3
+    name: "Create Topic with matching cluster name"
+    payload:
+      eventType: "AwsMskTopicSample"
+      timestamp: ${timestamp}
+      entityName: "test-topic-${timestamp}"
+      entityGuid: "${generatedGuid}"
+      entityId: ${entityIdHash}
+      
+      # Required fields - same as cluster
+      collector.name: "cloud-integrations"
+      instrumentation.provider: "aws"
+      provider: "AwsMskTopic"
+      providerAccountId: "${accountId}"
+      providerAccountName: "Relationship Test"
+      providerExternalId: "123456789012"
+      awsAccountId: "123456789012"
+      awsRegion: "us-east-1"
+      
+      # Topic specific - CRITICAL for relationship
+      provider.topicName: "test-topic-${timestamp}"
+      provider.clusterName: "relationship-test-cluster-${timestamp}"  # Must match cluster
+      
+      # Topic metrics
+      provider.messagesInPerSec.Sum: 500
+      provider.messagesInPerSec.Average: 8.33
+      provider.messagesInPerSec.Maximum: 20
+      provider.messagesInPerSec.Minimum: 2
+      provider.messagesInPerSec.SampleCount: 60
+      
+    waitAfter: 60  # Allow time for relationship formation
+
+verification:
+  - step: 4
+    name: "Verify All Entities Exist"
+    checks:
+      - type: "entityExists"
+        details:
+          entityName: "relationship-test-cluster-${timestamp}"
+          entityType: "AWS_KAFKA_CLUSTER"
+      
+      - type: "entityExists"
+        details:
+          entityName: "1:relationship-test-cluster-${timestamp}"
+          entityType: "AWS_KAFKA_BROKER"
+      
+      - type: "entityExists"
+        details:
+          entityName: "test-topic-${timestamp}"
+          entityType: "AWS_KAFKA_TOPIC"
+
+  - step: 5
+    name: "Verify Cluster MANAGES Relationships"
+    checks:
+      - type: "relationshipExists"
+        details:
+          sourceEntityName: "relationship-test-cluster-${timestamp}"
+          sourceEntityType: "AWS_KAFKA_CLUSTER"
+          targetEntityName: "1:relationship-test-cluster-${timestamp}"
+          targetEntityType: "AWS_KAFKA_BROKER"
+          relationshipType: "MANAGES"
+      
+      - type: "relationshipExists"
+        details:
+          sourceEntityName: "relationship-test-cluster-${timestamp}"
+          sourceEntityType: "AWS_KAFKA_CLUSTER"
+          targetEntityName: "test-topic-${timestamp}"
+          targetEntityType: "AWS_KAFKA_TOPIC"
+          relationshipType: "MANAGES"
+
+  - step: 6
+    name: "Verify Inverse Relationships"
+    checks:
+      - type: "inverseRelationshipExists"
+        details:
+          childEntityName: "1:relationship-test-cluster-${timestamp}"
+          parentEntityName: "relationship-test-cluster-${timestamp}"
+          expectedRelation: "managedBy"
+      
+      - type: "inverseRelationshipExists"
+        details:
+          childEntityName: "test-topic-${timestamp}"
+          parentEntityName: "relationship-test-cluster-${timestamp}"
+          expectedRelation: "managedBy"
+
+  - step: 7
+    name: "Verify UI Shows Relationships"
+    checks:
+      - type: "uiRelationshipVisible"
+        details:
+          parentEntity: "relationship-test-cluster-${timestamp}"
+          expectedChildren: 
+            - "1:relationship-test-cluster-${timestamp}"
+            - "test-topic-${timestamp}"
+          uiSection: "relatedEntities"
+
+expectedOutcome: "All entities created with proper MANAGES relationships"
+keyInsight: "Matching provider.clusterName creates parent-child relationships automatically"
+criticalRequirement: "All entities must have identical clusterName for relationships to form"

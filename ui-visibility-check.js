@@ -24,7 +24,7 @@ if (fs.existsSync(envPath)) {
 
 // Configuration
 const ACCOUNTS = {
-  'Your Account (Not in UI)': 3630072,
+  'Your Account (Not in UI)': parseInt(process.env.ACC || process.env.NR_ACCOUNT_ID || '3630072'),
   'Working Account 1': 1,
   'Working Account 3001033': 3001033,
   'Working Account 3026020': 3026020
@@ -175,8 +175,9 @@ async function compareAccounts() {
   
   try {
     // Check field differences
-    const ourFields = await executeQuery(3630072, 
-      `FROM AwsMskClusterSample SELECT keyset() WHERE nr.accountId = 3630072 SINCE 1 hour ago LIMIT 1`
+    const ourAccountId = parseInt(process.env.ACC || process.env.NR_ACCOUNT_ID || '3630072');
+    const ourFields = await executeQuery(ourAccountId, 
+      `FROM AwsMskClusterSample SELECT keyset() WHERE nr.accountId = ${ourAccountId} SINCE 1 hour ago LIMIT 1`
     );
     
     const workingFields = await executeQuery(1,
@@ -190,10 +191,10 @@ async function compareAccounts() {
       const missingInOurs = [...workingFieldSet].filter(f => !ourFieldSet.has(f));
       const extraInOurs = [...ourFieldSet].filter(f => !workingFieldSet.has(f));
       
-      console.log('\n🚨 Fields MISSING in account 3630072:');
+      console.log(`\n🚨 Fields MISSING in account ${ourAccountId}:`);
       missingInOurs.forEach(f => console.log(`  - ${f}`));
       
-      console.log('\n➕ Extra fields in account 3630072:');
+      console.log(`\n➕ Extra fields in account ${ourAccountId}:`);
       extraInOurs.forEach(f => console.log(`  - ${f}`));
     }
   } catch (error) {

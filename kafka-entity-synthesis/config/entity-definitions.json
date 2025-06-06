@@ -1,0 +1,243 @@
+{
+  "entities": {
+    "cluster": {
+      "domain": "INFRA",
+      "type": "KAFKA_CLUSTER",
+      "eventType": "AwsMskClusterSample",
+      "entityType": "AWS_KAFKA_CLUSTER",
+      "identifier": "clusterName",
+      "identityFields": [
+        "entityName",
+        "entityGuid",
+        "provider",
+        "clusterName"
+      ],
+      "synthesisConditions": {
+        "required": {
+          "clusterName": ".+",
+          "eventType": "AwsMskClusterSample"
+        },
+        "anyOf": [
+          {"collector.name": "cloudwatch-metric-streams"},
+          {"collector.name": "cloud-integrations"},
+          {"collector.name": "nri-kafka"}
+        ]
+      },
+      "requiredAttributes": {
+        "collector.name": ["cloudwatch-metric-streams", "cloud-integrations"],
+        "provider": "AwsMsk",
+        "eventType": "AwsMskClusterSample",
+        "timestamp": "number",
+        "entityName": "string",
+        "entityGuid": "string",
+        "clusterName": "string"
+      },
+      "awsContext": {
+        "provider.accountId": "string",
+        "provider.region": "string",
+        "provider.clusterArn": "string",
+        "aws.Namespace": "AWS/Kafka"
+      },
+      "goldenMetrics": [
+        "provider.activeControllerCount.Average",
+        "provider.globalPartitionCount.Average",
+        "provider.globalTopicCount.Average",
+        "provider.offlinePartitionsCount.Average",
+        "provider.zookeeperSessionState.Average"
+      ],
+      "summaryMetrics": {
+        "brokerCount": "provider.numberOfBrokerNodes",
+        "topicCount": "provider.globalTopicCount.Average",
+        "partitionCount": "provider.globalPartitionCount.Average"
+      },
+      "alertable": true,
+      "entityExpirationTime": "EIGHT_DAYS"
+    },
+    "broker": {
+      "domain": "INFRA",
+      "type": "KAFKA_BROKER",
+      "eventType": "AwsMskBrokerSample",
+      "entityType": "AWS_KAFKA_BROKER",
+      "identifier": "clusterName:brokerId",
+      "identityFields": [
+        "entityName",
+        "entityGuid",
+        "provider",
+        "clusterName",
+        "provider.brokerId"
+      ],
+      "synthesisConditions": {
+        "required": {
+          "clusterName": ".+",
+          "provider.brokerId": ".+",
+          "eventType": "AwsMskBrokerSample"
+        },
+        "anyOf": [
+          {"collector.name": "cloudwatch-metric-streams"},
+          {"collector.name": "cloud-integrations"},
+          {"collector.name": "nri-kafka"}
+        ]
+      },
+      "requiredAttributes": {
+        "collector.name": ["cloudwatch-metric-streams", "cloud-integrations"],
+        "provider": "AwsMsk",
+        "eventType": "AwsMskBrokerSample",
+        "timestamp": "number",
+        "entityName": "string",
+        "entityGuid": "string",
+        "clusterName": "string",
+        "provider.brokerId": "string"
+      },
+      "awsContext": {
+        "provider.accountId": "string",
+        "provider.region": "string",
+        "provider.clusterArn": "string",
+        "aws.Namespace": "AWS/Kafka",
+        "aws.kafka.brokerId": "string"
+      },
+      "goldenMetrics": [
+        "provider.bytesInPerSec.Average",
+        "provider.bytesOutPerSec.Average",
+        "provider.messagesInPerSec.Average",
+        "provider.cpuUser.Average",
+        "provider.cpuSystem.Average"
+      ],
+      "summaryMetrics": {
+        "throughput": "provider.bytesInPerSec.Average",
+        "messageRate": "provider.messagesInPerSec.Average",
+        "cpuUsage": "provider.cpuUser.Average"
+      },
+      "alertable": true,
+      "entityExpirationTime": "EIGHT_DAYS"
+    },
+    "topic": {
+      "domain": "INFRA",
+      "type": "KAFKA_TOPIC",
+      "eventType": "AwsMskTopicSample",
+      "entityType": "AWS_KAFKA_TOPIC",
+      "identifier": "clusterName:topicName",
+      "identityFields": [
+        "entityName",
+        "entityGuid",
+        "provider",
+        "clusterName",
+        "provider.topicName"
+      ],
+      "synthesisConditions": {
+        "required": {
+          "clusterName": ".+",
+          "provider.topicName": ".+",
+          "eventType": "AwsMskTopicSample"
+        },
+        "anyOf": [
+          {"collector.name": "cloudwatch-metric-streams"},
+          {"collector.name": "cloud-integrations"},
+          {"collector.name": "nri-kafka"}
+        ]
+      },
+      "requiredAttributes": {
+        "collector.name": ["cloudwatch-metric-streams", "cloud-integrations"],
+        "provider": "AwsMsk",
+        "eventType": "AwsMskTopicSample",
+        "timestamp": "number",
+        "entityName": "string",
+        "entityGuid": "string",
+        "clusterName": "string",
+        "provider.topicName": "string"
+      },
+      "awsContext": {
+        "provider.accountId": "string",
+        "provider.region": "string",
+        "provider.clusterArn": "string",
+        "aws.Namespace": "AWS/Kafka",
+        "aws.kafka.topicName": "string"
+      },
+      "goldenMetrics": [
+        "provider.messagesInPerSec.Average",
+        "provider.bytesInPerSec.Average",
+        "provider.bytesOutPerSec.Average",
+        "provider.fetchRequestsPerSec.Average",
+        "provider.produceRequestsPerSec.Average"
+      ],
+      "summaryMetrics": {
+        "messageRate": "provider.messagesInPerSec.Average",
+        "partitions": "provider.partitionCount",
+        "replicationFactor": "provider.replicationFactor"
+      },
+      "alertable": true,
+      "entityExpirationTime": "EIGHT_DAYS"
+    }
+  },
+  "metricAggregations": {
+    "required": [".Sum", ".Average", ".Minimum", ".Maximum", ".SampleCount"],
+    "description": "All CloudWatch metrics must include all 5 aggregation types"
+  },
+  "relationships": {
+    "cluster-manages-broker": {
+      "type": "MANAGES",
+      "source": "KAFKA_CLUSTER",
+      "target": "KAFKA_BROKER",
+      "ttl": "75 minutes"
+    },
+    "cluster-manages-topic": {
+      "type": "MANAGES",
+      "source": "KAFKA_CLUSTER",
+      "target": "KAFKA_TOPIC",
+      "ttl": "75 minutes"
+    },
+    "service-produces-topic": {
+      "type": "PRODUCES",
+      "source": "APM_APPLICATION",
+      "target": "KAFKA_TOPIC",
+      "ttl": "75 minutes",
+      "description": "Created when APM detects message production"
+    },
+    "service-consumes-topic": {
+      "type": "CONSUMES",
+      "source": "APM_APPLICATION",
+      "target": "KAFKA_TOPIC",
+      "ttl": "75 minutes",
+      "description": "Created when APM detects message consumption"
+    },
+    "broker-hosted-by-host": {
+      "type": "HOSTS",
+      "source": "HOST",
+      "target": "KAFKA_BROKER",
+      "ttl": "75 minutes",
+      "optional": true
+    }
+  },
+  "fieldConstraints": {
+    "identifierLength": {
+      "min": 1,
+      "max": 36,
+      "charset": "ASCII printable (32-126)",
+      "encoding": "Use encodeIdentifierInGUID: true for longer values"
+    },
+    "reservedFields": {
+      "doNotSet": ["entity.guid", "entity.name", "entity.type"],
+      "description": "These fields are automatically set by synthesis engine"
+    },
+    "caseSensitivity": {
+      "clusterName": false,
+      "topicName": true,
+      "brokerId": false
+    }
+  },
+  "uiVisibility": {
+    "requirements": {
+      "collector.name": ["cloudwatch-metric-streams", "cloud-integrations"],
+      "provider": "AwsMsk",
+      "messageQueueSample": "Entity must appear in MessageQueueSample for UI visibility"
+    },
+    "healthStatus": {
+      "green": "No active alerts",
+      "yellow": "Warning or critical alerts active",
+      "aggregation": "Cluster shows yellow if any child entity is unhealthy"
+    },
+    "navigator": {
+      "description": "Honeycomb visualization shows cluster, brokers, and topics as hexagon tiles",
+      "colorCoding": "Based on alert status"
+    }
+  }
+}

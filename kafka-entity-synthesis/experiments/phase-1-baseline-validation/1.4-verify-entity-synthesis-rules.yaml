@@ -1,0 +1,107 @@
+name: "Phase 1 / Test 1.4: Verify Entity Synthesis Rules"
+description: "Test exact entity synthesis requirements from New Relic definitions"
+basePayload:
+  eventType: "AwsMskBrokerSample"
+  timestamp: ${timestamp}
+  
+  # Entity identity - following exact format requirements
+  entityName: "1:p1-synthesis-cluster-${timestamp}"  # {brokerId}:{clusterName}
+  entityGuid: "${generatedGuid}"  # Will be generated following base64(accountId|INFRA|AWS_KAFKA_BROKER|hash)
+  entityId: ${entityIdHash}       # Numeric hash
+  
+  # Collector pipeline - CRITICAL
+  collector.name: "cloud-integrations"
+  instrumentation.provider: "aws"
+  
+  # Provider identity - exact values required
+  provider: "AwsMskBroker"  # NOT "AwsMsk" or "Broker"
+  
+  # Account mapping - all required
+  providerAccountId: "${accountId}"
+  providerAccountName: "Synthesis Test Account"
+  providerExternalId: "123456789012"  # AWS account ID
+  
+  # AWS context
+  awsAccountId: "123456789012"
+  awsRegion: "us-east-1"
+  dataSourceName: "Managed Kafka"
+  
+  # Entity-specific fields
+  provider.brokerId: "1"
+  provider.clusterName: "p1-synthesis-cluster-${timestamp}"
+  
+  # Metrics with ALL 5 aggregations
+  provider.bytesInPerSec.Sum: 150000.0
+  provider.bytesInPerSec.Average: 2500.0
+  provider.bytesInPerSec.Maximum: 5000.0
+  provider.bytesInPerSec.Minimum: 1000.0
+  provider.bytesInPerSec.SampleCount: 60
+  
+  provider.messagesInPerSec.Sum: 1000.0
+  provider.messagesInPerSec.Average: 16.67
+  provider.messagesInPerSec.Maximum: 30.0
+  provider.messagesInPerSec.Minimum: 5.0
+  provider.messagesInPerSec.SampleCount: 60
+  
+  # Health status metric
+  provider.offlinePartitionsCount.Sum: 0
+  provider.offlinePartitionsCount.Average: 0
+  provider.offlinePartitionsCount.Maximum: 0
+  provider.offlinePartitionsCount.Minimum: 0
+  provider.offlinePartitionsCount.SampleCount: 60
+  
+  _experimentId: "${experimentId}"
+
+verification:
+  timeout: 300
+  initialDelay: 30
+  checks:
+    - type: "entitySynthesisComplete"
+      details:
+        entityName: "1:p1-synthesis-cluster-${timestamp}"
+        expectedDomain: "INFRA"
+        expectedType: "AWS_KAFKA_BROKER"
+        validateGuid: true
+        validateTags: true
+    
+    - type: "collectorPipelineVerification"
+      details:
+        entityName: "1:p1-synthesis-cluster-${timestamp}"
+        expectedCollector: "cloud-integrations"
+        expectedProvider: "aws"
+    
+    - type: "providerFieldsComplete"
+      details:
+        entityName: "1:p1-synthesis-cluster-${timestamp}"
+        requiredFields:
+          - "provider"
+          - "providerAccountId"
+          - "providerExternalId"
+          - "awsAccountId"
+          - "awsRegion"
+          - "provider.brokerId"
+          - "provider.clusterName"
+    
+    - type: "metricAggregationsComplete"
+      details:
+        entityName: "1:p1-synthesis-cluster-${timestamp}"
+        testMetric: "provider.bytesInPerSec"
+        requireAllFive: true
+    
+    - type: "healthStatusCorrect"
+      details:
+        entityName: "1:p1-synthesis-cluster-${timestamp}"
+        expectedStatus: "HEALTHY"
+        reason: "offlinePartitionsCount = 0"
+    
+    - type: "messageQueueSample"
+      details:
+        entityName: "1:p1-synthesis-cluster-${timestamp}"
+    
+    - type: "entityIsVisibleInUi"
+      details:
+        entityName: "1:p1-synthesis-cluster-${timestamp}"
+        uiContext: "queuesAndStreams"
+
+expectedOutcome: "ALL_PASS"
+keyInsight: "Entity synthesis requires exact field values and complete metric aggregations"

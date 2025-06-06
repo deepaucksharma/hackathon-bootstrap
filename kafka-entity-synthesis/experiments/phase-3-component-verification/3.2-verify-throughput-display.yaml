@@ -1,0 +1,49 @@
+name: "Phase 3 / Test 3.2: Verify Throughput Display"
+description: "Ensure bytesInPerSec and bytesOutPerSec control throughput display"
+baseTemplate: "reference/working-account-samples/broker-events.json"
+
+modifications:
+  - action: "set"
+    path: "entityName"
+    value: "p3-throughput-broker-${timestamp}"
+  - action: "set"
+    path: "_experimentId"
+    value: "${experimentId}"
+  - action: "set"
+    path: "timestamp"
+    value: "${timestamp}"
+  - action: "set"
+    path: "provider.bytesInPerSec.Average"
+    value: 1048576
+  - action: "set"
+    path: "provider.bytesOutPerSec.Average"
+    value: 2097152
+
+verification:
+  timeout: 300
+  initialDelay: 30
+  checks:
+    - type: "entityExists"
+      details: 
+        entityName: "p3-throughput-broker-${timestamp}"
+        entityType: "AWS_KAFKA_BROKER"
+    
+    - type: "metricValueCheck"
+      details:
+        entityName: "p3-throughput-broker-${timestamp}"
+        metricName: "provider.bytesInPerSec.Average"
+        expectedValue: 1048576
+    
+    - type: "metricValueCheck"
+      details:
+        entityName: "p3-throughput-broker-${timestamp}"
+        metricName: "provider.bytesOutPerSec.Average"
+        expectedValue: 2097152
+    
+    - type: "entityIsVisibleInUi"
+      details:
+        entityName: "p3-throughput-broker-${timestamp}"
+        uiContext: "queuesAndStreams"
+
+expectedOutcome: "ALL_PASS"
+keyInsight: "bytesInPerSec and bytesOutPerSec control throughput visualization"

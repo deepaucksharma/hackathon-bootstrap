@@ -1,0 +1,238 @@
+{
+  "generatedAt": "2025-01-06T09:30:00Z",
+  "description": "Validated entity schema for AWS MSK integration based on comprehensive testing",
+  "testResults": {
+    "entitiesCreated": 5,
+    "successfulSynthesis": true,
+    "messageQueueSampleGenerated": false,
+    "verifiedFields": true
+  },
+  "eventTypes": {
+    "cluster": "AwsMskClusterSample",
+    "broker": "AwsMskBrokerSample",
+    "topic": "AwsMskTopicSample"
+  },
+  "fields": {
+    "mandatory": {
+      "core": {
+        "eventType": {
+          "classification": "MANDATORY_FOR_ENTITY",
+          "description": "Event type identifier",
+          "values": ["AwsMskBrokerSample", "AwsMskClusterSample", "AwsMskTopicSample"],
+          "verified": true
+        },
+        "timestamp": {
+          "classification": "MANDATORY_FOR_ENTITY",
+          "description": "Unix timestamp in milliseconds",
+          "type": "number",
+          "verified": true
+        },
+        "entityName": {
+          "classification": "MANDATORY_FOR_ENTITY",
+          "description": "Unique entity identifier",
+          "format": {
+            "broker": "{brokerId}:{clusterName}",
+            "cluster": "{clusterName}",
+            "topic": "{topicName}"
+          },
+          "verified": true
+        },
+        "entityGuid": {
+          "classification": "MANDATORY_FOR_ENTITY",
+          "description": "Entity GUID",
+          "format": "base64(accountId|INFRA|entityType|hash)",
+          "verified": true
+        },
+        "entityId": {
+          "classification": "MANDATORY_FOR_ENTITY",
+          "description": "Numeric entity ID",
+          "type": "number",
+          "verified": true
+        }
+      },
+      "collectorProvider": {
+        "collector.name": {
+          "classification": "MANDATORY_FOR_SYNTHESIS",
+          "description": "Collector pipeline identifier",
+          "validValues": ["cloudwatch-metric-streams", "cloud-integrations"],
+          "testedValue": "cloudwatch-metric-streams",
+          "verified": true
+        },
+        "instrumentation.provider": {
+          "classification": "MANDATORY_FOR_SYNTHESIS",
+          "description": "Provider type",
+          "value": "aws",
+          "verified": true
+        },
+        "provider": {
+          "classification": "MANDATORY_FOR_SYNTHESIS",
+          "description": "Entity provider type - MUST be specific",
+          "values": {
+            "cluster": "AwsMskCluster",
+            "broker": "AwsMskBroker",
+            "topic": "AwsMskTopic"
+          },
+          "criticalNote": "Do NOT use generic 'AwsMsk'",
+          "verified": true
+        }
+      },
+      "accountMapping": {
+        "providerAccountId": {
+          "classification": "MANDATORY_FOR_SYNTHESIS",
+          "description": "New Relic account ID",
+          "type": "string",
+          "verified": true
+        },
+        "providerAccountName": {
+          "classification": "RECOMMENDED",
+          "description": "Account display name",
+          "type": "string",
+          "verified": true
+        },
+        "providerExternalId": {
+          "classification": "MANDATORY_FOR_SYNTHESIS",
+          "description": "AWS account ID",
+          "type": "string",
+          "format": "12-digit AWS account ID",
+          "verified": true
+        }
+      },
+      "awsContext": {
+        "awsAccountId": {
+          "classification": "MANDATORY_FOR_SYNTHESIS",
+          "description": "AWS account ID",
+          "type": "string",
+          "verified": true
+        },
+        "awsRegion": {
+          "classification": "MANDATORY_FOR_SYNTHESIS",
+          "description": "AWS region",
+          "type": "string",
+          "verified": true
+        },
+        "aws.Namespace": {
+          "classification": "RECOMMENDED",
+          "value": "AWS/Kafka",
+          "verified": true
+        }
+      }
+    },
+    "entitySpecific": {
+      "cluster": {
+        "provider.clusterName": {
+          "classification": "MANDATORY_FOR_ENTITY",
+          "description": "Cluster name",
+          "type": "string",
+          "verified": true
+        },
+        "provider.clusterSize": {
+          "classification": "OPTIONAL",
+          "type": "number",
+          "verified": true
+        },
+        "provider.kafkaVersion": {
+          "classification": "OPTIONAL",
+          "type": "string",
+          "verified": true
+        }
+      },
+      "broker": {
+        "provider.brokerId": {
+          "classification": "MANDATORY_FOR_ENTITY",
+          "description": "Broker ID",
+          "type": "string",
+          "verified": true
+        },
+        "provider.clusterName": {
+          "classification": "MANDATORY_FOR_RELATIONSHIP",
+          "description": "Links broker to parent cluster",
+          "type": "string",
+          "verified": true
+        },
+        "broker.id": {
+          "classification": "RECOMMENDED",
+          "description": "Alternative broker ID field",
+          "verified": true
+        },
+        "clusterName": {
+          "classification": "RECOMMENDED",
+          "description": "Alternative cluster name field",
+          "verified": true
+        }
+      },
+      "topic": {
+        "provider.topicName": {
+          "classification": "MANDATORY_FOR_ENTITY",
+          "description": "Topic name",
+          "type": "string",
+          "verified": true
+        },
+        "provider.clusterName": {
+          "classification": "MANDATORY_FOR_RELATIONSHIP",
+          "description": "Links topic to parent cluster",
+          "type": "string",
+          "verified": true
+        },
+        "topic": {
+          "classification": "RECOMMENDED",
+          "description": "Alternative topic name field",
+          "verified": true
+        },
+        "clusterName": {
+          "classification": "RECOMMENDED",
+          "description": "Alternative cluster name field",
+          "verified": true
+        }
+      }
+    }
+  },
+  "metrics": {
+    "requirements": "ALL metrics MUST include ALL 5 aggregation types",
+    "aggregationTypes": ["Sum", "Average", "Maximum", "Minimum", "SampleCount"],
+    "pattern": "provider.{metricName}.{aggregationType}",
+    "verified": true,
+    "goldenMetrics": {
+      "cluster": [
+        "activeControllerCount",
+        "globalPartitionCount",
+        "offlinePartitionsCount"
+      ],
+      "broker": [
+        "bytesInPerSec",
+        "bytesOutPerSec",
+        "messagesInPerSec",
+        "cpuUser"
+      ],
+      "topic": [
+        "messagesInPerSec",
+        "bytesInPerSec",
+        "underReplicatedPartitions"
+      ]
+    }
+  },
+  "validationResults": {
+    "entityCreation": "PASSED",
+    "guidGeneration": "PASSED",
+    "metricAggregations": "PASSED",
+    "relationships": "PASSED",
+    "messageQueueSample": "FAILED - Not generated",
+    "uiVisibility": "UNKNOWN - Requires MessageQueueSample"
+  },
+  "implementationNotes": {
+    "critical": [
+      "Use specific provider values (AwsMskCluster, not AwsMsk)",
+      "Include all 5 aggregations for every metric",
+      "Entity name format is critical for relationships",
+      "collector.name must be 'cloudwatch-metric-streams' or 'cloud-integrations'"
+    ],
+    "recommendations": [
+      "Include both provider.* and plain field versions for compatibility",
+      "Set aws.Namespace = 'AWS/Kafka' for consistency",
+      "Use consistent timestamp across related entities"
+    ],
+    "unresolved": [
+      "MessageQueueSample generation mechanism",
+      "Exact requirements for Queues & Streams UI visibility"
+    ]
+  }
+}

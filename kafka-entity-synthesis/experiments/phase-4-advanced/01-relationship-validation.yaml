@@ -1,0 +1,120 @@
+name: Validate Entity Relationships
+description: Test MANAGES, PRODUCES, and CONSUMES relationships
+phase: advanced
+category: relationship-testing
+
+# First create a cluster with brokers and topics
+setup:
+  - type: cluster
+    entityId: test-cluster
+    payload:
+      eventType: AwsMskClusterSample
+      clusterName: relationship-test-cluster
+      
+  - type: broker
+    entityId: broker-1
+    payload:
+      eventType: AwsMskBrokerSample
+      clusterName: relationship-test-cluster
+      provider.brokerId: "1"
+      
+  - type: broker
+    entityId: broker-2
+    payload:
+      eventType: AwsMskBrokerSample
+      clusterName: relationship-test-cluster
+      provider.brokerId: "2"
+      
+  - type: topic
+    entityId: orders-topic
+    payload:
+      eventType: AwsMskTopicSample
+      clusterName: relationship-test-cluster
+      provider.topicName: orders
+
+verification:
+  waitTime: 60000  # Wait longer for relationships to form
+  checks:
+    # Cluster MANAGES Brokers
+    - type: clusterShouldHaveBrokers
+      params:
+        clusterGuid: "{test-cluster.guid}"
+        count: 2
+      retries: 5
+      
+    # Verify specific broker relationship
+    - type: relationshipShouldExist
+      params:
+        sourceGuid: "{test-cluster.guid}"
+        targetGuid: "{broker-1.guid}"
+        type: MANAGES
+      retries: 3
+      
+    # Cluster MANAGES Topics
+    - type: customQuery
+      params:
+        query: |
+          query {
+            actor {
+              entity(guid: "{test-cluster.guid}") {
+                relationships {
+                  filter(relationshipTypes: ["MANAGES"]) {
+                    results {
+                      target {
+                        entity {
+                          type
+                          name
+                        }
+                      }
+                    }
+                  }
+                }
+              }
+            }
+          }
+      name: Verify cluster manages both brokers and topics
+      
+    # Test relationship TTL
+    - type: wait
+      duration: 4500  # 75 minutes to test TTL
+      
+    - type: relationshipShouldExist
+      params:
+        sourceGuid: "{test-cluster.guid}"
+        targetGuid: "{broker-1.guid}"
+        type: MANAGES
+      name: Verify relationship persists within TTL
+
+# Test APM relationships (if APM data available)
+apmRelationships:
+  prerequisites:
+    - APM service producing to Kafka topic
+    
+  checks:
+    - type: customQuery
+      params:
+        query: |
+          query {
+            actor {
+              entitySearch(query: "type = 'KAFKA_TOPIC' AND name LIKE '%orders%'") {
+                results {
+                  entities {
+                    relationships {
+                      filter(relationshipTypes: ["PRODUCES", "CONSUMES"]) {
+                        results {
+                          source {
+                            entity {
+                              type
+                              name
+                            }
+                          }
+                          type
+                        }
+                      }
+                    }
+                  }
+                }
+              }
+            }
+          }
+      name: Check for PRODUCES/CONSUMES relationships from services

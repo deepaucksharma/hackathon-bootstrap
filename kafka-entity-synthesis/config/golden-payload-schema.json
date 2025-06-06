@@ -1,0 +1,155 @@
+{
+  "description": "The definitive, annotated golden payload schema for AWS MSK entity synthesis",
+  "schema": {
+    "event_timestamp": {
+      "required": true,
+      "fields": {
+        "eventType": {
+          "required": true,
+          "values": ["AwsMskBrokerSample", "AwsMskClusterSample", "AwsMskTopicSample"],
+          "description": "Triggers the correct processing pipeline"
+        },
+        "timestamp": {
+          "required": true,
+          "type": "number",
+          "description": "Unix timestamp in MILLISECONDS"
+        }
+      }
+    },
+    "entity_identity": {
+      "required": true,
+      "fields": {
+        "entityName": {
+          "required": true,
+          "format": "{brokerId}:{clusterName}",
+          "description": "Unique entity identifier"
+        },
+        "entityGuid": {
+          "required": true,
+          "format": "base64(accountId|INFRA|AWS_KAFKA_BROKER|hash(identifier))",
+          "description": "Generated entity GUID"
+        },
+        "entityId": {
+          "required": true,
+          "type": "number",
+          "description": "Numeric hash of the identifier"
+        }
+      }
+    },
+    "collector_provider": {
+      "required": true,
+      "description": "CRITICAL FOR UI VISIBILITY",
+      "fields": {
+        "collector.name": {
+          "required": true,
+          "value": "cloud-integrations",
+          "description": "NON-NEGOTIABLE: This is the magic key for the UI"
+        },
+        "instrumentation.provider": {
+          "required": true,
+          "value": "aws",
+          "description": "Identifies the data source as AWS-native"
+        },
+        "provider": {
+          "required": true,
+          "values": ["AwsMskBroker", "AwsMskCluster", "AwsMskTopic"],
+          "description": "Must match the entity type"
+        }
+      }
+    },
+    "account_mapping": {
+      "required": true,
+      "description": "CRITICAL FOR UI VISIBILITY",
+      "fields": {
+        "providerAccountId": {
+          "required": true,
+          "type": "string",
+          "description": "Your New Relic Account ID"
+        },
+        "providerAccountName": {
+          "required": true,
+          "type": "string",
+          "description": "Display name for the account link"
+        },
+        "providerExternalId": {
+          "required": true,
+          "type": "string",
+          "description": "Your 12-digit AWS Account ID. Links to AWS account in NR"
+        }
+      }
+    },
+    "aws_context": {
+      "required": true,
+      "fields": {
+        "awsAccountId": {
+          "required": true,
+          "type": "string",
+          "description": "Your 12-digit AWS Account ID"
+        },
+        "awsRegion": {
+          "required": true,
+          "type": "string",
+          "default": "us-east-1",
+          "description": "The AWS region"
+        },
+        "dataSourceName": {
+          "required": false,
+          "value": "Managed Kafka",
+          "description": "Static value used by the native integration"
+        }
+      }
+    },
+    "entity_specific": {
+      "broker": {
+        "fields": {
+          "provider.brokerId": {
+            "required": true,
+            "type": "string",
+            "description": "Broker ID"
+          },
+          "provider.clusterName": {
+            "required": true,
+            "type": "string",
+            "description": "Must match the cluster's entityName to establish relationships"
+          }
+        }
+      },
+      "cluster": {
+        "fields": {
+          "provider.clusterName": {
+            "required": true,
+            "type": "string",
+            "description": "Cluster name"
+          }
+        }
+      },
+      "topic": {
+        "fields": {
+          "provider.topicName": {
+            "required": true,
+            "type": "string",
+            "description": "Topic name"
+          },
+          "provider.clusterName": {
+            "required": true,
+            "type": "string",
+            "description": "Parent cluster name"
+          }
+        }
+      }
+    },
+    "metrics": {
+      "required": true,
+      "description": "MUST include all 5 aggregations for each metric",
+      "pattern": "provider.{metricName}.{aggregationType}",
+      "aggregation_types": ["Sum", "Average", "Maximum", "Minimum", "SampleCount"],
+      "example": {
+        "provider.bytesInPerSec.Sum": 150000.0,
+        "provider.bytesInPerSec.Average": 2500.0,
+        "provider.bytesInPerSec.Maximum": 5000.0,
+        "provider.bytesInPerSec.Minimum": 1000.0,
+        "provider.bytesInPerSec.SampleCount": 60
+      }
+    }
+  }
+}

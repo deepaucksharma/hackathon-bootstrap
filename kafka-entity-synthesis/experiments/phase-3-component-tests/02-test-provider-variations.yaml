@@ -1,0 +1,47 @@
+name: Test Provider Field Variations
+description: Test different provider values and structures
+phase: component-tests
+category: provider-variations
+
+baseTemplate: awsmskbroker
+entityType: broker
+
+variations:
+  - name: Generic AwsMsk Provider
+    modifications:
+      - action: set
+        field: provider
+        value: AwsMsk
+        
+  - name: Specific AwsMskBroker Provider
+    modifications:
+      - action: set
+        field: provider
+        value: AwsMskBroker
+        
+  - name: AWS MSK Provider
+    modifications:
+      - action: set
+        field: provider
+        value: AWS MSK
+        
+  - name: Provider Object
+    modifications:
+      - action: set
+        field: provider
+        value:
+          name: AwsMsk
+          type: broker
+          region: us-east-1
+
+verification:
+  waitTime: 30000
+  checks:
+    - type: entityShouldExist
+      params:
+        name: "{{entityName}}"
+        type: AWS_KAFKA_BROKER
+      
+    - type: shouldAppearInMessageQueues
+      params:
+        clusterName: "{{clusterName}}"

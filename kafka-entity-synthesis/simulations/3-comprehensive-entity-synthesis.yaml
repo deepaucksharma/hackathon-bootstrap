@@ -1,0 +1,176 @@
+name: Comprehensive Entity Synthesis Validation
+description: Test complete entity synthesis with all requirements from the comprehensive guide
+clusterName: comprehensive-test-cluster
+awsAccountId: "123456789012"
+region: us-east-1
+
+# Define payloads with all required fields
+payloads:
+  cluster:
+    template: awsmskcluster
+    entityType: cluster
+    modifications:
+      - action: set
+        field: collector.name
+        value: cloudwatch-metric-streams
+      - action: set
+        field: provider
+        value: AwsMsk
+      - action: set
+        field: providerAccountId
+        value: "{{accountId}}"
+      - action: set
+        field: providerExternalId
+        value: "arn:aws:kafka:{{region}}:{{awsAccountId}}:cluster/{{clusterName}}/{{uniqueId}}"
+        
+  broker:
+    template: awsmskbroker
+    entityType: broker
+    perInstance:
+      provider.brokerId:
+        values: ["1", "2", "3"]
+    modifications:
+      - action: set
+        field: broker.id
+        value: "{brokerId}"
+      - action: set
+        field: collector.name
+        value: cloudwatch-metric-streams
+
+# Simulation sequence
+sequence:
+  # Step 1: Create cluster
+  - step: 1
+    action: send
+    payload: cluster
+    entityId: main-cluster
+    
+  - step: 2
+    action: wait
+    duration: 30
+    
+  # Step 3: Verify cluster synthesis
+  - step: 3
+    action: verify
+    check: entityShouldExist
+    params:
+      name: "{main-cluster.name}"
+      type: AWS_KAFKA_CLUSTER
+      
+  - step: 4
+    action: verify
+    check: entityShouldHaveCorrectType
+    params:
+      name: "{main-cluster.name}"
+      expectedType: KAFKA_CLUSTER
+      expectedDomain: INFRA
+      
+  # Step 5: Create brokers
+  - step: 5
+    action: send
+    payload: broker
+    count: 3
+    entityId: broker-{index}
+    parallel: true
+    
+  - step: 6
+    action: wait
+    duration: 30
+    
+  # Step 7: Verify brokers and relationships
+  - step: 7
+    action: verify
+    check: clusterShouldHaveBrokers
+    params:
+      clusterGuid: "{main-cluster.guid}"
+      count: 3
+      
+  # Step 8: Test UI visibility
+  - step: 8
+    action: verify
+    check: shouldAppearInMessageQueues
+    params:
+      clusterName: comprehensive-test-cluster
+      
+  # Step 9: Generate traffic with all aggregations
+  - step: 9
+    action: generate
+    type: traffic
+    
+  - step: 10
+    action: wait
+    duration: 30
+    
+  # Step 11: Test wrong collector.name
+  - step: 11
+    action: update
+    entity: broker-0
+    updates:
+      collector.name: nri-kafka
+      
+  - step: 12
+    action: wait
+    duration: 30
+    
+  # Step 13: Verify broker disappeared from UI
+  - step: 13
+    action: verify
+    check: customQuery
+    params:
+      query: "FROM MessageQueueSample SELECT count(*) WHERE entity.name LIKE '%broker-0%' SINCE 5 minutes ago"
+      validation: "result.count === 0"
+
+# Final comprehensive verification
+verification:
+  checks:
+    # Entity existence
+    - name: All entities exist
+      type: customQuery
+      params:
+        query: "FROM AwsMskClusterSample, AwsMskBrokerSample SELECT count(*) WHERE clusterName = 'comprehensive-test-cluster' FACET eventType SINCE 1 hour ago"
+        
+    # Correct types
+    - name: Entities have correct types
+      type: entityShouldHaveCorrectType
+      params:
+        name: "{main-cluster.name}"
+        expectedType: KAFKA_CLUSTER
+        expectedDomain: INFRA
+        
+    # UI visibility
+    - name: Visible in Message Queues
+      type: shouldAppearInMessageQueues
+      params:
+        clusterName: comprehensive-test-cluster
+        
+    # Golden metrics
+    - name: Golden metrics populated
+      type: metricShouldBePopulated
+      params:
+        entityName: "{broker-1.name}"
+        metricName: provider.bytesInPerSec.Average
+        
+    # All aggregations
+    - name: All aggregations present
+      type: allAggregationsShouldExist
+      params:
+        entityName: "{broker-1.name}"
+        metricBase: provider.bytesInPerSec
+        eventType: AwsMskBrokerSample
+        
+    # Relationships
+    - name: Cluster manages brokers
+      type: clusterShouldHaveBrokers
+      params:
+        clusterGuid: "{main-cluster.guid}"
+        count: 3
+        
+    # Field constraints
+    - name: Required fields present
+      type: customQuery
+      params:
+        query: |
+          FROM AwsMskBrokerSample 
+          SELECT latest(collector.name), latest(provider), latest(clusterName), latest(broker.id)
+          WHERE entityName LIKE '%comprehensive-test%'
+          SINCE 1 hour ago

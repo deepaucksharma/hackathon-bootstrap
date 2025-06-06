@@ -1,0 +1,182 @@
+{
+  "description": "Field classifications based on New Relic entity definitions and testing",
+  "lastUpdated": "2025-01-06",
+  "sources": [
+    "New Relic entity-definitions repository",
+    "New Relic Queues & Streams documentation",
+    "Entity synthesis testing results"
+  ],
+  "classifications": {
+    "MANDATORY_FOR_ENTITY": {
+      "description": "Required for entity to be created in NerdGraph",
+      "fields": {
+        "eventType": {
+          "values": ["AwsMskBrokerSample", "AwsMskClusterSample", "AwsMskTopicSample"],
+          "reason": "Determines entity synthesis pipeline"
+        },
+        "timestamp": {
+          "type": "number",
+          "format": "Unix milliseconds",
+          "reason": "Required for all telemetry"
+        },
+        "entityName": {
+          "format": {
+            "broker": "{brokerId}:{clusterName}",
+            "cluster": "{clusterName}",
+            "topic": "{topicName}"
+          },
+          "constraints": "1-50 chars, printable ASCII",
+          "reason": "Used as entity identifier"
+        },
+        "entityGuid": {
+          "format": "base64(accountId|INFRA|entityType|hash)",
+          "algorithm": "MurmurHash3",
+          "reason": "Unique entity identifier"
+        },
+        "entityId": {
+          "type": "number",
+          "description": "Numeric hash of identifier",
+          "reason": "Legacy compatibility"
+        }
+      }
+    },
+    "MANDATORY_FOR_UI": {
+      "description": "Required for Queues & Streams UI visibility",
+      "fields": {
+        "collector.name": {
+          "value": "cloud-integrations",
+          "critical": true,
+          "reason": "UI filters for this specific collector pipeline"
+        },
+        "instrumentation.provider": {
+          "value": "aws",
+          "reason": "Identifies AWS-native data source"
+        },
+        "provider": {
+          "values": {
+            "broker": "AwsMskBroker",
+            "cluster": "AwsMskCluster",
+            "topic": "AwsMskTopic"
+          },
+          "critical": true,
+          "reason": "Must match exact provider types for UI recognition"
+        },
+        "providerExternalId": {
+          "type": "string",
+          "format": "12-digit AWS account ID or ARN",
+          "critical": true,
+          "reason": "Links entity to AWS account in New Relic"
+        },
+        "providerAccountId": {
+          "type": "string",
+          "description": "New Relic account ID",
+          "reason": "Account mapping for multi-account setups"
+        },
+        "awsAccountId": {
+          "type": "string",
+          "format": "12-digit AWS account ID",
+          "reason": "AWS context for entity"
+        },
+        "awsRegion": {
+          "type": "string",
+          "example": "us-east-1",
+          "reason": "Regional context for entity"
+        }
+      }
+    },
+    "MANDATORY_FOR_METRICS": {
+      "description": "Required for metric population and display",
+      "fields": {
+        "metric_aggregations": {
+          "pattern": "provider.{metricName}.{aggregationType}",
+          "required_aggregations": ["Sum", "Average", "Maximum", "Minimum", "SampleCount"],
+          "reason": "All 5 aggregations required for each metric"
+        }
+      }
+    },
+    "RECOMMENDED": {
+      "description": "Present in all working examples, improve functionality",
+      "fields": {
+        "providerAccountName": {
+          "type": "string",
+          "description": "Human-readable account name",
+          "reason": "Improves UI display"
+        },
+        "collector.version": {
+          "type": "string",
+          "description": "Collector version info",
+          "reason": "Debugging and compatibility"
+        },
+        "dataSourceName": {
+          "value": "Managed Kafka",
+          "reason": "Consistency with native integration"
+        }
+      }
+    },
+    "OPTIONAL": {
+      "description": "Can be omitted without impact",
+      "fields": {
+        "tags.*": {
+          "description": "Custom tags for filtering",
+          "reason": "User-defined metadata"
+        },
+        "labels.*": {
+          "description": "Custom labels",
+          "reason": "Additional context"
+        }
+      }
+    },
+    "ENTITY_SPECIFIC": {
+      "description": "Required fields specific to entity type",
+      "broker": {
+        "provider.brokerId": {
+          "type": "string",
+          "mandatory": true,
+          "reason": "Broker identifier within cluster"
+        },
+        "provider.clusterName": {
+          "type": "string",
+          "mandatory": true,
+          "reason": "Links broker to parent cluster"
+        }
+      },
+      "cluster": {
+        "provider.clusterName": {
+          "type": "string",
+          "mandatory": true,
+          "reason": "Cluster identifier"
+        }
+      },
+      "topic": {
+        "provider.topicName": {
+          "type": "string",
+          "mandatory": true,
+          "reason": "Topic identifier"
+        },
+        "provider.clusterName": {
+          "type": "string",
+          "mandatory": true,
+          "reason": "Links topic to parent cluster"
+        }
+      }
+    }
+  },
+  "validation_rules": [
+    "Never manually set entity.guid unless explicitly overriding",
+    "Never manually set entity.name unless intentionally changing display",
+    "Identifier fields must be 1-50 chars of printable ASCII",
+    "All timestamps must be Unix milliseconds",
+    "Metric values must be float64",
+    "Provider values must match exactly (case-sensitive)"
+  ],
+  "health_status_triggers": {
+    "UNHEALTHY": [
+      "provider.offlinePartitionsCount.Sum > 0",
+      "provider.activeControllerCount.Sum != 1"
+    ],
+    "WARNING": [
+      "provider.underReplicatedPartitions.Sum > 0",
+      "provider.consumerLag.Average > 100000"
+    ]
+  }
+}

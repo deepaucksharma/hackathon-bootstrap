@@ -1,0 +1,48 @@
+name: Test Collector Name Variations
+description: Test different collector.name values for entity synthesis
+phase: component-tests
+category: collector-variations
+
+baseTemplate: awsmskbroker
+entityType: broker
+
+# Test with different collector names
+variations:
+  - name: CloudWatch Metric Streams
+    modifications:
+      - action: set
+        field: collector.name
+        value: cloudwatch-metric-streams
+        
+  - name: Cloud Integrations
+    modifications:
+      - action: set
+        field: collector.name
+        value: cloud-integrations
+        
+  - name: NRI Kafka MSK
+    modifications:
+      - action: set
+        field: collector.name
+        value: nri-kafka-msk
+        
+  - name: Custom Collector
+    modifications:
+      - action: set
+        field: collector.name
+        value: custom-kafka-collector
+
+verification:
+  waitTime: 30000
+  checks:
+    - type: entityShouldExist
+      params:
+        name: "{{entityName}}"
+        type: AWS_KAFKA_BROKER
+      retries: 3
+      
+    - type: fieldShouldExist
+      params:
+        eventType: AwsMskBrokerSample
+        field: collector.name
+        where: "entityName = '{{entityName}}'"

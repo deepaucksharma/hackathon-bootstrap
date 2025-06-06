@@ -1,0 +1,26 @@
+name: Remove Entity GUID
+description: Test if entity synthesis works without entityGuid field
+phase: deconstruction
+category: critical-field-test
+
+baseTemplate: awsmskbroker
+entityType: broker
+
+modifications:
+  - action: remove
+    field: entityGuid
+
+verification:
+  waitTime: 45000
+  checks:
+    - type: entityShouldNotExist
+      params:
+        name: "{{entityName}}"
+        type: AWS_KAFKA_BROKER
+      
+    - type: eventCountShouldBe
+      params:
+        eventType: AwsMskBrokerSample
+        where: "entityName = '{{entityName}}'"
+        count: 0
+        operator: ">"
