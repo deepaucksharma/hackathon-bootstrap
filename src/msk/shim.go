@@ -16,6 +16,7 @@ type MSKShim struct {
 	entityCache            *EntityCache
 	systemAPI              InfrastructureAPI
 	dimensionalTransformer *DimensionalTransformer
+	cloudwatchEmulator     *CloudWatchEmulator
 	mu                     sync.Mutex
 }
 
@@ -50,6 +51,19 @@ func (s *MSKShim) SetIntegration(i *integration.Integration) {
 	// Initialize dimensional transformer if integration is set
 	if i != nil {
 		s.dimensionalTransformer = NewDimensionalTransformer(i, &s.config)
+		
+		// Initialize CloudWatch emulator if enabled
+		log.Info("CloudWatch format check - UseCloudWatchFormat: %v, MetricAPIKey length: %d", 
+			s.config.UseCloudWatchFormat, len(s.config.MetricAPIKey))
+		
+		if s.config.UseCloudWatchFormat && s.config.MetricAPIKey != "" {
+			s.cloudwatchEmulator = NewCloudWatchEmulator(&s.config, s.config.MetricAPIKey)
+			log.Info("CloudWatch emulator initialized for entity synthesis")
+		} else if s.config.UseCloudWatchFormat {
+			log.Warn("CloudWatch format enabled but no API key available")
+		} else {
+			log.Info("CloudWatch format not enabled")
+		}
 	}
 }
 

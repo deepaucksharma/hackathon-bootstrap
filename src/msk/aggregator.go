@@ -284,3 +284,95 @@ func (a *MetricAggregator) AddConsumerLagMetrics(consumerGroup, topic string, of
 		a.consumerLagMetrics[topic][consumerGroup] = lag
 	}
 }
+
+// Average calculates the average of a slice of float64 values
+func Average(values []float64) float64 {
+	if len(values) == 0 {
+		return 0
+	}
+	
+	sum := 0.0
+	for _, v := range values {
+		sum += v
+	}
+	return sum / float64(len(values))
+}
+
+// Max returns the maximum value from a slice of float64 values
+func Max(values []float64) float64 {
+	if len(values) == 0 {
+		return 0
+	}
+	
+	max := values[0]
+	for _, v := range values {
+		if v > max {
+			max = v
+		}
+	}
+	return max
+}
+
+// Sum calculates the sum of a slice of float64 values
+func Sum(values []float64) float64 {
+	sum := 0.0
+	for _, v := range values {
+		sum += v
+	}
+	return sum
+}
+
+// Count returns the number of non-zero values in a slice
+func Count(values []float64) int {
+	count := 0
+	for _, v := range values {
+		if v != 0 {
+			count++
+		}
+	}
+	return count
+}
+
+// AggregateMetrics applies an aggregation function to broker metrics
+func (a *MetricAggregator) AggregateMetrics(metricName string, aggregationType string) float64 {
+	a.mu.RLock()
+	defer a.mu.RUnlock()
+	
+	values := make([]float64, 0, len(a.brokerMetrics))
+	
+	// Collect values based on metric name
+	for _, broker := range a.brokerMetrics {
+		var value float64
+		switch metricName {
+		case "requestHandlerIdlePercent":
+			value = 0 // Would come from actual metrics
+		case "networkProcessorIdlePercent":
+			value = 0 // Would come from actual metrics
+		case "bytesIn":
+			value = broker.BytesInPerSec
+		case "bytesOut":
+			value = broker.BytesOutPerSec
+		case "messagesIn":
+			value = broker.MessagesInPerSec
+		case "underReplicatedPartitions":
+			value = float64(broker.UnderReplicatedPartitions)
+		case "partitionCount":
+			value = float64(broker.PartitionCount)
+		}
+		values = append(values, value)
+	}
+	
+	// Apply aggregation
+	switch aggregationType {
+	case "Average":
+		return Average(values)
+	case "Max":
+		return Max(values)
+	case "Sum":
+		return Sum(values)
+	case "Count":
+		return float64(Count(values))
+	default:
+		return 0
+	}
+}

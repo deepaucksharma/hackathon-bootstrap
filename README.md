@@ -46,6 +46,13 @@ export NRI_KAFKA_DEBUG=true
 
 See [MSK Shim Documentation](./docs/MSK-SHIM.md) for complete setup and configuration.
 
+## Security and Credentials
+
+**Important**: This project uses environment variables for credential management. See [SECURITY.md](./SECURITY.md) for detailed instructions on:
+- Setting up your `.env` file
+- Managing Kubernetes secrets
+- Best practices for credential security
+
 ## Installation and usage
 
 For installation and usage instructions, see our [documentation web site](https://docs.newrelic.com/docs/integrations/host-integrations/host-integrations-list/kafka-monitoring-integration).

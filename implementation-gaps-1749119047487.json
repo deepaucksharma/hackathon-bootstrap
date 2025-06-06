@@ -1,0 +1,92 @@
+{
+  "timestamp": "2025-06-05T10:24:07.484Z",
+  "gaps": {
+    "critical": [
+      {
+        "description": "buildBrokerAttributes missing providerExternalId field",
+        "location": "src/msk/dimensional_transformer.go"
+      },
+      {
+        "description": "buildClusterAttributes missing providerExternalId field",
+        "location": "src/msk/dimensional_transformer.go"
+      },
+      {
+        "description": "buildTopicAttributes missing providerExternalId field",
+        "location": "src/msk/dimensional_transformer.go"
+      },
+      {
+        "description": "PRIMARY ISSUE: Missing providerExternalId field that exists in all working accounts",
+        "location": "Account Comparison"
+      },
+      {
+        "description": "SECONDARY ISSUE: Using New Relic account ID (3630072) instead of AWS format (123456789012)",
+        "location": "Account Comparison"
+      }
+    ],
+    "high": [
+      {
+        "description": "Not setting entity.type in samples",
+        "location": "src/msk/simple_transformer.go"
+      },
+      {
+        "description": "buildBrokerAttributes missing instrumentation.provider field",
+        "location": "src/msk/dimensional_transformer.go"
+      },
+      {
+        "description": "buildClusterAttributes missing instrumentation.provider field",
+        "location": "src/msk/dimensional_transformer.go"
+      },
+      {
+        "description": "buildTopicAttributes missing instrumentation.provider field",
+        "location": "src/msk/dimensional_transformer.go"
+      }
+    ],
+    "medium": [],
+    "low": []
+  },
+  "fixes": {
+    "immediate": [
+      {
+        "priority": "CRITICAL",
+        "task": "Add providerExternalId to all attribute builders",
+        "files": [
+          "src/msk/simple_transformer.go - Line ~42",
+          "src/msk/dimensional_transformer.go - buildBrokerAttributes, buildClusterAttributes, buildTopicAttributes"
+        ],
+        "code": "attribute.Attribute{Key: \"providerExternalId\", Value: s.config.AWSAccountID}"
+      },
+      {
+        "priority": "CRITICAL",
+        "task": "Update AWS account ID to proper format",
+        "files": [
+          "src/msk/config.go - Line ~31",
+          "minikube-consolidated/monitoring/04-daemonset-bundle.yaml - Line ~35"
+        ],
+        "code": "awsAccountID = \"123456789012\" // NOT \"3630072\""
+      },
+      {
+        "priority": "HIGH",
+        "task": "Enable dimensional metrics",
+        "files": [
+          "minikube-consolidated/monitoring/04-daemonset-bundle.yaml"
+        ],
+        "code": "MSK_USE_DIMENSIONAL: \"true\""
+      }
+    ],
+    "shortTerm": [
+      {
+        "priority": "HIGH",
+        "task": "Ensure entity.type is set correctly",
+        "description": "Set to AWS_KAFKA_BROKER, AWS_KAFKA_CLUSTER, or AWS_KAFKA_TOPIC"
+      },
+      {
+        "priority": "MEDIUM",
+        "task": "Add instrumentation.provider = \"aws\" to all samples",
+        "description": "Required for AWS provider detection"
+      }
+    ],
+    "longTerm": []
+  },
+  "totalGaps": 9,
+  "criticalGaps": 5
+}

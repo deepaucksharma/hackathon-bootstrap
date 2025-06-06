@@ -4,22 +4,27 @@ import (
 	"os"
 	"strconv"
 	"time"
+	
+	"github.com/newrelic/infra-integrations-sdk/v3/log"
 )
 
 // Config holds the configuration for the MSK shim
 type Config struct {
-	Enabled           bool
-	ClusterName       string
-	ClusterARN        string
-	AWSAccountID      string
-	AWSRegion         string
-	Environment       string
-	DiskMountRegex    string
-	LogMountRegex     string
-	ConsumerLagEnrich bool
-	BatchSize         int
-	FlushInterval     time.Duration
-	AggregationMethod string
+	Enabled                  bool
+	ClusterName              string
+	ClusterARN               string
+	AWSAccountID             string
+	AWSRegion                string
+	Environment              string
+	DiskMountRegex           string
+	LogMountRegex            string
+	ConsumerLagEnrich        bool
+	BatchSize                int
+	FlushInterval            time.Duration
+	AggregationMethod        string
+	EnableDimensionalMetrics bool
+	MetricAPIKey             string
+	UseCloudWatchFormat      bool
 }
 
 // NewConfig creates a new MSK configuration from environment variables
@@ -73,6 +78,22 @@ func NewConfig() *Config {
 		// Generate a valid AWS ARN format
 		// Format: arn:aws:kafka:region:account-id:cluster/cluster-name/cluster-uuid
 		config.ClusterARN = generateClusterARN(config.AWSRegion, config.AWSAccountID, config.ClusterName)
+	}
+	
+	// Set dimensional metrics configuration
+	// For Metric API, we need the ingest license key, not the user API key
+	apiKey := os.Getenv("NRIA_LICENSE_KEY")
+	if apiKey == "" {
+		// Fallback to NEW_RELIC_API_KEY only if license key not available
+		apiKey = os.Getenv("NEW_RELIC_API_KEY")
+	}
+	config.MetricAPIKey = apiKey
+	config.EnableDimensionalMetrics = os.Getenv("MSK_USE_DIMENSIONAL") == "true" || os.Getenv("MSK_USE_CLOUDWATCH_FORMAT") == "true"
+	config.UseCloudWatchFormat = os.Getenv("MSK_USE_CLOUDWATCH_FORMAT") == "true"
+	
+	// Log configuration for debugging
+	if config.UseCloudWatchFormat {
+		log.Info("CloudWatch format enabled in config - API key length: %d", len(config.MetricAPIKey))
 	}
 
 	return config

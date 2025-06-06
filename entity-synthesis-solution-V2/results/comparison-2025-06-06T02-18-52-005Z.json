@@ -1,0 +1,549 @@
+{
+  "1": {
+    "accountId": "1",
+    "label": "Working Account 1",
+    "brokerSamples": {
+      "collectors": [
+        "cloud-integrations"
+      ],
+      "entityGuids": [
+        "MXxJTkZSQXxOQXwyMTg1NzM5MDUxMzUwNTY2NTQ1",
+        "MXxJTkZSQXxOQXw1NzQ5MzIyNjI5NjY0NDMxNDQz",
+        "MXxJTkZSQXxOQXw0ODA1OTA1MTg0MjE0OTAxMDQy",
+        "MXxJTkZSQXxOQXwtNjg3NzkyMTgxMzgwMTQ1MjQ4"
+      ],
+      "entityTypes": [],
+      "eventTypes": [],
+      "instrumentationProviders": [
+        "aws"
+      ],
+      "lastSeen": 1749176100000,
+      "providers": [
+        "AwsMskBroker"
+      ],
+      "totalEvents": 570,
+      "sampleFields": [
+        "awsAccountId",
+        "awsRegion",
+        "collector.name",
+        "collector.version",
+        "dataSourceId",
+        "dataSourceName",
+        "displayName",
+        "entityGuid",
+        "entityId",
+        "entityName",
+        "instrumentation.provider",
+        "provider",
+        "provider.awsRegion",
+        "provider.brokerId",
+        "provider.clusterName",
+        "provider.swapUsed.Average",
+        "provider.swapUsed.Maximum",
+        "provider.swapUsed.Minimum",
+        "provider.swapUsed.SampleCount",
+        "provider.swapUsed.Sum",
+        "provider.underMinIsrPartitionCount.Average",
+        "provider.underMinIsrPartitionCount.Maximum",
+        "provider.underMinIsrPartitionCount.Minimum",
+        "provider.underMinIsrPartitionCount.SampleCount",
+        "provider.underMinIsrPartitionCount.Sum",
+        "provider.underReplicatedPartitions.Average",
+        "provider.underReplicatedPartitions.Maximum",
+        "provider.underReplicatedPartitions.Minimum",
+        "provider.underReplicatedPartitions.SampleCount",
+        "provider.underReplicatedPartitions.Sum",
+        "provider.zooKeeperRequestLatencyMsMean.Average",
+        "provider.zooKeeperRequestLatencyMsMean.Maximum",
+        "provider.zooKeeperRequestLatencyMsMean.Minimum",
+        "provider.zooKeeperRequestLatencyMsMean.SampleCount",
+        "provider.zooKeeperRequestLatencyMsMean.Sum",
+        "provider.zooKeeperSessionState.Average",
+        "provider.zooKeeperSessionState.Maximum",
+        "provider.zooKeeperSessionState.Minimum",
+        "provider.zooKeeperSessionState.SampleCount",
+        "provider.zooKeeperSessionState.Sum",
+        "providerAccountId",
+        "providerAccountName",
+        "providerExternalId",
+        "timestamp"
+      ]
+    },
+    "clusterSamples": {},
+    "topicSamples": {},
+    "metrics": {
+      "collectors": [],
+      "entityTypes": [],
+      "kafkaMetrics": 0,
+      "namespaces": [],
+      "total": 0
+    },
+    "entities": {
+      "brokerGuids": [
+        "MXxJTkZSQXxOQXwyMTg1NzM5MDUxMzUwNTY2NTQ1",
+        "MXxJTkZSQXxOQXw1NzQ5MzIyNjI5NjY0NDMxNDQz",
+        "MXxJTkZSQXxOQXwtNjg3NzkyMTgxMzgwMTQ1MjQ4",
+        "MXxJTkZSQXxOQXw0ODA1OTA1MTg0MjE0OTAxMDQy"
+      ],
+      "brokerNames": [],
+      "brokerTypes": []
+    },
+    "criticalFields": {
+      "collectorValues": [
+        "cloud-integrations"
+      ],
+      "entityTypeValues": [],
+      "hasAwsAccountId": 100,
+      "hasCollectorName": 100,
+      "hasEntityGuid": 100,
+      "hasEntityType": 0,
+      "hasProvider": 100,
+      "hasProviderAccountId": 100,
+      "hasProviderExternalId": 100,
+      "providerValues": [
+        "AwsMskBroker"
+      ]
+    }
+  },
+  "3001033": {
+    "accountId": "3001033",
+    "label": "Working Account 3001033",
+    "brokerSamples": {
+      "collectors": [
+        "cloudwatch-metric-streams"
+      ],
+      "entityGuids": [
+        "MzAwMTAzM3xJTkZSQXxOQXwtODAzNjA1MzIzOTQwMzA3ODcyMw",
+        "MzAwMTAzM3xJTkZSQXxOQXw3ODE5NzUxNzc4NzgyMzU1OTY2",
+        "MzAwMTAzM3xJTkZSQXxOQXw0NzUwODI1NDk2NzM2NTQyODU",
+        "MzAwMTAzM3xJTkZSQXxOQXwtODMwMDQ5ODg1NzQ1MzM2NDY0Nw",
+        "MzAwMTAzM3xJTkZSQXxOQXwtNjI1MDkwNTE1MTY3MTE2ODIyNQ",
+        "MzAwMTAzM3xJTkZSQXxOQXwyNTU1MDE2MjM1Mjc2ODM2ODUx"
+      ],
+      "entityTypes": [
+        "AWS_MSK_BROKER",
+        "AWS_MSK_CLUSTER"
+      ],
+      "eventTypes": [],
+      "instrumentationProviders": [
+        "aws"
+      ],
+      "lastSeen": 1749176100000,
+      "providers": [],
+      "totalEvents": 9401
+    },
+    "clusterSamples": {},
+    "topicSamples": {},
+    "metrics": {
+      "collectors": [
+        "cloudwatch-metric-streams"
+      ],
+      "entityTypes": [
+        "AWS_RDS_DB_INSTANCE",
+        "AWSSECRETSMANAGER",
+        "AWSREKOGNITIONOPERATION",
+        "AWSELASTICACHEREDISCLUSTER",
+        "AWS_ALB_TARGET_GROUP",
+        "AWS_LAMBDA_REGION",
+        "HOST",
+        "AWS_TRANSIT_GATEWAY_TRANSIT_GATEWAY_ATTACHMENT",
+        "AWS_RDS_DB_CLUSTER",
+        "AWSELASTICACHEREDISREPLICATIONGROUP",
+        "AWSVPNCONNECTION",
+        "AWS_DYNAMO_DB_TABLE",
+        "AWS_S3_BUCKET",
+        "AWS_NLB_TARGET_GROUP",
+        "AWS_LAMBDA_FUNCTION",
+        "AWSEVENTSRULEALL",
+        "AWSAUTOSCALINGGROUP",
+        "AWS_REDSHIFT_NODE",
+        "AWSUSAGE",
+        "AWS_MSK_TOPIC",
+        "AWS_EBS_VOLUME",
+        "AWS_STATES_API_USAGE",
+        "AWSCLOUDWATCHMETRICSTREAM",
+        "AWSLOGS",
+        "AWS_ELB",
+        "AWS_TRANSIT_GATEWAY_TRANSIT_GATEWAY",
+        "AWSGWLBTARGETGROUP",
+        "AWSTRUSTEDADVISORSERVICELIMIT",
+        "AWS_ROUTE53_HEALTH_CHECK",
+        "AWS_LAMBDA_FUNCTION_ALIAS",
+        "AWSELASTICACHEMEMCACHEDCLUSTER",
+        "AWSELASTICACHEREDISNODE",
+        "AWS_ALB",
+        "AWS_ECS_SERVICE",
+        "AWSEVENTSSOURCE",
+        "AWS_NLB",
+        "AWSEVENTSRULE",
+        "AWS_ECS_CLUSTER",
+        "AWSELASTICACHEMEMCACHEDNODE",
+        "AWS_MSK_BROKER",
+        "AWSNATGATEWAY",
+        "AWS_EFS_FILE_SYSTEM",
+        "AWS_SNS_TOPIC",
+        "AWS_SQS_QUEUE",
+        "AWSGWLB",
+        "AWSCERTIFICATEMANAGER",
+        "AWS_MQ_BROKER",
+        "AWS_CLOUD_FRONT_DISTRIBUTION",
+        "AWS_MSK_CLUSTER",
+        "AWSVPCVPNTUNNEL",
+        "AWS_REDSHIFT_CLUSTER",
+        "AWS_KINESIS_DELIVERY_STREAM",
+        "AWSELASTICACHEREDISSHARD",
+        "AWS_DYNAMO_DB_GLOBAL_SECONDARY_INDEX",
+        "AWSPRIVATELINKSERVICE",
+        "AWS_KINESIS_STREAM"
+      ],
+      "kafkaMetrics": 15311,
+      "namespaces": [
+        "AWS/Redshift-Serverless",
+        "AWS/Glue",
+        "AWS/Logs",
+        "AWS/Config",
+        "AWS/Route53",
+        "AWS/WAFV2",
+        "AWS/SQS",
+        "AWS/CloudFront",
+        "AWS/AutoScaling",
+        "AWS/TransitGateway",
+        "AWS/KafkaConnect",
+        "AWS/Rekognition",
+        "AWS/Firehose",
+        "AWS/NetworkELB",
+        "AWS/EKS",
+        "AWS/DynamoDB",
+        "AWS/AuroraDSQL",
+        "AWS/EC2",
+        "AWS/VPN",
+        "AWS/Lambda",
+        "AWS/Events",
+        "AWS/TrustedAdvisor",
+        "AWS/EFS",
+        "AWS/SNS",
+        "AWS/CloudWatch/MetricStreams",
+        "AWS/EBS",
+        "userAccess",
+        "AWS/Kinesis",
+        "AWS/RDS",
+        "AWS/Timestream",
+        "AWS/ElastiCache",
+        "AWS/CertificateManager",
+        "AWS/PrivateLinkServices",
+        "AWS/HealthLake",
+        "AWS/X-Ray",
+        "AWS/ECS",
+        "AWS/ECS/ManagedScaling",
+        "AWS/Kafka",
+        "AWS/ApplicationELB",
+        "AWS/ELB",
+        "AWS/SecretsManager",
+        "AWS/AmazonMQ",
+        "AWS/S3",
+        "ECS/ContainerInsights",
+        "AWS/Usage",
+        "AWS/KMS",
+        "AWS/Redshift",
+        "AWS/States",
+        "AWS/NATGateway",
+        "AWS/GatewayELB"
+      ],
+      "total": 397062,
+      "sampleFields": [
+        "aws.MetricStreamArn",
+        "aws.Namespace",
+        "aws.accountId",
+        "aws.kafka.ClusterName",
+        "aws.kafka.ZooKeeperRequestLatencyMsMean",
+        "aws.region",
+        "collector.name",
+        "displayName",
+        "endTimestamp",
+        "entity.guid",
+        "entity.id",
+        "entity.name",
+        "entity.type",
+        "entityName",
+        "instrumentation.provider",
+        "metricName",
+        "newrelic.cloudIntegrations.providerAccountId",
+        "newrelic.cloudIntegrations.providerAccountName",
+        "newrelic.cloudIntegrations.providerExternalId",
+        "newrelic.source",
+        "timestamp"
+      ]
+    },
+    "entities": {
+      "brokerGuids": [
+        "MzAwMTAzM3xJTkZSQXxOQXwtODAzNjA1MzIzOTQwMzA3ODcyMw",
+        "MzAwMTAzM3xJTkZSQXxOQXw3ODE5NzUxNzc4NzgyMzU1OTY2",
+        "MzAwMTAzM3xJTkZSQXxOQXw0NzUwODI1NDk2NzM2NTQyODU",
+        "MzAwMTAzM3xJTkZSQXxOQXwtODMwMDQ5ODg1NzQ1MzM2NDY0Nw",
+        "MzAwMTAzM3xJTkZSQXxOQXwtNjI1MDkwNTE1MTY3MTE2ODIyNQ",
+        "MzAwMTAzM3xJTkZSQXxOQXwyNTU1MDE2MjM1Mjc2ODM2ODUx"
+      ],
+      "brokerNames": [
+        "Broker 2 - (autodiscover-msk-cluster-auth-bob)",
+        "Broker 1 - (autodiscover-msk-cluster-auth-bob)",
+        "autodiscover-msk-cluster-auth-bob",
+        "Broker 2 - (pchawla-test)",
+        "Broker 3 - (pchawla-test)",
+        "pchawla-test"
+      ],
+      "brokerTypes": [
+        "AWS_MSK_BROKER",
+        "AWS_MSK_CLUSTER"
+      ]
+    },
+    "criticalFields": {
+      "collectorValues": [
+        "cloudwatch-metric-streams"
+      ],
+      "entityTypeValues": [
+        "AWS_MSK_BROKER",
+        "AWS_MSK_CLUSTER"
+      ],
+      "hasAwsAccountId": 0,
+      "hasCollectorName": 100,
+      "hasEntityGuid": 0,
+      "hasEntityType": 100,
+      "hasProvider": 0,
+      "hasProviderAccountId": 0,
+      "hasProviderExternalId": 0,
+      "providerValues": []
+    }
+  },
+  "3026020": {
+    "accountId": "3026020",
+    "label": "Working Account 3026020",
+    "brokerSamples": {
+      "collectors": [
+        "cloud-integrations"
+      ],
+      "entityGuids": [
+        "MzAyNjAyMHxJTkZSQXxOQXwzODUyMTkyODE2MDU2Njg2MDMw",
+        "MzAyNjAyMHxJTkZSQXxOQXwtMTUzMTYyMTIzNzU2MzY0OTIwNA",
+        "MzAyNjAyMHxJTkZSQXxOQXwtOTM0ODc4Nzc2NTczMDAyOTMz",
+        "MzAyNjAyMHxJTkZSQXxOQXw5MDg4MjEzMTMzMjgyNTc3MzYw"
+      ],
+      "entityTypes": [],
+      "eventTypes": [],
+      "instrumentationProviders": [
+        "aws"
+      ],
+      "lastSeen": 1749176220000,
+      "providers": [
+        "AwsMskBroker"
+      ],
+      "totalEvents": 590,
+      "sampleFields": [
+        "awsAccountId",
+        "awsRegion",
+        "collector.name",
+        "collector.version",
+        "dataSourceId",
+        "dataSourceName",
+        "displayName",
+        "entityGuid",
+        "entityId",
+        "entityName",
+        "instrumentation.provider",
+        "provider",
+        "provider.awsRegion",
+        "provider.brokerId",
+        "provider.clusterName",
+        "provider.swapUsed.Average",
+        "provider.swapUsed.Maximum",
+        "provider.swapUsed.Minimum",
+        "provider.swapUsed.SampleCount",
+        "provider.swapUsed.Sum",
+        "provider.underMinIsrPartitionCount.Average",
+        "provider.underMinIsrPartitionCount.Maximum",
+        "provider.underMinIsrPartitionCount.Minimum",
+        "provider.underMinIsrPartitionCount.SampleCount",
+        "provider.underMinIsrPartitionCount.Sum",
+        "provider.underReplicatedPartitions.Average",
+        "provider.underReplicatedPartitions.Maximum",
+        "provider.underReplicatedPartitions.Minimum",
+        "provider.underReplicatedPartitions.SampleCount",
+        "provider.underReplicatedPartitions.Sum",
+        "provider.zooKeeperRequestLatencyMsMean.Average",
+        "provider.zooKeeperRequestLatencyMsMean.Maximum",
+        "provider.zooKeeperRequestLatencyMsMean.Minimum",
+        "provider.zooKeeperRequestLatencyMsMean.SampleCount",
+        "provider.zooKeeperRequestLatencyMsMean.Sum",
+        "provider.zooKeeperSessionState.Average",
+        "provider.zooKeeperSessionState.Maximum",
+        "provider.zooKeeperSessionState.Minimum",
+        "provider.zooKeeperSessionState.SampleCount",
+        "provider.zooKeeperSessionState.Sum",
+        "providerAccountId",
+        "providerAccountName",
+        "providerExternalId",
+        "timestamp"
+      ]
+    },
+    "clusterSamples": {},
+    "topicSamples": {},
+    "metrics": {
+      "collectors": [],
+      "entityTypes": [],
+      "kafkaMetrics": 0,
+      "namespaces": [],
+      "total": 0
+    },
+    "entities": {
+      "brokerGuids": [
+        "MzAyNjAyMHxJTkZSQXxOQXwzODUyMTkyODE2MDU2Njg2MDMw",
+        "MzAyNjAyMHxJTkZSQXxOQXwtOTM0ODc4Nzc2NTczMDAyOTMz",
+        "MzAyNjAyMHxJTkZSQXxOQXwtMTUzMTYyMTIzNzU2MzY0OTIwNA",
+        "MzAyNjAyMHxJTkZSQXxOQXw5MDg4MjEzMTMzMjgyNTc3MzYw"
+      ],
+      "brokerNames": [],
+      "brokerTypes": []
+    },
+    "criticalFields": {
+      "collectorValues": [
+        "cloud-integrations"
+      ],
+      "entityTypeValues": [],
+      "hasAwsAccountId": 100,
+      "hasCollectorName": 100,
+      "hasEntityGuid": 100,
+      "hasEntityType": 0,
+      "hasProvider": 100,
+      "hasProviderAccountId": 100,
+      "hasProviderExternalId": 100,
+      "providerValues": [
+        "AwsMskBroker"
+      ]
+    }
+  },
+  "3630072": {
+    "accountId": "3630072",
+    "label": "Our Implementation",
+    "brokerSamples": {
+      "collectors": [
+        "nri-kafka-msk"
+      ],
+      "entityGuids": [
+        "MzYzMDA3MnxJTkZSQXxOQXwtODE2MzgwODY3NjYyNzUzNDA5OA"
+      ],
+      "entityTypes": [],
+      "eventTypes": [],
+      "instrumentationProviders": [
+        "aws"
+      ],
+      "lastSeen": 1749176308000,
+      "providers": [
+        "AwsMskBroker"
+      ],
+      "totalEvents": 25,
+      "sampleFields": [
+        "agentName",
+        "agentVersion",
+        "awsAccountId",
+        "awsRegion",
+        "clusterName",
+        "collector.name",
+        "collector.version",
+        "coreCount",
+        "displayName",
+        "entity.guid",
+        "entityGuid",
+        "entityId",
+        "entityKey",
+        "entityName",
+        "environment",
+        "event_type",
+        "externalKey",
+        "fullHostname",
+        "host",
+        "hostStatus",
+        "hostname",
+        "instanceType",
+        "instrumentation.provider",
+        "integrationName",
+        "integrationVersion",
+        "kernelVersion",
+        "linuxDistribution",
+        "operatingSystem",
+        "processorCount",
+        "provider",
+        "provider.accountId",
+        "provider.brokerId",
+        "provider.bytesInPerSec.Average",
+        "provider.bytesInPerSec.Sum",
+        "provider.bytesOutPerSec.Average",
+        "provider.bytesOutPerSec.Sum",
+        "provider.clusterArn",
+        "provider.clusterName",
+        "provider.cpuIdle",
+        "provider.cpuSystem",
+        "provider.cpuUser",
+        "provider.fetchConsumerRequestsPerSec.Average",
+        "provider.fetchConsumerTotalTimeMs.Average",
+        "provider.leaderCount",
+        "provider.memoryFree",
+        "provider.memoryHeapUsed",
+        "provider.memoryUsed",
+        "provider.messagesInPerSec.Average",
+        "provider.messagesInPerSec.Sum",
+        "provider.networkRxDropped",
+        "provider.networkRxErrors",
+        "provider.networkRxPackets",
+        "provider.networkTxDropped",
+        "provider.networkTxErrors",
+        "provider.networkTxPackets",
+        "provider.offlinePartitionsCount",
+        "provider.produceRequestsPerSec.Average",
+        "provider.produceTotalTimeMs.Average",
+        "provider.region",
+        "provider.requestHandlerAvgIdlePercent.Average",
+        "provider.rootDiskUsed",
+        "provider.underReplicatedPartitions",
+        "provider.zooKeeperRequestLatencyMsMean",
+        "provider.zooKeeperSessionState",
+        "providerAccountId",
+        "providerAccountName",
+        "providerExternalId",
+        "reportingAgent",
+        "systemMemoryBytes",
+        "timestamp"
+      ]
+    },
+    "clusterSamples": {},
+    "topicSamples": {},
+    "metrics": {
+      "collectors": [],
+      "entityTypes": [],
+      "kafkaMetrics": 0,
+      "namespaces": [],
+      "total": 0
+    },
+    "entities": {
+      "brokerGuids": [
+        "MzYzMDA3MnxJTkZSQXxOQXwtODE2MzgwODY3NjYyNzUzNDA5OA"
+      ],
+      "brokerNames": [],
+      "brokerTypes": []
+    },
+    "criticalFields": {
+      "collectorValues": [
+        "nri-kafka-msk"
+      ],
+      "entityTypeValues": [],
+      "hasAwsAccountId": 100,
+      "hasCollectorName": 100,
+      "hasEntityGuid": 100,
+      "hasEntityType": 0,
+      "hasProvider": 100,
+      "hasProviderAccountId": 100,
+      "hasProviderExternalId": 100,
+      "providerValues": [
+        "AwsMskBroker"
+      ]
+    }
+  }
+}

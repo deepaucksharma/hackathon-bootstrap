@@ -36,7 +36,7 @@ data:
           
           # MSK Shim Configuration
           MSK_SHIM_ENABLED: "true"
-          AWS_ACCOUNT_ID: "3630072"
+          AWS_ACCOUNT_ID: "123456789012"  # Use proper 12-digit AWS account format
           AWS_REGION: "us-east-1"
           KAFKA_CLUSTER_NAME: "minikube-kafka"
           ENVIRONMENT: "minikube"
@@ -80,7 +80,7 @@ data:
           
           # MSK Shim Configuration
           MSK_SHIM_ENABLED: "true"
-          AWS_ACCOUNT_ID: "3630072"
+          AWS_ACCOUNT_ID: "123456789012"  # Use proper 12-digit AWS account format
           AWS_REGION: "us-west-2"
           KAFKA_CLUSTER_NAME: "strimzi-kafka-cluster"
           ENVIRONMENT: "minikube-strimzi"

@@ -74,11 +74,8 @@ func NewDimensionalTransformer(integration *integration.Integration, config *Con
 
 	if apiKey == "" {
 		log.Error("No API key found for dimensional metrics. Set NEW_RELIC_API_KEY or NRIA_LICENSE_KEY")
-		return &DimensionalTransformer{
-			integration: integration,
-			config:      config,
-			enabled:     false,
-		}
+		// For now, continue without API key but log warning
+		log.Warn("Continuing without dimensional metrics API client")
 	}
 	
 	log.Info("Dimensional metrics API key found, length: %d", len(apiKey))
@@ -805,7 +802,7 @@ func (dt *DimensionalTransformer) TransformConsumerOffsetSamples(samples []map[s
 // buildCommonAttributes builds common attributes for all metrics
 func (dt *DimensionalTransformer) buildCommonAttributes() map[string]interface{} {
 	return map[string]interface{}{
-		"instrumentation.provider": "nri-kafka",
+		"collector.name":           "cloudwatch-metric-streams",
 		"instrumentation.name":     "com.newrelic.kafka",
 		"instrumentation.source":   "msk-shim",
 		"instrumentation.version":  Version,
@@ -831,12 +828,12 @@ func (dt *DimensionalTransformer) buildBrokerAttributes(sample map[string]interf
 	attrs["entity.guid"] = dt.generateBrokerGUID(clusterName, brokerId)
 	
 	// Critical AWS fields for UI visibility
-	attrs["provider"] = "AwsMskBroker"
+	attrs["provider"] = "AwsMsk"
 	attrs["awsAccountId"] = dt.config.AWSAccountID
 	attrs["awsRegion"] = dt.config.AWSRegion
 	attrs["providerAccountId"] = dt.config.AWSAccountID
 	attrs["providerExternalId"] = dt.config.AWSAccountID // Required for AWS account mapping
-	attrs["instrumentation.provider"] = "aws"
+	attrs["aws.Namespace"] = "AWS/Kafka"
 	
 	// Optional but recommended
 	if host := getStringValueWithDefault(sample, "host", ""); host != "" {
@@ -874,12 +871,12 @@ func (dt *DimensionalTransformer) buildTopicAttributes(sample map[string]interfa
 	attrs["entity.guid"] = dt.generateTopicGUID(attrs["cluster.name"].(string), topicName)
 	
 	// Critical AWS fields for UI visibility
-	attrs["provider"] = "AwsMskTopic"
+	attrs["provider"] = "AwsMsk"
 	attrs["awsAccountId"] = dt.config.AWSAccountID
 	attrs["awsRegion"] = dt.config.AWSRegion
 	attrs["providerAccountId"] = dt.config.AWSAccountID
 	attrs["providerExternalId"] = dt.config.AWSAccountID // Required for AWS account mapping
-	attrs["instrumentation.provider"] = "aws"
+	attrs["aws.Namespace"] = "AWS/Kafka"
 	
 	// Include broker that reported this metric
 	if brokerId := extractBrokerId(sample); brokerId != "unknown" {
@@ -900,12 +897,12 @@ func (dt *DimensionalTransformer) buildConsumerGroupAttributes(groupId string, s
 	attrs["entity.guid"] = dt.generateConsumerGroupGUID(attrs["cluster.name"].(string), groupId)
 	
 	// Critical AWS fields for UI visibility
-	attrs["provider"] = "AwsMskConsumerGroup"
+	attrs["provider"] = "AwsMsk"
 	attrs["awsAccountId"] = dt.config.AWSAccountID
 	attrs["awsRegion"] = dt.config.AWSRegion
 	attrs["providerAccountId"] = dt.config.AWSAccountID
 	attrs["providerExternalId"] = dt.config.AWSAccountID // Required for AWS account mapping
-	attrs["instrumentation.provider"] = "aws"
+	attrs["aws.Namespace"] = "AWS/Kafka"
 	
 	if topic := getStringValueWithDefault(sample, "topic", ""); topic != "" {
 		attrs["topic"] = topic
@@ -925,12 +922,12 @@ func (dt *DimensionalTransformer) buildClusterAttributes(sample map[string]inter
 	attrs["entity.guid"] = dt.generateClusterGUID(clusterName)
 	
 	// Critical AWS fields for UI visibility
-	attrs["provider"] = "AwsMskCluster"
+	attrs["provider"] = "AwsMsk"
 	attrs["awsAccountId"] = dt.config.AWSAccountID
 	attrs["awsRegion"] = dt.config.AWSRegion
 	attrs["providerAccountId"] = dt.config.AWSAccountID
 	attrs["providerExternalId"] = dt.config.AWSAccountID // Required for AWS account mapping
-	attrs["instrumentation.provider"] = "aws"
+	attrs["aws.Namespace"] = "AWS/Kafka"
 	
 	// Add AWS-specific attributes if available
 	if arn := getStringValueWithDefault(sample, "clusterArn", ""); arn != "" {

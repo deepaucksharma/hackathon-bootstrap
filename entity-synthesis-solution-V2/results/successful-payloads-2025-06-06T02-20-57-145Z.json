@@ -1,0 +1,259 @@
+[
+  {
+    "testName": "Minimal CloudWatch Metric",
+    "payload": [
+      {
+        "metrics": [
+          {
+            "name": "BytesInPerSec",
+            "type": "gauge",
+            "value": 1000,
+            "timestamp": 1749176389806,
+            "attributes": {
+              "collector.name": "cloudwatch-metric-streams",
+              "aws.Namespace": "AWS/Kafka"
+            }
+          }
+        ]
+      }
+    ]
+  },
+  {
+    "testName": "CloudWatch + Entity Type",
+    "payload": [
+      {
+        "metrics": [
+          {
+            "name": "BytesInPerSec",
+            "type": "gauge",
+            "value": 2000,
+            "timestamp": 1749176404253,
+            "attributes": {
+              "collector.name": "cloudwatch-metric-streams",
+              "aws.Namespace": "AWS/Kafka",
+              "entity.type": "AWS_KAFKA_BROKER",
+              "entity.name": "test-broker-1"
+            }
+          }
+        ]
+      }
+    ]
+  },
+  {
+    "testName": "Full CloudWatch Broker",
+    "payload": [
+      {
+        "metrics": [
+          {
+            "name": "BytesInPerSec",
+            "type": "gauge",
+            "value": 3000,
+            "timestamp": 1749176417618,
+            "attributes": {
+              "collector.name": "cloudwatch-metric-streams",
+              "eventType": "Metric",
+              "instrumentation.provider": "cloudwatch",
+              "aws.Namespace": "AWS/Kafka",
+              "aws.MetricName": "BytesInPerSec",
+              "entity.type": "AWS_KAFKA_BROKER",
+              "entity.name": "test-cluster:broker-1",
+              "aws.accountId": "3630072",
+              "aws.region": "us-east-1",
+              "awsAccountId": "3630072",
+              "awsRegion": "us-east-1",
+              "aws.kafka.clusterName": "test-cluster",
+              "aws.kafka.brokerId": "1",
+              "aws.Dimensions": [
+                {
+                  "Name": "ClusterName",
+                  "Value": "test-cluster"
+                },
+                {
+                  "Name": "BrokerID",
+                  "Value": "1"
+                }
+              ]
+            }
+          }
+        ]
+      }
+    ]
+  },
+  {
+    "testName": "CloudWatch + All Critical Fields",
+    "payload": [
+      {
+        "metrics": [
+          {
+            "name": "BytesInPerSec",
+            "type": "gauge",
+            "value": 4000,
+            "timestamp": 1749176430578,
+            "attributes": {
+              "collector.name": "cloudwatch-metric-streams",
+              "eventType": "Metric",
+              "instrumentation.provider": "cloudwatch",
+              "aws.Namespace": "AWS/Kafka",
+              "aws.MetricName": "BytesInPerSec",
+              "entity.type": "AWS_KAFKA_BROKER",
+              "entity.name": "test-msk-cluster:broker-1",
+              "entity.guid": "MzYzMDA3MnxJTkZSQXxOQXw1OTA5MzcwMDQ=",
+              "aws.accountId": "3630072",
+              "aws.region": "us-east-1",
+              "awsAccountId": "3630072",
+              "awsRegion": "us-east-1",
+              "provider": "AwsMsk",
+              "providerAccountId": "3630072",
+              "providerExternalId": "3630072",
+              "providerAccountName": "Test Account",
+              "aws.kafka.clusterName": "test-msk-cluster",
+              "aws.kafka.brokerId": "1",
+              "clusterName": "test-msk-cluster",
+              "aws.Dimensions": [
+                {
+                  "Name": "ClusterName",
+                  "Value": "test-msk-cluster"
+                },
+                {
+                  "Name": "BrokerID",
+                  "Value": "1"
+                }
+              ],
+              "collector.version": "1.0.0",
+              "newrelic.source": "cloudwatch",
+              "aws.MetricDatapoints": 1
+            }
+          }
+        ]
+      }
+    ]
+  },
+  {
+    "testName": "Multiple Metrics Bundle",
+    "payload": [
+      {
+        "metrics": [
+          {
+            "name": "ActiveControllerCount",
+            "type": "gauge",
+            "value": 1,
+            "timestamp": 1749176444149,
+            "attributes": {
+              "collector.name": "cloudwatch-metric-streams",
+              "eventType": "Metric",
+              "instrumentation.provider": "cloudwatch",
+              "aws.Namespace": "AWS/Kafka",
+              "aws.MetricName": "ActiveControllerCount",
+              "entity.type": "AWS_KAFKA_CLUSTER",
+              "entity.name": "test-cluster-bundle",
+              "aws.accountId": "3630072",
+              "awsAccountId": "3630072",
+              "providerAccountId": "3630072",
+              "providerExternalId": "3630072",
+              "aws.kafka.clusterName": "test-cluster-bundle",
+              "aws.Dimensions": [
+                {
+                  "Name": "ClusterName",
+                  "Value": "test-cluster-bundle"
+                }
+              ]
+            }
+          },
+          {
+            "name": "BytesInPerSec",
+            "type": "gauge",
+            "value": 1000,
+            "timestamp": 1749176444149,
+            "attributes": {
+              "collector.name": "cloudwatch-metric-streams",
+              "eventType": "Metric",
+              "instrumentation.provider": "cloudwatch",
+              "aws.Namespace": "AWS/Kafka",
+              "aws.MetricName": "BytesInPerSec",
+              "entity.type": "AWS_KAFKA_BROKER",
+              "entity.name": "test-cluster-bundle:broker-1",
+              "aws.accountId": "3630072",
+              "awsAccountId": "3630072",
+              "providerAccountId": "3630072",
+              "providerExternalId": "3630072",
+              "aws.kafka.clusterName": "test-cluster-bundle",
+              "aws.kafka.brokerId": "1",
+              "aws.Dimensions": [
+                {
+                  "Name": "ClusterName",
+                  "Value": "test-cluster-bundle"
+                },
+                {
+                  "Name": "BrokerID",
+                  "Value": "1"
+                }
+              ]
+            }
+          },
+          {
+            "name": "BytesInPerSec",
+            "type": "gauge",
+            "value": 2000,
+            "timestamp": 1749176444149,
+            "attributes": {
+              "collector.name": "cloudwatch-metric-streams",
+              "eventType": "Metric",
+              "instrumentation.provider": "cloudwatch",
+              "aws.Namespace": "AWS/Kafka",
+              "aws.MetricName": "BytesInPerSec",
+              "entity.type": "AWS_KAFKA_BROKER",
+              "entity.name": "test-cluster-bundle:broker-2",
+              "aws.accountId": "3630072",
+              "awsAccountId": "3630072",
+              "providerAccountId": "3630072",
+              "providerExternalId": "3630072",
+              "aws.kafka.clusterName": "test-cluster-bundle",
+              "aws.kafka.brokerId": "2",
+              "aws.Dimensions": [
+                {
+                  "Name": "ClusterName",
+                  "Value": "test-cluster-bundle"
+                },
+                {
+                  "Name": "BrokerID",
+                  "Value": "2"
+                }
+              ]
+            }
+          },
+          {
+            "name": "BytesInPerSec",
+            "type": "gauge",
+            "value": 3000,
+            "timestamp": 1749176444149,
+            "attributes": {
+              "collector.name": "cloudwatch-metric-streams",
+              "eventType": "Metric",
+              "instrumentation.provider": "cloudwatch",
+              "aws.Namespace": "AWS/Kafka",
+              "aws.MetricName": "BytesInPerSec",
+              "entity.type": "AWS_KAFKA_BROKER",
+              "entity.name": "test-cluster-bundle:broker-3",
+              "aws.accountId": "3630072",
+              "awsAccountId": "3630072",
+              "providerAccountId": "3630072",
+              "providerExternalId": "3630072",
+              "aws.kafka.clusterName": "test-cluster-bundle",
+              "aws.kafka.brokerId": "3",
+              "aws.Dimensions": [
+                {
+                  "Name": "ClusterName",
+                  "Value": "test-cluster-bundle"
+                },
+                {
+                  "Name": "BrokerID",
+                  "Value": "3"
+                }
+              ]
+            }
+          }
+        ]
+      }
+    ]
+  }
+]

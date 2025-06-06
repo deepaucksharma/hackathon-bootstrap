@@ -42,89 +42,89 @@ func NewMetricMapper() *MetricMapper {
 // initializeBrokerMappings sets up broker metric mappings
 func (m *MetricMapper) initializeBrokerMappings() {
 	// Throughput metrics
-	m.brokerMappings["broker.bytesInPerSecond"] = "provider.bytesInPerSec.Average"
-	m.brokerMappings["broker.bytesOutPerSecond"] = "provider.bytesOutPerSec.Average"
-	m.brokerMappings["broker.messagesInPerSecond"] = "provider.messagesInPerSec.Average"
-	m.brokerMappings["broker.bytesRejectedPerSecond"] = "provider.bytesRejectedPerSec.Average"
+	m.brokerMappings["broker.bytesInPerSecond"] = "kafka.broker.bytesIn"
+	m.brokerMappings["broker.bytesOutPerSecond"] = "kafka.broker.bytesOut"
+	m.brokerMappings["broker.messagesInPerSecond"] = "kafka.broker.messagesIn"
+	m.brokerMappings["broker.bytesRejectedPerSecond"] = "kafka.broker.bytesRejected"
 	
 	// V2 metrics
-	m.brokerMappings["broker.ActiveControllerCount"] = "controller.activeCount"
-	m.brokerMappings["broker.GlobalPartitionCount"] = "controller.globalPartitionCount"
-	m.brokerMappings["broker.bytesReadFromTopicPerSecond"] = "provider.topicBytesOutPerSec"
-	m.brokerMappings["broker.messagesProducedToTopicPerSecond"] = "provider.topicMessagesInPerSec"
+	m.brokerMappings["broker.ActiveControllerCount"] = "kafka.broker.activeControllerCount"
+	m.brokerMappings["broker.GlobalPartitionCount"] = "kafka.broker.globalPartitionCount"
+	m.brokerMappings["broker.bytesReadFromTopicPerSecond"] = "kafka.broker.topicBytesOut"
+	m.brokerMappings["broker.messagesProducedToTopicPerSecond"] = "kafka.broker.topicMessagesIn"
 	
 	// Replication metrics
-	m.brokerMappings["broker.underReplicatedPartitions"] = "provider.underReplicatedPartitions.Maximum"
-	m.brokerMappings["replication.isrShrinksPerSecond"] = "provider.isrShrinksPerSec.Average"
-	m.brokerMappings["replication.isrExpandsPerSecond"] = "provider.isrExpandsPerSec.Average"
-	m.brokerMappings["replication.leaderElectionPerSecond"] = "provider.leaderElectionRateAndTimeMsMean.Average"
-	m.brokerMappings["replication.uncleanLeaderElectionPerSecond"] = "provider.uncleanLeaderElectionPerSec.Average"
+	m.brokerMappings["broker.underReplicatedPartitions"] = "kafka.broker.underReplicatedPartitions"
+	m.brokerMappings["replication.isrShrinksPerSecond"] = "kafka.broker.isrShrinks"
+	m.brokerMappings["replication.isrExpandsPerSecond"] = "kafka.broker.isrExpands"
+	m.brokerMappings["replication.leaderElectionPerSecond"] = "kafka.broker.leaderElectionRate"
+	m.brokerMappings["replication.uncleanLeaderElectionPerSecond"] = "kafka.broker.uncleanLeaderElection"
 	
 	// Handler metrics
-	m.brokerMappings["broker.requestHandlerAvgIdlePercent"] = "provider.requestHandlerAvgIdlePercent.Average"
-	m.brokerMappings["broker.networkProcessorAvgIdlePercent"] = "provider.networkProcessorAvgIdlePercent.Average"
+	m.brokerMappings["broker.requestHandlerAvgIdlePercent"] = "kafka.broker.requestHandlerIdlePercent"
+	m.brokerMappings["broker.networkProcessorAvgIdlePercent"] = "kafka.broker.networkProcessorIdlePercent"
 	
 	// Partition metrics
-	m.brokerMappings["broker.partitionCount"] = "provider.partitionCount"
-	m.brokerMappings["broker.leaderCount"] = "provider.leaderCount"
+	m.brokerMappings["broker.partitionCount"] = "kafka.broker.partitionCount"
+	m.brokerMappings["broker.leaderCount"] = "kafka.broker.leaderCount"
 	
 	// Controller metrics
-	m.brokerMappings["cluster.offlinePartitionsCount"] = "controller.offlinePartitionsCount"
-	m.brokerMappings["cluster.partitionCount"] = "controller.globalPartitionCount"
-	m.brokerMappings["cluster.underMinIsrPartitionCount"] = "controller.underMinIsrPartitionCount"
+	m.brokerMappings["cluster.offlinePartitionsCount"] = "kafka.cluster.offlinePartitionsCount"
+	m.brokerMappings["cluster.partitionCount"] = "kafka.cluster.partitionCount"
+	m.brokerMappings["cluster.underMinIsrPartitionCount"] = "kafka.cluster.underMinIsrPartitionCount"
 	
 	// Throttling metrics
-	m.brokerMappings["broker.produceThrottleTimeMs"] = "provider.produceThrottleTime.Average"
-	m.brokerMappings["broker.fetchThrottleTimeMs"] = "provider.fetchThrottleTime.Average"
-	m.brokerMappings["broker.requestThrottleTimeMs"] = "provider.requestThrottleTime.Average"
+	m.brokerMappings["broker.produceThrottleTimeMs"] = "kafka.broker.produceThrottleTime"
+	m.brokerMappings["broker.fetchThrottleTimeMs"] = "kafka.broker.fetchThrottleTime"
+	m.brokerMappings["broker.requestThrottleTimeMs"] = "kafka.broker.requestThrottleTime"
 	
 	// Request rates
-	m.brokerMappings["broker.totalFetchRequestsPerSecond"] = "provider.fetchConsumerTotalFetchRequestsPerSec.Average"
-	m.brokerMappings["broker.totalProduceRequestsPerSecond"] = "provider.produceRequestsPerSec.Average"
+	m.brokerMappings["broker.totalFetchRequestsPerSecond"] = "kafka.broker.fetchConsumerRequestsPerSec"
+	m.brokerMappings["broker.totalProduceRequestsPerSecond"] = "kafka.broker.produceRequestsPerSec"
 }
 
 // initializeRequestMappings sets up RequestMetrics mappings
 func (m *MetricMapper) initializeRequestMappings() {
 	// Fetch consumer metrics
 	m.requestMappings["fetchConsumerLocalTimeMs"] = RequestMapping{
-		MetricName:    "provider.fetchConsumerLocalTimeMsMean.Average",
+		MetricName:    "kafka.broker.fetchConsumerLocalTime",
 		RequestType:   "FetchConsumer",
 		AttributeName: "LocalTimeMs",
 	}
 	m.requestMappings["fetchConsumerRequestQueueTimeMs"] = RequestMapping{
-		MetricName:    "provider.fetchConsumerRequestQueueTimeMsMean.Average",
+		MetricName:    "kafka.broker.fetchConsumerRequestQueueTime",
 		RequestType:   "FetchConsumer",
 		AttributeName: "RequestQueueTimeMs",
 	}
 	m.requestMappings["fetchConsumerResponseSendTimeMs"] = RequestMapping{
-		MetricName:    "provider.fetchConsumerResponseSendTimeMsMean.Average",
+		MetricName:    "kafka.broker.fetchConsumerResponseSendTime",
 		RequestType:   "FetchConsumer",
 		AttributeName: "ResponseSendTimeMs",
 	}
 	m.requestMappings["fetchConsumerTotalTimeMs"] = RequestMapping{
-		MetricName:    "provider.fetchConsumerTotalTimeMsMean.Average",
+		MetricName:    "kafka.broker.fetchConsumerTotalTime",
 		RequestType:   "FetchConsumer",
 		AttributeName: "TotalTimeMs",
 	}
 	
 	// Produce metrics
 	m.requestMappings["produceLocalTimeMs"] = RequestMapping{
-		MetricName:    "provider.produceLocalTimeMsMean.Average",
+		MetricName:    "kafka.broker.produceLocalTime",
 		RequestType:   "Produce",
 		AttributeName: "LocalTimeMs",
 	}
 	m.requestMappings["produceRequestQueueTimeMs"] = RequestMapping{
-		MetricName:    "provider.produceRequestQueueTimeMsMean.Average",
+		MetricName:    "kafka.broker.produceRequestQueueTime",
 		RequestType:   "Produce",
 		AttributeName: "RequestQueueTimeMs",
 	}
 	m.requestMappings["produceResponseSendTimeMs"] = RequestMapping{
-		MetricName:    "provider.produceResponseSendTimeMsMean.Average",
+		MetricName:    "kafka.broker.produceResponseSendTime",
 		RequestType:   "Produce",
 		AttributeName: "ResponseSendTimeMs",
 	}
 	m.requestMappings["produceTotalTimeMs"] = RequestMapping{
-		MetricName:    "provider.produceTotalTimeMsMean.Average",
+		MetricName:    "kafka.broker.produceTotalTime",
 		RequestType:   "Produce",
 		AttributeName: "TotalTimeMs",
 	}
@@ -133,19 +133,19 @@ func (m *MetricMapper) initializeRequestMappings() {
 // initializeTopicMappings sets up topic metric mappings
 func (m *MetricMapper) initializeTopicMappings() {
 	// Throughput metrics
-	m.topicMappings["topic.bytesInPerSecond"] = "provider.bytesInPerSec.Average"
-	m.topicMappings["topic.bytesOutPerSecond"] = "provider.bytesOutPerSec.Average"
-	m.topicMappings["topic.messagesInPerSecond"] = "provider.messagesInPerSec.Average"
-	m.topicMappings["topic.bytesRejectedPerSecond"] = "provider.bytesRejectedPerSec.Average"
+	m.topicMappings["topic.bytesInPerSecond"] = "kafka.topic.bytesIn"
+	m.topicMappings["topic.bytesOutPerSecond"] = "kafka.topic.bytesOut"
+	m.topicMappings["topic.messagesInPerSecond"] = "kafka.topic.messagesIn"
+	m.topicMappings["topic.bytesRejectedPerSecond"] = "kafka.topic.bytesRejected"
 	
 	// Configuration metrics
-	m.topicMappings["topic.partitionCount"] = "provider.partitionCount"
-	m.topicMappings["topic.replicationFactor"] = "provider.replicationFactor"
-	m.topicMappings["topic.minInSyncReplicas"] = "provider.minInSyncReplicas"
-	m.topicMappings["topic.underReplicatedPartitions"] = "provider.underReplicatedPartitions"
+	m.topicMappings["topic.partitionCount"] = "kafka.topic.partitionCount"
+	m.topicMappings["topic.replicationFactor"] = "kafka.topic.replicationFactor"
+	m.topicMappings["topic.minInSyncReplicas"] = "kafka.topic.minInSyncReplicas"
+	m.topicMappings["topic.underReplicatedPartitions"] = "kafka.topic.underReplicatedPartitions"
 	
 	// Size metrics
-	m.topicMappings["topic.sizeInBytes"] = "provider.sizeInBytes"
+	m.topicMappings["topic.sizeInBytes"] = "kafka.topic.sizeInBytes"
 }
 
 // MapBrokerMetric maps a broker metric name to MSK format

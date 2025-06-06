@@ -34,15 +34,17 @@ func (s *MSKShim) SimpleTransformBrokerMetrics(brokerData map[string]interface{}
 		attribute.Attribute{Key: "entityName", Value: entityName},
 		attribute.Attribute{Key: "environment", Value: s.config.Environment},
 		// Critical AWS fields for UI visibility
-		attribute.Attribute{Key: "provider", Value: "AwsMskBroker"},
+		attribute.Attribute{Key: "provider", Value: "AwsMsk"}, // Must be "AwsMsk" not "AwsMskBroker"
 		attribute.Attribute{Key: "awsAccountId", Value: s.config.AWSAccountID},
 		attribute.Attribute{Key: "awsRegion", Value: s.config.AWSRegion},
-		attribute.Attribute{Key: "instrumentation.provider", Value: "aws"},
+		attribute.Attribute{Key: "aws.Namespace", Value: "AWS/Kafka"},
 		attribute.Attribute{Key: "providerAccountId", Value: s.config.AWSAccountID},
 		attribute.Attribute{Key: "providerExternalId", Value: s.config.AWSAccountID}, // Required for AWS account mapping
 		attribute.Attribute{Key: "providerAccountName", Value: "MSK Shim Account"},
-		attribute.Attribute{Key: "collector.name", Value: "nri-kafka-msk"},
+		attribute.Attribute{Key: "collector.name", Value: "cloudwatch-metric-streams"},
 		attribute.Attribute{Key: "collector.version", Value: "1.0.0"},
+		attribute.Attribute{Key: "entity.guid", Value: GenerateEntityGUID(EntityTypeBroker, s.config.AWSAccountID, s.config.ClusterName, &brokerIDStr)},
+		attribute.Attribute{Key: "entity.type", Value: "AWS_KAFKA_BROKER"}, // Required entity type
 	)
 	
 	// ALSO create standard Kafka metric set for UI visibility
@@ -150,6 +152,13 @@ func (s *MSKShim) SimpleTransformBrokerMetrics(brokerData map[string]interface{}
 		s.aggregator.AddBrokerMetrics(brokerIDStr, brokerData)
 	}
 	
+	// Send metrics via CloudWatch emulator if available
+	if s.cloudwatchEmulator != nil {
+		if err := s.cloudwatchEmulator.EmitBrokerMetrics(brokerIDStr, brokerData); err != nil {
+			log.Error("Failed to emit CloudWatch metrics for broker: %v", err)
+		}
+	}
+	
 	// Send dimensional metrics if enabled
 	if s.dimensionalTransformer != nil {
 		// Create AwsMskBrokerSample representation with provider.* attributes
@@ -158,6 +167,7 @@ func (s *MSKShim) SimpleTransformBrokerMetrics(brokerData map[string]interface{}
 			"clusterName": s.config.ClusterName,
 			"entityGuid":  GenerateEntityGUID(EntityTypeBroker, s.config.AWSAccountID, s.config.ClusterName, brokerIDStr),
 			"entityName":  entityName,
+			"entity.type": "AWS_KAFKA_BROKER",
 			"provider.brokerId": brokerIDStr,
 			"provider.accountId": s.config.AWSAccountID,
 			"provider.region": s.config.AWSRegion,
@@ -165,14 +175,14 @@ func (s *MSKShim) SimpleTransformBrokerMetrics(brokerData map[string]interface{}
 		}
 		
 		// Add critical AWS fields for UI visibility
-		awsMskSample["provider"] = "AwsMskBroker"
+		awsMskSample["provider"] = "AwsMsk"
 		awsMskSample["awsAccountId"] = s.config.AWSAccountID
 		awsMskSample["awsRegion"] = s.config.AWSRegion
-		awsMskSample["instrumentation.provider"] = "aws"
+		awsMskSample["aws.Namespace"] = "AWS/Kafka"
 		awsMskSample["providerAccountId"] = s.config.AWSAccountID
 		awsMskSample["providerExternalId"] = s.config.AWSAccountID // Required for AWS account mapping
 		awsMskSample["providerAccountName"] = "MSK Shim Account"
-		awsMskSample["collector.name"] = "nri-kafka-msk"
+		awsMskSample["collector.name"] = "cloudwatch-metric-streams"
 		awsMskSample["collector.version"] = "1.0.0"
 		
 		// Add all provider.* metrics from the metric set
@@ -210,16 +220,18 @@ func (s *MSKShim) SimpleTransformClusterMetrics() error {
 		attribute.Attribute{Key: "entityName", Value: s.config.ClusterName},
 		attribute.Attribute{Key: "environment", Value: s.config.Environment},
 		// Critical AWS fields for UI visibility
-		attribute.Attribute{Key: "provider", Value: "AwsMskCluster"},
+		attribute.Attribute{Key: "provider", Value: "AwsMsk"}, // Must be "AwsMsk" not "AwsMskCluster"
+		attribute.Attribute{Key: "entity.type", Value: "AWS_KAFKA_CLUSTER"}, // Required entity type
 		attribute.Attribute{Key: "awsAccountId", Value: s.config.AWSAccountID},
 		attribute.Attribute{Key: "awsRegion", Value: s.config.AWSRegion},
-		attribute.Attribute{Key: "instrumentation.provider", Value: "aws"},
+		attribute.Attribute{Key: "aws.Namespace", Value: "AWS/Kafka"},
 		attribute.Attribute{Key: "providerAccountId", Value: s.config.AWSAccountID},
 		attribute.Attribute{Key: "providerExternalId", Value: s.config.AWSAccountID}, // Required for AWS account mapping
 		attribute.Attribute{Key: "providerAccountName", Value: "MSK Shim Account"},
-		attribute.Attribute{Key: "collector.name", Value: "nri-kafka-msk"},
+		attribute.Attribute{Key: "collector.name", Value: "cloudwatch-metric-streams"},
 		attribute.Attribute{Key: "collector.version", Value: "1.0.0"},
 		attribute.Attribute{Key: "displayName", Value: s.config.ClusterName},
+		attribute.Attribute{Key: "entity.guid", Value: GenerateEntityGUID(EntityTypeCluster, s.config.AWSAccountID, s.config.ClusterName, nil)},
 	)
 	
 	// Set cluster status and health metrics
@@ -317,6 +329,46 @@ func (s *MSKShim) SimpleTransformClusterMetrics() error {
 	ms.SetMetric("provider.networkRxPackets.Sum", 10000.0, metric.GAUGE)
 	ms.SetMetric("provider.networkTxPackets.Sum", 10000.0, metric.GAUGE)
 	
+	// Send metrics via CloudWatch emulator if available
+	if s.cloudwatchEmulator != nil {
+		// Prepare cluster metrics for CloudWatch emulation
+		clusterMetrics := make(map[string]interface{})
+		
+		// Extract key cluster metrics
+		// Get aggregated values if available
+		if s.aggregator != nil {
+			clusterMetrics["GlobalPartitionCount"] = float64(s.aggregator.GetTopicCount() * 3) // Estimate
+			clusterMetrics["GlobalTopicCount"] = float64(s.aggregator.GetTopicCount())
+			
+			// Calculate totals from broker metrics
+			totalOfflinePartitions := 0.0
+			totalUnderReplicated := 0.0
+			for _, brokerMetrics := range s.aggregator.GetBrokerMetrics() {
+				if offlinePartitions, ok := getFloatValue(brokerMetrics, "replication.offlinePartitions"); ok {
+					totalOfflinePartitions += offlinePartitions
+				}
+				if underReplicated, ok := getFloatValue(brokerMetrics, "replication.unreplicatedPartitions"); ok {
+					totalUnderReplicated += underReplicated
+				}
+			}
+			clusterMetrics["OfflinePartitionsCount"] = totalOfflinePartitions
+			clusterMetrics["UnderReplicatedPartitions"] = totalUnderReplicated
+		} else {
+			// Use default values
+			clusterMetrics["GlobalPartitionCount"] = 50.0
+			clusterMetrics["GlobalTopicCount"] = 10.0
+			clusterMetrics["OfflinePartitionsCount"] = 0.0
+			clusterMetrics["UnderReplicatedPartitions"] = 0.0
+		}
+		
+		// Active controller count is always 1 for a healthy cluster
+		clusterMetrics["ActiveControllerCount"] = 1.0
+		
+		if err := s.cloudwatchEmulator.EmitClusterMetrics(clusterMetrics); err != nil {
+			log.Error("Failed to emit CloudWatch metrics for cluster: %v", err)
+		}
+	}
+	
 	// Send dimensional metrics if enabled
 	if s.dimensionalTransformer != nil {
 		// Create AwsMskClusterSample representation with provider.* attributes
@@ -325,17 +377,18 @@ func (s *MSKShim) SimpleTransformClusterMetrics() error {
 			"clusterName": s.config.ClusterName,
 			"entityGuid":  GenerateEntityGUID(EntityTypeCluster, s.config.AWSAccountID, s.config.ClusterName, nil),
 			"entityName":  s.config.ClusterName,
+			"entity.type": "AWS_KAFKA_CLUSTER",
 		}
 		
 		// Add critical AWS fields for UI visibility
-		awsMskSample["provider"] = "AwsMskCluster"
+		awsMskSample["provider"] = "AwsMsk"
 		awsMskSample["awsAccountId"] = s.config.AWSAccountID
 		awsMskSample["awsRegion"] = s.config.AWSRegion
-		awsMskSample["instrumentation.provider"] = "aws"
+		awsMskSample["aws.Namespace"] = "AWS/Kafka"
 		awsMskSample["providerAccountId"] = s.config.AWSAccountID
 		awsMskSample["providerExternalId"] = s.config.AWSAccountID // Required for AWS account mapping
 		awsMskSample["providerAccountName"] = "MSK Shim Account"
-		awsMskSample["collector.name"] = "nri-kafka-msk"
+		awsMskSample["collector.name"] = "cloudwatch-metric-streams"
 		awsMskSample["collector.version"] = "1.0.0"
 		awsMskSample["displayName"] = s.config.ClusterName
 		awsMskSample["provider.accountId"] = s.config.AWSAccountID
@@ -384,6 +437,18 @@ func (s *MSKShim) SimpleTransformTopicMetrics(topicData map[string]interface{}) 
 		attribute.Attribute{Key: "clusterName", Value: s.config.ClusterName},
 		attribute.Attribute{Key: "entityName", Value: entityName},
 		attribute.Attribute{Key: "environment", Value: s.config.Environment},
+		// Critical AWS fields for UI visibility
+		attribute.Attribute{Key: "provider", Value: "AwsMsk"}, // Must be "AwsMsk"
+		attribute.Attribute{Key: "awsAccountId", Value: s.config.AWSAccountID},
+		attribute.Attribute{Key: "awsRegion", Value: s.config.AWSRegion},
+		attribute.Attribute{Key: "aws.Namespace", Value: "AWS/Kafka"},
+		attribute.Attribute{Key: "providerAccountId", Value: s.config.AWSAccountID},
+		attribute.Attribute{Key: "providerExternalId", Value: s.config.AWSAccountID}, // Required for AWS account mapping
+		attribute.Attribute{Key: "providerAccountName", Value: "MSK Shim Account"},
+		attribute.Attribute{Key: "collector.name", Value: "cloudwatch-metric-streams"},
+		attribute.Attribute{Key: "collector.version", Value: "1.0.0"},
+		attribute.Attribute{Key: "entity.guid", Value: GenerateEntityGUID(EntityTypeTopic, s.config.AWSAccountID, s.config.ClusterName, topicName)},
+		attribute.Attribute{Key: "entity.type", Value: "AWS_KAFKA_TOPIC"}, // Required entity type
 	)
 	
 	// Map standard Kafka topic metrics to MSK metrics
@@ -473,6 +538,13 @@ func (s *MSKShim) SimpleTransformTopicMetrics(topicData map[string]interface{}) 
 		s.aggregator.AddTopicMetric(topicName, topicMetric)
 	}
 	
+	// Send metrics via CloudWatch emulator if available
+	if s.cloudwatchEmulator != nil {
+		if err := s.cloudwatchEmulator.EmitTopicMetrics(topicName, topicData); err != nil {
+			log.Error("Failed to emit CloudWatch metrics for topic %s: %v", topicName, err)
+		}
+	}
+	
 	// Send dimensional metrics if enabled
 	if s.dimensionalTransformer != nil {
 		// Create AwsMskTopicSample representation with provider.* attributes
@@ -481,7 +553,14 @@ func (s *MSKShim) SimpleTransformTopicMetrics(topicData map[string]interface{}) 
 			"clusterName": s.config.ClusterName,
 			"entityGuid":  GenerateEntityGUID(EntityTypeTopic, s.config.AWSAccountID, s.config.ClusterName, topicName),
 			"entityName":  entityName,
+			"entity.type": "AWS_KAFKA_TOPIC",
 			"topic":       topicName,
+			"provider": "AwsMsk",
+			"awsAccountId": s.config.AWSAccountID,
+			"awsRegion": s.config.AWSRegion,
+			"instrumentation.provider": "aws",
+			"providerAccountId": s.config.AWSAccountID,
+			"providerExternalId": s.config.AWSAccountID,
 		}
 		
 		// Add all provider.* metrics from the metric set

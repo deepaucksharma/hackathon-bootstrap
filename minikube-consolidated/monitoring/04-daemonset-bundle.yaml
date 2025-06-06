@@ -35,12 +35,11 @@ data:
           AWS_ACCOUNT_ID: "123456789012"  # Use real AWS account ID format
           AWS_REGION: "us-east-1"
           KAFKA_CLUSTER_NAME: "minikube-kafka"
-          MSK_USE_DIMENSIONAL: "true"  # Enable dimensional metrics
-          NEW_RELIC_API_KEY:
-            valueFrom:
-              secretKeyRef:
-                name: newrelic-credentials
-                key: license-key
+          MSK_USE_DIMENSIONAL: "true"  # Enable dimensional metrics for CloudWatch
+          MSK_USE_CLOUDWATCH_FORMAT: "true"  # Enable CloudWatch emulator
+          
+          # API Key for dimensional metrics - will be injected from secret
+          # NEW_RELIC_API_KEY and NRIA_LICENSE_KEY are set via environment variables from secrets
         interval: 30s
         timeout: 30s
         inventory_source: config/kafka
@@ -90,6 +89,13 @@ spec:
           value: "true"
         - name: NEW_RELIC_METADATA_KUBERNETES_CLUSTER_NAME
           value: "minikube"
+        - name: NEW_RELIC_API_KEY
+          valueFrom:
+            secretKeyRef:
+              name: newrelic-credentials
+              key: user-key
+        - name: NRIA_PASSTHROUGH_ENVIRONMENT
+          value: "NEW_RELIC_API_KEY,NRIA_LICENSE_KEY"
         volumeMounts:
         - name: config
           mountPath: /etc/newrelic-infra/integrations.d/

@@ -1,0 +1,495 @@
+{
+  "accountName": "Account 3001033",
+  "metrics": {
+    "CloudWatch Kafka Metrics": null,
+    "All Kafka Metrics": null,
+    "Metric Attributes": [
+      {
+        "type": "string",
+        "key": "aws.MetricStreamArn"
+      },
+      {
+        "type": "string",
+        "key": "aws.Namespace"
+      },
+      {
+        "type": "string",
+        "key": "aws.accountId"
+      },
+      {
+        "type": "string",
+        "key": "aws.kafka.BrokerID"
+      },
+      {
+        "type": "string",
+        "key": "aws.kafka.ClientAuthentication"
+      },
+      {
+        "type": "string",
+        "key": "aws.kafka.ClusterName"
+      },
+      {
+        "type": "string",
+        "key": "aws.kafka.ConsumerGroup"
+      },
+      {
+        "type": "string",
+        "key": "aws.kafka.Topic"
+      },
+      {
+        "type": "string",
+        "key": "aws.region"
+      },
+      {
+        "type": "string",
+        "key": "collector.name"
+      },
+      {
+        "type": "string",
+        "key": "displayName"
+      },
+      {
+        "type": "string",
+        "key": "entity.guid"
+      },
+      {
+        "type": "string",
+        "key": "entity.id"
+      },
+      {
+        "type": "string",
+        "key": "entity.name"
+      },
+      {
+        "type": "string",
+        "key": "entity.type"
+      },
+      {
+        "type": "string",
+        "key": "entityName"
+      },
+      {
+        "type": "string",
+        "key": "instrumentation.provider"
+      },
+      {
+        "type": "string",
+        "key": "metricName"
+      },
+      {
+        "type": "string",
+        "key": "newrelic.cloudIntegrations.providerAccountId"
+      },
+      {
+        "type": "string",
+        "key": "newrelic.cloudIntegrations.providerAccountName"
+      },
+      {
+        "type": "string",
+        "key": "newrelic.cloudIntegrations.providerExternalId"
+      },
+      {
+        "type": "string",
+        "key": "newrelic.source"
+      },
+      {
+        "type": "numeric",
+        "key": "endTimestamp"
+      },
+      {
+        "type": "numeric",
+        "key": "timestamp"
+      },
+      {
+        "type": "summary",
+        "key": "aws.kafka.ActiveControllerCount"
+      },
+      {
+        "type": "summary",
+        "key": "aws.kafka.BurstBalance"
+      },
+      {
+        "type": "summary",
+        "key": "aws.kafka.BwInAllowanceExceeded"
+      },
+      {
+        "type": "summary",
+        "key": "aws.kafka.BwOutAllowanceExceeded"
+      },
+      {
+        "type": "summary",
+        "key": "aws.kafka.BytesInPerSec.byBroker"
+      },
+      {
+        "type": "summary",
+        "key": "aws.kafka.BytesInPerSec.byTopic"
+      },
+      {
+        "type": "summary",
+        "key": "aws.kafka.BytesOutPerSec.byBroker"
+      },
+      {
+        "type": "summary",
+        "key": "aws.kafka.BytesOutPerSec.byTopic"
+      },
+      {
+        "type": "summary",
+        "key": "aws.kafka.CPUCreditBalance"
+      },
+      {
+        "type": "summary",
+        "key": "aws.kafka.CPUCreditUsage"
+      },
+      {
+        "type": "summary",
+        "key": "aws.kafka.ClientConnectionCount"
+      },
+      {
+        "type": "summary",
+        "key": "aws.kafka.ConnectionCloseRate"
+      },
+      {
+        "type": "summary",
+        "key": "aws.kafka.ConnectionCount"
+      },
+      {
+        "type": "summary",
+        "key": "aws.kafka.ConnectionCreationRate"
+      },
+      {
+        "type": "summary",
+        "key": "aws.kafka.ConntrackAllowanceExceeded"
+      },
+      {
+        "type": "summary",
+        "key": "aws.kafka.CpuIdle"
+      },
+      {
+        "type": "summary",
+        "key": "aws.kafka.CpuIoWait"
+      },
+      {
+        "type": "summary",
+        "key": "aws.kafka.CpuSystem"
+      },
+      {
+        "type": "summary",
+        "key": "aws.kafka.CpuUser"
+      },
+      {
+        "type": "summary",
+        "key": "aws.kafka.EstimatedMaxTimeLag"
+      },
+      {
+        "type": "summary",
+        "key": "aws.kafka.FetchConsumerLocalTimeMsMean"
+      },
+      {
+        "type": "summary",
+        "key": "aws.kafka.FetchConsumerRequestQueueTimeMsMean"
+      },
+      {
+        "type": "summary",
+        "key": "aws.kafka.FetchConsumerResponseQueueTimeMsMean"
+      },
+      {
+        "type": "summary",
+        "key": "aws.kafka.FetchConsumerResponseSendTimeMsMean"
+      },
+      {
+        "type": "summary",
+        "key": "aws.kafka.FetchConsumerTotalTimeMsMean"
+      },
+      {
+        "type": "summary",
+        "key": "aws.kafka.FetchFollowerLocalTimeMsMean"
+      },
+      {
+        "type": "summary",
+        "key": "aws.kafka.FetchFollowerRequestQueueTimeMsMean"
+      },
+      {
+        "type": "summary",
+        "key": "aws.kafka.FetchFollowerResponseQueueTimeMsMean"
+      },
+      {
+        "type": "summary",
+        "key": "aws.kafka.FetchFollowerResponseSendTimeMsMean"
+      },
+      {
+        "type": "summary",
+        "key": "aws.kafka.FetchFollowerTotalTimeMsMean"
+      },
+      {
+        "type": "summary",
+        "key": "aws.kafka.FetchMessageConversionsPerSec.byBroker"
+      },
+      {
+        "type": "summary",
+        "key": "aws.kafka.FetchMessageConversionsTimeMsMean"
+      },
+      {
+        "type": "summary",
+        "key": "aws.kafka.FetchThrottleQueueSize"
+      },
+      {
+        "type": "summary",
+        "key": "aws.kafka.GlobalPartitionCount"
+      },
+      {
+        "type": "summary",
+        "key": "aws.kafka.GlobalTopicCount"
+      },
+      {
+        "type": "summary",
+        "key": "aws.kafka.HeapMemoryAfterGC"
+      },
+      {
+        "type": "summary",
+        "key": "aws.kafka.IAMNumberOfConnectionRequests"
+      },
+      {
+        "type": "summary",
+        "key": "aws.kafka.IAMTooManyConnections"
+      },
+      {
+        "type": "summary",
+        "key": "aws.kafka.KafkaAppLogsDiskUsed"
+      },
+      {
+        "type": "summary",
+        "key": "aws.kafka.KafkaDataLogsDiskUsed"
+      },
+      {
+        "type": "summary",
+        "key": "aws.kafka.LeaderCount"
+      },
+      {
+        "type": "summary",
+        "key": "aws.kafka.LinklocalAllowanceExceeded"
+      },
+      {
+        "type": "summary",
+        "key": "aws.kafka.MaxOffsetLag"
+      },
+      {
+        "type": "summary",
+        "key": "aws.kafka.MemoryBuffered"
+      },
+      {
+        "type": "summary",
+        "key": "aws.kafka.MemoryCached"
+      },
+      {
+        "type": "summary",
+        "key": "aws.kafka.MemoryFree"
+      },
+      {
+        "type": "summary",
+        "key": "aws.kafka.MemoryUsed"
+      },
+      {
+        "type": "summary",
+        "key": "aws.kafka.MessagesInPerSec.byBroker"
+      },
+      {
+        "type": "summary",
+        "key": "aws.kafka.MessagesInPerSec.byTopic"
+      },
+      {
+        "type": "summary",
+        "key": "aws.kafka.NetworkProcessorAvgIdlePercent"
+      },
+      {
+        "type": "summary",
+        "key": "aws.kafka.NetworkRxDropped"
+      },
+      {
+        "type": "summary",
+        "key": "aws.kafka.NetworkRxErrors"
+      },
+      {
+        "type": "summary",
+        "key": "aws.kafka.NetworkRxPackets"
+      },
+      {
+        "type": "summary",
+        "key": "aws.kafka.NetworkTxDropped"
+      },
+      {
+        "type": "summary",
+        "key": "aws.kafka.NetworkTxErrors"
+      },
+      {
+        "type": "summary",
+        "key": "aws.kafka.NetworkTxPackets"
+      },
+      {
+        "type": "summary",
+        "key": "aws.kafka.OfflinePartitionsCount"
+      },
+      {
+        "type": "summary",
+        "key": "aws.kafka.PartitionCount"
+      },
+      {
+        "type": "summary",
+        "key": "aws.kafka.PpsAllowanceExceeded"
+      },
+      {
+        "type": "summary",
+        "key": "aws.kafka.ProduceLocalTimeMsMean"
+      },
+      {
+        "type": "summary",
+        "key": "aws.kafka.ProduceMessageConversionsPerSec.byBroker"
+      },
+      {
+        "type": "summary",
+        "key": "aws.kafka.ProduceMessageConversionsTimeMsMean"
+      },
+      {
+        "type": "summary",
+        "key": "aws.kafka.ProduceRequestQueueTimeMsMean"
+      },
+      {
+        "type": "summary",
+        "key": "aws.kafka.ProduceResponseQueueTimeMsMean"
+      },
+      {
+        "type": "summary",
+        "key": "aws.kafka.ProduceResponseSendTimeMsMean"
+      },
+      {
+        "type": "summary",
+        "key": "aws.kafka.ProduceThrottleQueueSize"
+      },
+      {
+        "type": "summary",
+        "key": "aws.kafka.ProduceTotalTimeMsMean"
+      },
+      {
+        "type": "summary",
+        "key": "aws.kafka.ReplicationBytesInPerSec"
+      },
+      {
+        "type": "summary",
+        "key": "aws.kafka.ReplicationBytesOutPerSec"
+      },
+      {
+        "type": "summary",
+        "key": "aws.kafka.RequestBytesMean"
+      },
+      {
+        "type": "summary",
+        "key": "aws.kafka.RequestHandlerAvgIdlePercent"
+      },
+      {
+        "type": "summary",
+        "key": "aws.kafka.RequestThrottleQueueSize"
+      },
+      {
+        "type": "summary",
+        "key": "aws.kafka.RollingEstimatedTimeLagMax"
+      },
+      {
+        "type": "summary",
+        "key": "aws.kafka.RootDiskUsed"
+      },
+      {
+        "type": "summary",
+        "key": "aws.kafka.SumOffsetLag"
+      },
+      {
+        "type": "summary",
+        "key": "aws.kafka.SwapFree"
+      },
+      {
+        "type": "summary",
+        "key": "aws.kafka.SwapUsed"
+      },
+      {
+        "type": "summary",
+        "key": "aws.kafka.TCPConnections"
+      },
+      {
+        "type": "summary",
+        "key": "aws.kafka.TrafficBytes"
+      },
+      {
+        "type": "summary",
+        "key": "aws.kafka.TrafficShaping"
+      },
+      {
+        "type": "summary",
+        "key": "aws.kafka.UnderMinIsrPartitionCount"
+      },
+      {
+        "type": "summary",
+        "key": "aws.kafka.UnderReplicatedPartitions"
+      },
+      {
+        "type": "summary",
+        "key": "aws.kafka.UserPartitionExists"
+      },
+      {
+        "type": "summary",
+        "key": "aws.kafka.VolumeQueueLength"
+      },
+      {
+        "type": "summary",
+        "key": "aws.kafka.VolumeReadBytes"
+      },
+      {
+        "type": "summary",
+        "key": "aws.kafka.VolumeReadOps"
+      },
+      {
+        "type": "summary",
+        "key": "aws.kafka.VolumeTotalReadTime"
+      },
+      {
+        "type": "summary",
+        "key": "aws.kafka.VolumeTotalWriteTime"
+      },
+      {
+        "type": "summary",
+        "key": "aws.kafka.VolumeWriteBytes"
+      },
+      {
+        "type": "summary",
+        "key": "aws.kafka.VolumeWriteOps"
+      },
+      {
+        "type": "summary",
+        "key": "aws.kafka.ZooKeeperRequestLatencyMsMean"
+      },
+      {
+        "type": "summary",
+        "key": "aws.kafka.ZooKeeperSessionState"
+      },
+      {
+        "type": "summary",
+        "key": "nr.dataPointCount"
+      }
+    ]
+  },
+  "entities": {
+    "MSK Entities": [],
+    "Kafka Entities": [],
+    "Entity Tags": [
+      {
+        "type": "numeric",
+        "key": "timestamp"
+      }
+    ]
+  },
+  "eventTypes": {
+    "MSK Event Types": [],
+    "Kafka Event Types": [],
+    "All Event Types with Kafka/MSK": [],
+    "MessageQueue Sample": [],
+    "MessageQueue Providers": []
+  },
+  "summary": {}
+}

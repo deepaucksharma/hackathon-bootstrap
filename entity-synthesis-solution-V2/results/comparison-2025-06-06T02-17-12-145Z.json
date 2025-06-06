@@ -1,0 +1,41 @@
+{
+  "1": {
+    "accountId": "1",
+    "label": "Working Account 1",
+    "brokerSamples": {},
+    "clusterSamples": {},
+    "topicSamples": {},
+    "metrics": {},
+    "entities": {},
+    "criticalFields": {}
+  },
+  "3001033": {
+    "accountId": "3001033",
+    "label": "Working Account 3001033",
+    "brokerSamples": {},
+    "clusterSamples": {},
+    "topicSamples": {},
+    "metrics": {},
+    "entities": {},
+    "criticalFields": {}
+  },
+  "3026020": {
+    "accountId": "3026020",
+    "label": "Working Account 3026020",
+    "brokerSamples": {},
+    "clusterSamples": {},
+    "topicSamples": {},
+    "metrics": {},
+    "entities": {},
+    "criticalFields": {}
+  },
+  "undefined": {
+    "label": "Our Implementation",
+    "brokerSamples": {},
+    "clusterSamples": {},
+    "topicSamples": {},
+    "metrics": {},
+    "entities": {},
+    "criticalFields": {}
+  }
+}
