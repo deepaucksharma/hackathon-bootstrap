@@ -4,46 +4,9 @@
 
 ### 1.1 Mission Statement
 
-New Relic Queues & Streaming provides unified observability for heterogeneous messaging architectures, enabling organizations to monitor, troubleshoot, and optimize their event-driven systems through a single pane of glass at `one.newrelic.com > All capabilities > Queues & Streams`.
+New Relic Queues & Streaming provides unified observability for heterogeneous messaging architectures, enabling organizations to monitor, troubleshoot, and optimize their event-driven systems through a single pane of glass 
 
-### 1.2 Core Capabilities
-
-```yaml
-Unified_Monitoring:
-  - Single interface for 10+ messaging technologies
-  - Consistent entity model across providers
-  - Standardized metrics and relationships
-  
-Intelligent_Observability:
-  - AI-driven anomaly detection
-  - Predictive capacity planning
-  - Automated root cause analysis
-  - Business impact correlation
-  
-Deep_Integration:
-  - Bi-directional producer ↔ consumer tracing
-  - APM service correlation
-  - Infrastructure host mapping
-  - Cloud provider native metrics
-  
-Enterprise_Features:
-  - Multi-account/region support
-  - Role-based access control
-  - Compliance reporting
-  - SLA/SLO tracking
-```
-
-### 1.3 Business Value Metrics
-
-| Metric | Baseline | With Queues & Streaming | Improvement |
-|--------|----------|-------------------------|-------------|
-| MTTR (Mean Time To Resolution) | 4 hours | 1.5 hours | 62.5% reduction |
-| Unplanned Downtime | 12 hours/month | 3 hours/month | 75% reduction |
-| Performance Incidents | 25/month | 8/month | 68% reduction |
-| Engineering Hours on Troubleshooting | 200/month | 60/month | 70% reduction |
-| Data Processing Efficiency | 85% | 97% | 14% improvement |
-
-### 1.4 Strategic Positioning
+###  Strategic Positioning
 
 ```mermaid
 graph TB
