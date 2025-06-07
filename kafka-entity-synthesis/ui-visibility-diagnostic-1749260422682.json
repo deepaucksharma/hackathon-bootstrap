@@ -1,0 +1,331 @@
+{
+  "timestamp": "2025-06-07T01:40:15.776Z",
+  "accountId": "3630072",
+  "diagnostics": {
+    "accountCapabilities": {
+      "canQueryData": true,
+      "hasData": false,
+      "hasGraphQLAccess": true
+    },
+    "existingEntities": {
+      "count": 56,
+      "entities": [
+        {
+          "name": "1:autodiscover-msk-cluster-auth-bob",
+          "type": "AWSMSKBROKER",
+          "reporting": true
+        },
+        {
+          "name": "1:autodiscover-msk-cluster-auth-bob",
+          "type": "AWSMSKBROKER",
+          "reporting": true
+        },
+        {
+          "name": "1:autodiscover-msk-cluster-auth-bob",
+          "type": "AWSMSKBROKER",
+          "reporting": true
+        },
+        {
+          "name": "1:autodiscover-msk-cluster-auth-bob:__amazon_msk_canary",
+          "type": "AWSMSKTOPIC",
+          "reporting": true
+        },
+        {
+          "name": "1:autodiscover-msk-cluster-auth-bob:__amazon_msk_canary",
+          "type": "AWSMSKTOPIC",
+          "reporting": true
+        },
+        {
+          "name": "1:autodiscover-msk-cluster-auth-bob:__amazon_msk_canary",
+          "type": "AWSMSKTOPIC",
+          "reporting": true
+        },
+        {
+          "name": "1:autodiscover-msk-cluster-auth-bob:__consumer_offsets",
+          "type": "AWSMSKTOPIC",
+          "reporting": true
+        },
+        {
+          "name": "1:autodiscover-msk-cluster-auth-bob:__consumer_offsets",
+          "type": "AWSMSKTOPIC",
+          "reporting": true
+        },
+        {
+          "name": "1:autodiscover-msk-cluster-auth-bob:__consumer_offsets",
+          "type": "AWSMSKTOPIC",
+          "reporting": true
+        },
+        {
+          "name": "2:autodiscover-msk-cluster-auth-bob",
+          "type": "AWSMSKBROKER",
+          "reporting": true
+        },
+        {
+          "name": "2:autodiscover-msk-cluster-auth-bob",
+          "type": "AWSMSKBROKER",
+          "reporting": true
+        },
+        {
+          "name": "2:autodiscover-msk-cluster-auth-bob",
+          "type": "AWSMSKBROKER",
+          "reporting": true
+        },
+        {
+          "name": "2:autodiscover-msk-cluster-auth-bob:__amazon_msk_canary",
+          "type": "AWSMSKTOPIC",
+          "reporting": true
+        },
+        {
+          "name": "2:autodiscover-msk-cluster-auth-bob:__amazon_msk_canary",
+          "type": "AWSMSKTOPIC",
+          "reporting": true
+        },
+        {
+          "name": "2:autodiscover-msk-cluster-auth-bob:__amazon_msk_canary",
+          "type": "AWSMSKTOPIC",
+          "reporting": true
+        },
+        {
+          "name": "2:autodiscover-msk-cluster-auth-bob:__consumer_offsets",
+          "type": "AWSMSKTOPIC",
+          "reporting": true
+        },
+        {
+          "name": "2:autodiscover-msk-cluster-auth-bob:__consumer_offsets",
+          "type": "AWSMSKTOPIC",
+          "reporting": true
+        },
+        {
+          "name": "2:autodiscover-msk-cluster-auth-bob:__consumer_offsets",
+          "type": "AWSMSKTOPIC",
+          "reporting": true
+        },
+        {
+          "name": "2:pchawla-test",
+          "type": "AWSMSKBROKER",
+          "reporting": true
+        },
+        {
+          "name": "2:pchawla-test",
+          "type": "AWSMSKBROKER",
+          "reporting": true
+        },
+        {
+          "name": "2:pchawla-test",
+          "type": "AWSMSKBROKER",
+          "reporting": true
+        },
+        {
+          "name": "2:pchawla-test:__consumer_offsets",
+          "type": "AWSMSKTOPIC",
+          "reporting": true
+        },
+        {
+          "name": "2:pchawla-test:__consumer_offsets",
+          "type": "AWSMSKTOPIC",
+          "reporting": true
+        },
+        {
+          "name": "2:pchawla-test:__consumer_offsets",
+          "type": "AWSMSKTOPIC",
+          "reporting": true
+        },
+        {
+          "name": "3:pchawla-test",
+          "type": "AWSMSKBROKER",
+          "reporting": true
+        },
+        {
+          "name": "3:pchawla-test",
+          "type": "AWSMSKBROKER",
+          "reporting": true
+        },
+        {
+          "name": "3:pchawla-test",
+          "type": "AWSMSKBROKER",
+          "reporting": true
+        },
+        {
+          "name": "3:pchawla-test:__consumer_offsets",
+          "type": "AWSMSKTOPIC",
+          "reporting": true
+        },
+        {
+          "name": "3:pchawla-test:__consumer_offsets",
+          "type": "AWSMSKTOPIC",
+          "reporting": true
+        },
+        {
+          "name": "3:pchawla-test:__consumer_offsets",
+          "type": "AWSMSKTOPIC",
+          "reporting": true
+        },
+        {
+          "name": "__amazon_msk_canary (autodiscover-msk-cluster-auth-bob)",
+          "type": "AWSMSKTOPIC",
+          "reporting": true
+        },
+        {
+          "name": "__amazon_msk_canary (autodiscover-msk-cluster-auth-bob)",
+          "type": "AWSMSKTOPIC",
+          "reporting": true
+        },
+        {
+          "name": "__amazon_msk_canary (autodiscover-msk-cluster-auth-bob)",
+          "type": "AWSMSKTOPIC",
+          "reporting": true
+        },
+        {
+          "name": "__consumer_offsets (autodiscover-msk-cluster-auth-bob)",
+          "type": "AWSMSKTOPIC",
+          "reporting": true
+        },
+        {
+          "name": "__consumer_offsets (autodiscover-msk-cluster-auth-bob)",
+          "type": "AWSMSKTOPIC",
+          "reporting": true
+        },
+        {
+          "name": "__consumer_offsets (autodiscover-msk-cluster-auth-bob)",
+          "type": "AWSMSKTOPIC",
+          "reporting": true
+        },
+        {
+          "name": "__consumer_offsets (pchawla-test)",
+          "type": "AWSMSKTOPIC",
+          "reporting": true
+        },
+        {
+          "name": "autodiscover-msk-cluster-auth-bob",
+          "type": "AWSMSKCLUSTER",
+          "reporting": true
+        },
+        {
+          "name": "autodiscover-msk-cluster-auth-bob",
+          "type": "AWSMSKCLUSTER",
+          "reporting": true
+        },
+        {
+          "name": "autodiscover-msk-cluster-auth-bob",
+          "type": "AWSMSKCLUSTER",
+          "reporting": true
+        },
+        {
+          "name": "autodiscover-msk-cluster-auth-bob",
+          "type": "AWSMSKCLUSTER",
+          "reporting": true
+        },
+        {
+          "name": "autodiscover-msk-cluster-auth-bob",
+          "type": "AWSMSKCLUSTER",
+          "reporting": true
+        },
+        {
+          "name": "autodiscover-msk-cluster-auth-bob",
+          "type": "AWSMSKCLUSTER",
+          "reporting": true
+        },
+        {
+          "name": "Broker 1 - (autodiscover-msk-cluster-auth-bob)",
+          "type": "AWSMSKBROKER",
+          "reporting": true
+        },
+        {
+          "name": "Broker 1 - (autodiscover-msk-cluster-auth-bob)",
+          "type": "AWSMSKBROKER",
+          "reporting": true
+        },
+        {
+          "name": "Broker 1 - (autodiscover-msk-cluster-auth-bob)",
+          "type": "AWSMSKBROKER",
+          "reporting": true
+        },
+        {
+          "name": "Broker 2 - (autodiscover-msk-cluster-auth-bob)",
+          "type": "AWSMSKBROKER",
+          "reporting": true
+        },
+        {
+          "name": "Broker 2 - (autodiscover-msk-cluster-auth-bob)",
+          "type": "AWSMSKBROKER",
+          "reporting": true
+        },
+        {
+          "name": "Broker 2 - (autodiscover-msk-cluster-auth-bob)",
+          "type": "AWSMSKBROKER",
+          "reporting": true
+        },
+        {
+          "name": "Broker 2 - (pchawla-test)",
+          "type": "AWSMSKBROKER",
+          "reporting": true
+        },
+        {
+          "name": "Broker 3 - (pchawla-test)",
+          "type": "AWSMSKBROKER",
+          "reporting": true
+        },
+        {
+          "name": "pchawla-test",
+          "type": "AWSMSKCLUSTER",
+          "reporting": true
+        },
+        {
+          "name": "pchawla-test",
+          "type": "AWSMSKCLUSTER",
+          "reporting": true
+        },
+        {
+          "name": "pchawla-test",
+          "type": "AWSMSKCLUSTER",
+          "reporting": true
+        },
+        {
+          "name": "pchawla-test",
+          "type": "AWSMSKCLUSTER",
+          "reporting": true
+        },
+        {
+          "name": "pchawla-test",
+          "type": "AWSMSKCLUSTER",
+          "reporting": true
+        }
+      ]
+    },
+    "eventSubmission": {
+      "success": false,
+      "error": "Request failed with status code 403"
+    },
+    "uiQueries": {
+      "Message Queue Clusters": 3,
+      "Entity Search Filter": 11,
+      "Metric Stream Data": 0
+    },
+    "integrations": {
+      "hasAWSIntegration": false,
+      "linkedAccounts": []
+    },
+    "workingPatterns": {
+      "CloudWatch Metric Pattern": {
+        "success": false,
+        "message": "Request failed with status code 403"
+      },
+      "Infrastructure Bundle Pattern": {
+        "success": false,
+        "message": "Request failed with status code 403"
+      }
+    }
+  },
+  "recommendations": [
+    {
+      "priority": "HIGH",
+      "issue": "No AWS integration found",
+      "recommendation": "Set up AWS CloudWatch Metric Streams integration for automatic MSK entity creation."
+    },
+    {
+      "priority": "INFO",
+      "issue": "Existing MSK entities found",
+      "recommendation": "Study the existing entities to understand the working pattern."
+    }
+  ]
+}

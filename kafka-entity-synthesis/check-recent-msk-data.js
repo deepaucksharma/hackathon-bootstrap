@@ -4,7 +4,7 @@ const https = require('https');
 require('dotenv').config({ path: '../.env' });
 
 const config = {
-  accountId: parseInt(process.env.ACC || '3630072'),
+  accountId: parseInt(process.env.ACC),
   apiKey: process.env.UKEY || process.env.QKey
 };
 

@@ -1,0 +1,340 @@
+{
+  "name": "Kafka Cluster Monitoring (MSK Format)",
+  "description": "Custom dashboard for Kafka clusters using ingested MSK-format events",
+  "permissions": "PUBLIC_READ_WRITE",
+  "pages": [
+    {
+      "name": "Cluster Overview",
+      "description": "High-level view of Kafka cluster health and performance",
+      "guid": null,
+      "widgets": [
+        {
+          "title": "Cluster Health Status",
+          "layout": {
+            "column": 1,
+            "row": 1,
+            "width": 4,
+            "height": 3
+          },
+          "visualization": {
+            "id": "viz.billboard"
+          },
+          "rawConfiguration": {
+            "facet": {
+              "showOtherSeries": false
+            },
+            "nrqlQueries": [
+              {
+                "accountId": 3630072,
+                "query": "FROM AwsMskClusterSample SELECT latest(provider.activeControllerCount.Average) as 'Active Controllers', latest(provider.offlinePartitionsCount.Average) as 'Offline Partitions', latest(provider.globalPartitionCount.Average) as 'Total Partitions' WHERE provider.clusterName = '{{cluster_name}}' SINCE 5 minutes ago"
+              }
+            ],
+            "platformOptions": {
+              "ignoreTimeRange": false
+            }
+          }
+        },
+        {
+          "title": "Broker Status",
+          "layout": {
+            "column": 5,
+            "row": 1,
+            "width": 4,
+            "height": 3
+          },
+          "visualization": {
+            "id": "viz.table"
+          },
+          "rawConfiguration": {
+            "facet": {
+              "showOtherSeries": false
+            },
+            "nrqlQueries": [
+              {
+                "accountId": 3630072,
+                "query": "FROM AwsMskBrokerSample SELECT latest(provider.cpuUser.Average) as 'CPU %', latest(provider.memoryUsed.Average) as 'Memory %', latest(provider.rootDiskUsed.Average) as 'Disk %' WHERE provider.clusterName = '{{cluster_name}}' FACET provider.brokerId as 'Broker ID' SINCE 5 minutes ago"
+              }
+            ]
+          }
+        },
+        {
+          "title": "Cluster Throughput",
+          "layout": {
+            "column": 9,
+            "row": 1,
+            "width": 4,
+            "height": 3
+          },
+          "visualization": {
+            "id": "viz.area"
+          },
+          "rawConfiguration": {
+            "facet": {
+              "showOtherSeries": false
+            },
+            "nrqlQueries": [
+              {
+                "accountId": 3630072,
+                "query": "FROM AwsMskBrokerSample SELECT sum(provider.bytesInPerSec.Average)/1024/1024 as 'MB/s In', sum(provider.bytesOutPerSec.Average)/1024/1024 as 'MB/s Out' WHERE provider.clusterName = '{{cluster_name}}' TIMESERIES SINCE 1 hour ago"
+              }
+            ],
+            "platformOptions": {
+              "ignoreTimeRange": false
+            }
+          }
+        },
+        {
+          "title": "Messages Per Second by Broker",
+          "layout": {
+            "column": 1,
+            "row": 4,
+            "width": 6,
+            "height": 3
+          },
+          "visualization": {
+            "id": "viz.line"
+          },
+          "rawConfiguration": {
+            "facet": {
+              "showOtherSeries": false
+            },
+            "nrqlQueries": [
+              {
+                "accountId": 3630072,
+                "query": "FROM AwsMskBrokerSample SELECT average(provider.messagesInPerSec.Average) WHERE provider.clusterName = '{{cluster_name}}' FACET provider.brokerId TIMESERIES SINCE 1 hour ago"
+              }
+            ],
+            "platformOptions": {
+              "ignoreTimeRange": false
+            },
+            "yAxisLeft": {
+              "zero": true
+            }
+          }
+        },
+        {
+          "title": "Broker Resource Utilization",
+          "layout": {
+            "column": 7,
+            "row": 4,
+            "width": 6,
+            "height": 3
+          },
+          "visualization": {
+            "id": "viz.line"
+          },
+          "rawConfiguration": {
+            "facet": {
+              "showOtherSeries": false
+            },
+            "nrqlQueries": [
+              {
+                "accountId": 3630072,
+                "query": "FROM AwsMskBrokerSample SELECT average(provider.cpuUser.Average) as 'CPU %', average(provider.memoryUsed.Average) as 'Memory %' WHERE provider.clusterName = '{{cluster_name}}' FACET provider.brokerId TIMESERIES SINCE 1 hour ago"
+              }
+            ],
+            "platformOptions": {
+              "ignoreTimeRange": false
+            },
+            "yAxisLeft": {
+              "zero": true,
+              "max": 100
+            }
+          }
+        },
+        {
+          "title": "Under-Replicated Partitions",
+          "layout": {
+            "column": 1,
+            "row": 7,
+            "width": 4,
+            "height": 3
+          },
+          "visualization": {
+            "id": "viz.billboard"
+          },
+          "rawConfiguration": {
+            "facet": {
+              "showOtherSeries": false
+            },
+            "nrqlQueries": [
+              {
+                "accountId": 3630072,
+                "query": "FROM AwsMskBrokerSample SELECT sum(provider.underReplicatedPartitions.Maximum) as 'Under-Replicated Partitions' WHERE provider.clusterName = '{{cluster_name}}' SINCE 5 minutes ago"
+              }
+            ],
+            "platformOptions": {
+              "ignoreTimeRange": false
+            },
+            "thresholds": [
+              {
+                "value": 0,
+                "alertSeverity": "NOT_ALERTING"
+              },
+              {
+                "value": 1,
+                "alertSeverity": "WARNING"
+              },
+              {
+                "value": 10,
+                "alertSeverity": "CRITICAL"
+              }
+            ]
+          }
+        }
+      ]
+    },
+    {
+      "name": "Topics",
+      "description": "Topic-level metrics and performance",
+      "guid": null,
+      "widgets": [
+        {
+          "title": "Topic Throughput",
+          "layout": {
+            "column": 1,
+            "row": 1,
+            "width": 12,
+            "height": 3
+          },
+          "visualization": {
+            "id": "viz.bar"
+          },
+          "rawConfiguration": {
+            "facet": {
+              "showOtherSeries": false
+            },
+            "nrqlQueries": [
+              {
+                "accountId": 3630072,
+                "query": "FROM AwsMskTopicSample SELECT average(provider.bytesInPerSec.Average)/1024/1024 as 'MB/s In', average(provider.bytesOutPerSec.Average)/1024/1024 as 'MB/s Out' WHERE provider.clusterName = '{{cluster_name}}' FACET provider.topic SINCE 5 minutes ago"
+              }
+            ]
+          }
+        },
+        {
+          "title": "Topic Messages Per Second",
+          "layout": {
+            "column": 1,
+            "row": 4,
+            "width": 6,
+            "height": 3
+          },
+          "visualization": {
+            "id": "viz.line"
+          },
+          "rawConfiguration": {
+            "facet": {
+              "showOtherSeries": false
+            },
+            "nrqlQueries": [
+              {
+                "accountId": 3630072,
+                "query": "FROM AwsMskTopicSample SELECT average(provider.messagesInPerSec.Average) WHERE provider.clusterName = '{{cluster_name}}' FACET provider.topic TIMESERIES SINCE 1 hour ago"
+              }
+            ]
+          }
+        },
+        {
+          "title": "Consumer Lag by Topic",
+          "layout": {
+            "column": 7,
+            "row": 4,
+            "width": 6,
+            "height": 3
+          },
+          "visualization": {
+            "id": "viz.line"
+          },
+          "rawConfiguration": {
+            "facet": {
+              "showOtherSeries": false
+            },
+            "nrqlQueries": [
+              {
+                "accountId": 3630072,
+                "query": "FROM AwsMskTopicSample SELECT average(provider.sumOffsetLag.Average) WHERE provider.clusterName = '{{cluster_name}}' FACET provider.topic TIMESERIES SINCE 1 hour ago"
+              }
+            ],
+            "platformOptions": {
+              "ignoreTimeRange": false
+            },
+            "yAxisLeft": {
+              "zero": true
+            }
+          }
+        },
+        {
+          "title": "Topic Details",
+          "layout": {
+            "column": 1,
+            "row": 7,
+            "width": 12,
+            "height": 3
+          },
+          "visualization": {
+            "id": "viz.table"
+          },
+          "rawConfiguration": {
+            "facet": {
+              "showOtherSeries": false
+            },
+            "nrqlQueries": [
+              {
+                "accountId": 3630072,
+                "query": "FROM AwsMskTopicSample SELECT latest(provider.partitionCount) as 'Partitions', latest(provider.replicationFactor) as 'Replication Factor', latest(provider.messagesInPerSec.Average) as 'Msg/sec', latest(provider.sumOffsetLag.Average) as 'Consumer Lag' WHERE provider.clusterName = '{{cluster_name}}' FACET provider.topic as 'Topic' SINCE 5 minutes ago LIMIT 50"
+              }
+            ]
+          }
+        }
+      ]
+    },
+    {
+      "name": "Data Freshness",
+      "description": "Monitor data ingestion health",
+      "guid": null,
+      "widgets": [
+        {
+          "title": "Last Data Received",
+          "layout": {
+            "column": 1,
+            "row": 1,
+            "width": 12,
+            "height": 3
+          },
+          "visualization": {
+            "id": "viz.table"
+          },
+          "rawConfiguration": {
+            "facet": {
+              "showOtherSeries": false
+            },
+            "nrqlQueries": [
+              {
+                "accountId": 3630072,
+                "query": "FROM AwsMskClusterSample, AwsMskBrokerSample, AwsMskTopicSample SELECT latest(timestamp) as 'Last Update', count(*) as 'Events' WHERE provider.clusterName = '{{cluster_name}}' FACET eventType() SINCE 1 hour ago"
+              }
+            ]
+          }
+        }
+      ]
+    }
+  ],
+  "variables": [
+    {
+      "name": "cluster_name",
+      "type": "NRQL",
+      "defaultValues": [
+        {
+          "value": {
+            "string": "kafka"
+          }
+        }
+      ],
+      "nrqlQuery": {
+        "accountIds": [3630072],
+        "query": "FROM AwsMskClusterSample SELECT uniques(provider.clusterName) SINCE 1 day ago"
+      }
+    }
+  ]
+}

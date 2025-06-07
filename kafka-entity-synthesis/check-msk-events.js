@@ -1,10 +1,11 @@
 #!/usr/bin/env node
 
+require('dotenv').config({ path: '../.env' });
 const https = require('https');
 
 // Configuration
 const config = {
-  accountId: process.env.ACC || '3630072',
+  accountId: process.env.ACC,
   apiKey: process.env.UKEY || process.env.QKey,
   clusterName: 'msk-cluster-1749192934433'
 };

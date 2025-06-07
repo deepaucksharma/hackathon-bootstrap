@@ -1,0 +1,34 @@
+{
+  "timestamp": "2025-06-07T05:31:59.268Z",
+  "summary": {
+    "uiChecksPassed": 0,
+    "uiChecksTotal": 3,
+    "uiVisible": false
+  },
+  "checks": [
+    {
+      "name": "Cluster List Query",
+      "key": "clusterList",
+      "success": false,
+      "error": "Invalid value \"undefined\" for header \"API-Key\""
+    },
+    {
+      "name": "Broker Details Query",
+      "key": "brokerDetails",
+      "success": false,
+      "error": "Invalid value \"undefined\" for header \"API-Key\""
+    },
+    {
+      "name": "Topic Metrics Query",
+      "key": "topicMetrics",
+      "success": false,
+      "error": "Invalid value \"undefined\" for header \"API-Key\""
+    },
+    {
+      "name": "Entity Search Query",
+      "key": "entitySearch",
+      "success": false,
+      "error": "Invalid value \"undefined\" for header \"API-Key\""
+    }
+  ]
+}

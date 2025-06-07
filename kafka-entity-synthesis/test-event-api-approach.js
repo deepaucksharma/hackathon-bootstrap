@@ -4,8 +4,8 @@ const https = require('https');
 require('dotenv').config({ path: '../.env' });
 
 const config = {
-  accountId: parseInt(process.env.ACC || '3630072'),
-  insertKey: process.env.IKEY || process.env.NEW_RELIC_INSERT_KEY
+  accountId: parseInt(process.env.ACC),
+  insertKey: process.env.IKEY
 };
 
 class EventAPISender {

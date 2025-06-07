@@ -4,7 +4,7 @@ const https = require('https');
 require('dotenv').config({ path: '../.env' });
 
 // Configuration
-const ACCOUNT_ID = process.env.ACC || '3630072';
+const ACCOUNT_ID = process.env.ACC;
 const API_KEY = process.env.QKey || process.env.UKEY;
 
 async function runQuery(nrql) {

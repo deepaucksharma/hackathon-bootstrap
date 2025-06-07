@@ -1,0 +1,8 @@
+{
+  "newrelic": {
+    "accountId": "YOUR_ACCOUNT_ID",
+    "apiKey": "YOUR_INGEST_KEY"
+  },
+  "environment": "development",
+  "testClusterPrefix": "test-msk"
+}

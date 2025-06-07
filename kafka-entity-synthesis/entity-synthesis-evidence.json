@@ -1,0 +1,61 @@
+{
+  "timestamp": "2025-06-07T01:36:09.994Z",
+  "accountId": "3630072",
+  "testPeriod": "2025-06-07 00:00 - 01:30 UTC",
+  "evidence": {
+    "eventsSubmitted": {
+      "total": 0,
+      "breakdown": {},
+      "timeRange": "Last 2 hours"
+    },
+    "sampleEvent": {
+      "eventType": "AwsMskBrokerSample",
+      "fieldsPresent": 80,
+      "criticalFields": {
+        "entityName": "✓",
+        "entityGuid": "✓",
+        "provider": "AwsMskBroker",
+        "providerAccountId": "✓",
+        "providerAccountName": "✓",
+        "providerExternalId": "✓",
+        "integrationName": "✓",
+        "collector.name": "cloud-integrations"
+      }
+    },
+    "entityCreation": {
+      "mskEntitiesFound": 0,
+      "result": "FAILURE"
+    },
+    "awsIntegration": {
+      "awsEntitiesFound": 0,
+      "awsEntityTypes": [],
+      "status": "NOT_CONFIGURED"
+    },
+    "collectors": {
+      "found": [
+        "nri-kafka-msk",
+        "cloudwatch-metric-streams",
+        "cloud-integrations"
+      ],
+      "includesCloudIntegrations": true
+    },
+    "queryUtilsAlignment": {
+      "expectedProviders": [
+        "AwsMskCluster",
+        "AwsMskBroker",
+        "AwsMskTopic"
+      ],
+      "foundProviders": [
+        "AwsMskBroker"
+      ],
+      "matchesUIExpectations": true
+    }
+  },
+  "summary": {
+    "conclusion": "Entity synthesis failed despite correct event format",
+    "rootCause": "AWS integration not configured in account",
+    "eventsAccepted": false,
+    "entitiesCreated": false,
+    "awsIntegrationActive": false
+  }
+}
