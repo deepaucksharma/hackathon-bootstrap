@@ -83,3 +83,9 @@ k8s-validation/
 k8s-fixes/
 strimzi-kafka-setup/
 kafka-entity-synthesis/node_modules/
+
+# Test result files
+entity-synthesis-solution-V2/results/
+kafka-verification-*.json
+kafka-verification-*.html
+kafka-verification-*.md
