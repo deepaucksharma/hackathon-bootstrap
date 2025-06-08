@@ -84,8 +84,18 @@ k8s-fixes/
 strimzi-kafka-setup/
 kafka-entity-synthesis/node_modules/
 
+# Node.js dependencies
+node_modules/
+npm-debug.log*
+yarn-debug.log*
+yarn-error.log*
+.npm
+.yarn-integrity
+package-lock.json
+
 # Test result files
 entity-synthesis-solution-V2/results/
 kafka-verification-*.json
 kafka-verification-*.html
 kafka-verification-*.md
+test-results.json
