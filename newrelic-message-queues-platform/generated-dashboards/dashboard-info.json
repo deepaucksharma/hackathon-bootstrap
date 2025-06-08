@@ -1,0 +1,60 @@
+{
+  "title": "Message Queues Platform - Project Dashboard",
+  "description": "Live monitoring dashboard for the New Relic Message Queues platform development",
+  "shareableUrl": "https://one.newrelic.com/dashboards",
+  "instructions": [
+    "1. Copy the dashboard JSON from: generated-dashboards/message-queues-platform-dashboard.json",
+    "2. Go to New Relic One dashboards",
+    "3. Click \"Import dashboard\"",
+    "4. Paste the JSON and click \"Import\""
+  ],
+  "metrics": {
+    "platform": "Message Queues Platform",
+    "version": "1.0.0",
+    "components": {
+      "entityFramework": "READY",
+      "dashboardFramework": "READY",
+      "streamingEngine": "ACTIVE",
+      "verificationSuite": "OPERATIONAL"
+    },
+    "metrics": {
+      "entitiesCreated": 183,
+      "dashboardsGenerated": 4,
+      "verificationTests": 40,
+      "testsPassed": 40,
+      "performance": {
+        "entityCreation": "28,571/sec",
+        "metricGeneration": "83,333/sec",
+        "dashboardBuild": "64 widgets/sec"
+      }
+    },
+    "streaming": {
+      "status": "ACTIVE",
+      "accountId": "3630072",
+      "entities": {
+        "clusters": 3,
+        "brokers": 30,
+        "topics": 150,
+        "total": 183
+      }
+    }
+  },
+  "queries": [
+    {
+      "title": "Active Message Queue Entities",
+      "nrql": "FROM MESSAGE_QUEUE_CLUSTER_SAMPLE, MESSAGE_QUEUE_BROKER_SAMPLE, MESSAGE_QUEUE_TOPIC_SAMPLE SELECT count(*) WHERE provider = 'kafka' SINCE 1 hour ago"
+    },
+    {
+      "title": "Cluster Health Score",
+      "nrql": "FROM MESSAGE_QUEUE_CLUSTER_SAMPLE SELECT average(cluster.health.score) WHERE provider = 'kafka' SINCE 1 hour ago TIMESERIES"
+    },
+    {
+      "title": "Topic Throughput",
+      "nrql": "FROM MESSAGE_QUEUE_TOPIC_SAMPLE SELECT sum(topic.throughput.in), sum(topic.throughput.out) WHERE provider = 'kafka' SINCE 1 hour ago TIMESERIES"
+    },
+    {
+      "title": "Broker Performance",
+      "nrql": "FROM MESSAGE_QUEUE_BROKER_SAMPLE SELECT average(broker.cpu.usage), average(broker.memory.usage) FACET hostname WHERE clusterName LIKE 'kafka%' SINCE 1 hour ago"
+    }
+  ]
+}

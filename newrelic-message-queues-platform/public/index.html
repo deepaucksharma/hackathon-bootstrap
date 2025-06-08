@@ -1,0 +1,268 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0">
+  <title>Message Queues Simulation Control Panel</title>
+  <link href="https://cdn.jsdelivr.net/npm/tailwindcss@2.2.19/dist/tailwind.min.css" rel="stylesheet">
+  <link href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.0.0/css/all.min.css" rel="stylesheet">
+  <style>
+    .metric-card {
+      transition: all 0.3s ease;
+    }
+    .metric-card:hover {
+      transform: translateY(-2px);
+      box-shadow: 0 4px 6px -1px rgba(0, 0, 0, 0.1), 0 2px 4px -1px rgba(0, 0, 0, 0.06);
+    }
+    .anomaly-pulse {
+      animation: pulse 2s infinite;
+    }
+    @keyframes pulse {
+      0% { opacity: 1; }
+      50% { opacity: 0.5; }
+      100% { opacity: 1; }
+    }
+    .status-indicator {
+      width: 10px;
+      height: 10px;
+      border-radius: 50%;
+      display: inline-block;
+      margin-right: 5px;
+    }
+    .status-running { background-color: #10b981; }
+    .status-paused { background-color: #f59e0b; }
+    .status-stopped { background-color: #ef4444; }
+  </style>
+</head>
+<body class="bg-gray-100">
+  <div id="app" class="container mx-auto px-4 py-8">
+    <!-- Header -->
+    <header class="bg-white rounded-lg shadow-md p-6 mb-6">
+      <div class="flex justify-between items-center">
+        <div>
+          <h1 class="text-3xl font-bold text-gray-800">
+            <i class="fas fa-chart-line mr-2"></i>
+            Message Queues Simulation Control
+          </h1>
+          <p class="text-gray-600 mt-2">Real-time control and monitoring for v2.0 simulation engine</p>
+        </div>
+        <div class="text-right">
+          <div class="flex items-center mb-2">
+            <span :class="['status-indicator', statusClass]"></span>
+            <span class="text-lg font-semibold capitalize">{{ simulationStatus }}</span>
+          </div>
+          <div class="text-sm text-gray-500">
+            <i class="fas fa-clock mr-1"></i>
+            Uptime: {{ formatUptime(uptime) }}
+          </div>
+        </div>
+      </div>
+    </header>
+
+    <!-- Control Panel -->
+    <div class="grid grid-cols-1 md:grid-cols-3 gap-6 mb-6">
+      <!-- Simulation Control -->
+      <div class="bg-white rounded-lg shadow-md p-6">
+        <h2 class="text-xl font-semibold mb-4">
+          <i class="fas fa-gamepad mr-2"></i>
+          Simulation Control
+        </h2>
+        <div class="space-y-3">
+          <button @click="startSimulation" :disabled="running" 
+                  class="w-full bg-green-500 hover:bg-green-600 disabled:bg-gray-400 text-white font-bold py-2 px-4 rounded transition">
+            <i class="fas fa-play mr-2"></i> Start
+          </button>
+          <button @click="pauseSimulation" :disabled="!running || paused" 
+                  class="w-full bg-yellow-500 hover:bg-yellow-600 disabled:bg-gray-400 text-white font-bold py-2 px-4 rounded transition">
+            <i class="fas fa-pause mr-2"></i> Pause
+          </button>
+          <button @click="resumeSimulation" :disabled="!running || !paused" 
+                  class="w-full bg-blue-500 hover:bg-blue-600 disabled:bg-gray-400 text-white font-bold py-2 px-4 rounded transition">
+            <i class="fas fa-play-circle mr-2"></i> Resume
+          </button>
+          <button @click="stopSimulation" :disabled="!running" 
+                  class="w-full bg-red-500 hover:bg-red-600 disabled:bg-gray-400 text-white font-bold py-2 px-4 rounded transition">
+            <i class="fas fa-stop mr-2"></i> Stop
+          </button>
+          <button @click="resetSimulation" 
+                  class="w-full bg-gray-500 hover:bg-gray-600 text-white font-bold py-2 px-4 rounded transition">
+            <i class="fas fa-undo mr-2"></i> Reset
+          </button>
+        </div>
+      </div>
+
+      <!-- Speed Control -->
+      <div class="bg-white rounded-lg shadow-md p-6">
+        <h2 class="text-xl font-semibold mb-4">
+          <i class="fas fa-tachometer-alt mr-2"></i>
+          Speed Control
+        </h2>
+        <div class="space-y-4">
+          <div>
+            <label class="block text-sm font-medium text-gray-700 mb-2">
+              Simulation Speed: {{ speed }}x
+            </label>
+            <input type="range" v-model="speed" @change="updateSpeed" 
+                   min="0.1" max="10" step="0.1" 
+                   class="w-full h-2 bg-gray-200 rounded-lg appearance-none cursor-pointer">
+          </div>
+          <div class="grid grid-cols-3 gap-2">
+            <button @click="setSpeed(0.5)" class="bg-gray-200 hover:bg-gray-300 py-1 px-2 rounded text-sm">
+              0.5x
+            </button>
+            <button @click="setSpeed(1)" class="bg-gray-200 hover:bg-gray-300 py-1 px-2 rounded text-sm">
+              1x
+            </button>
+            <button @click="setSpeed(2)" class="bg-gray-200 hover:bg-gray-300 py-1 px-2 rounded text-sm">
+              2x
+            </button>
+          </div>
+        </div>
+      </div>
+
+      <!-- Anomaly Injection -->
+      <div class="bg-white rounded-lg shadow-md p-6">
+        <h2 class="text-xl font-semibold mb-4">
+          <i class="fas fa-bolt mr-2"></i>
+          Anomaly Injection
+        </h2>
+        <div class="space-y-3">
+          <select v-model="anomalyType" class="w-full p-2 border rounded">
+            <option value="spike">Spike</option>
+            <option value="drop">Drop</option>
+            <option value="drift">Drift</option>
+          </select>
+          <select v-model="anomalySeverity" class="w-full p-2 border rounded">
+            <option value="mild">Mild</option>
+            <option value="moderate">Moderate</option>
+            <option value="severe">Severe</option>
+          </select>
+          <button @click="injectAnomaly" :disabled="!running" 
+                  class="w-full bg-purple-500 hover:bg-purple-600 disabled:bg-gray-400 text-white font-bold py-2 px-4 rounded transition">
+            <i class="fas fa-exclamation-triangle mr-2"></i> Inject Anomaly
+          </button>
+        </div>
+        <div v-if="activeAnomalies.length > 0" class="mt-4">
+          <h3 class="text-sm font-semibold text-gray-700 mb-2">Active Anomalies:</h3>
+          <div v-for="anomaly in activeAnomalies" :key="anomaly.id" 
+               class="text-xs bg-purple-100 text-purple-800 px-2 py-1 rounded mb-1 anomaly-pulse">
+            {{ anomaly.type }} ({{ anomaly.severity }})
+          </div>
+        </div>
+      </div>
+    </div>
+
+    <!-- Topology Overview -->
+    <div class="bg-white rounded-lg shadow-md p-6 mb-6" v-if="topology">
+      <h2 class="text-xl font-semibold mb-4">
+        <i class="fas fa-network-wired mr-2"></i>
+        Topology Overview
+      </h2>
+      <div class="grid grid-cols-3 gap-4">
+        <div class="text-center">
+          <div class="text-3xl font-bold text-blue-600">{{ topology.clusters }}</div>
+          <div class="text-gray-600">Clusters</div>
+        </div>
+        <div class="text-center">
+          <div class="text-3xl font-bold text-green-600">{{ topology.brokers }}</div>
+          <div class="text-gray-600">Brokers</div>
+        </div>
+        <div class="text-center">
+          <div class="text-3xl font-bold text-purple-600">{{ topology.topics }}</div>
+          <div class="text-gray-600">Topics</div>
+        </div>
+      </div>
+    </div>
+
+    <!-- Real-time Metrics -->
+    <div class="bg-white rounded-lg shadow-md p-6 mb-6">
+      <h2 class="text-xl font-semibold mb-4">
+        <i class="fas fa-chart-bar mr-2"></i>
+        Real-time Metrics
+      </h2>
+      <div class="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-4 gap-4">
+        <div v-for="(metric, guid) in latestMetrics" :key="guid" 
+             class="metric-card bg-gray-50 rounded-lg p-4">
+          <div class="text-sm font-semibold text-gray-700 mb-2">{{ metric.entity.name }}</div>
+          <div v-for="gm in metric.goldenMetrics" :key="gm.name" class="mb-1">
+            <div class="flex justify-between items-center">
+              <span class="text-xs text-gray-600">{{ formatMetricName(gm.name) }}</span>
+              <span class="text-sm font-bold" :class="getMetricColorClass(gm.name, gm.value)">
+                {{ formatMetricValue(gm.value, gm.unit) }}
+              </span>
+            </div>
+          </div>
+          <div class="text-xs text-gray-400 mt-2">
+            <i class="fas fa-clock"></i> {{ formatTimestamp(metric.timestamp) }}
+          </div>
+        </div>
+      </div>
+    </div>
+
+    <!-- Pattern Configuration -->
+    <div class="bg-white rounded-lg shadow-md p-6">
+      <h2 class="text-xl font-semibold mb-4">
+        <i class="fas fa-sliders-h mr-2"></i>
+        Pattern Configuration
+      </h2>
+      <div class="grid grid-cols-1 md:grid-cols-2 gap-6">
+        <div>
+          <h3 class="text-lg font-semibold mb-2">Business Hours</h3>
+          <div class="space-y-2">
+            <div class="flex items-center">
+              <label class="text-sm text-gray-600 w-24">Start Hour:</label>
+              <input type="number" v-model.number="patterns.businessHours.start" 
+                     min="0" max="23" class="w-20 p-1 border rounded">
+            </div>
+            <div class="flex items-center">
+              <label class="text-sm text-gray-600 w-24">End Hour:</label>
+              <input type="number" v-model.number="patterns.businessHours.end" 
+                     min="0" max="23" class="w-20 p-1 border rounded">
+            </div>
+            <div class="flex items-center">
+              <label class="text-sm text-gray-600 w-24">Timezone:</label>
+              <select v-model="patterns.timezone" class="p-1 border rounded">
+                <option>UTC</option>
+                <option>America/New_York</option>
+                <option>Europe/London</option>
+                <option>Asia/Tokyo</option>
+              </select>
+            </div>
+          </div>
+        </div>
+        <div>
+          <h3 class="text-lg font-semibold mb-2">Anomaly Settings</h3>
+          <div class="space-y-2">
+            <div class="flex items-center">
+              <label class="text-sm text-gray-600 w-32">Probability:</label>
+              <input type="range" v-model.number="patterns.anomalyProbability" 
+                     min="0" max="0.1" step="0.001" class="w-32">
+              <span class="ml-2 text-sm">{{ (patterns.anomalyProbability * 100).toFixed(1) }}%</span>
+            </div>
+            <div class="flex items-center">
+              <label class="text-sm text-gray-600 w-32">Weekend Reduction:</label>
+              <input type="range" v-model.number="patterns.weekendReduction" 
+                     min="0" max="1" step="0.1" class="w-32">
+              <span class="ml-2 text-sm">{{ (patterns.weekendReduction * 100).toFixed(0) }}%</span>
+            </div>
+          </div>
+        </div>
+      </div>
+      <div class="mt-4 flex justify-end space-x-2">
+        <button @click="updatePatterns" 
+                class="bg-blue-500 hover:bg-blue-600 text-white font-bold py-2 px-4 rounded">
+          <i class="fas fa-save mr-2"></i> Apply Changes
+        </button>
+        <button @click="resetPatterns" 
+                class="bg-gray-500 hover:bg-gray-600 text-white font-bold py-2 px-4 rounded">
+          <i class="fas fa-undo mr-2"></i> Reset to Defaults
+        </button>
+      </div>
+    </div>
+  </div>
+
+  <script src="https://cdn.jsdelivr.net/npm/vue@2.6.14/dist/vue.js"></script>
+  <script src="https://cdn.jsdelivr.net/npm/axios/dist/axios.min.js"></script>
+  <script src="/js/control-panel.js"></script>
+</body>
+</html>

@@ -1,0 +1,53 @@
+{
+  "deployment": {
+    "method1": {
+      "title": "Deploy via New Relic UI",
+      "steps": [
+        "Go to https://one.newrelic.com/dashboards",
+        "Click \"Import dashboard\"",
+        "Copy and paste the JSON from validated-dashboard.json",
+        "Click \"Import dashboard\""
+      ]
+    },
+    "method2": {
+      "title": "Deploy via API",
+      "steps": [
+        "Set NEW_RELIC_USER_API_KEY environment variable",
+        "Run: node programmatic-dashboard-deploy.js",
+        "Dashboard will be created and link provided"
+      ]
+    },
+    "method3": {
+      "title": "Deploy via NerdGraph",
+      "example": "\nmutation CreateDashboard {\n  dashboardCreate(\n    accountId: 3630072\n    dashboard: {\n      name: \"Message Queues Platform - Comprehensive Monitoring\"\n      description: \"Production-ready dashboard for MESSAGE_QUEUE_* entities with validated NRQL queries\"\n      permissions: PUBLIC_READ_WRITE\n      pages: [\n        # ... pages configuration\n        # See validated-dashboard.json for full structure\n      ]\n    }\n  ) {\n    entityResult {\n      guid\n      name\n      permalink\n    }\n    errors {\n      description\n    }\n  }\n}"
+    }
+  },
+  "validation": {
+    "totalQueries": 16,
+    "queryTypes": [
+      "SELECT",
+      "FACET",
+      "TIMESERIES",
+      "WHERE",
+      "LIMIT"
+    ],
+    "eventTypes": [
+      "MESSAGE_QUEUE_CLUSTER_SAMPLE",
+      "MESSAGE_QUEUE_TOPIC_SAMPLE",
+      "MESSAGE_QUEUE_BROKER_SAMPLE",
+      "MESSAGE_QUEUE_QUEUE_SAMPLE"
+    ],
+    "attributes": [
+      "cluster.health.score",
+      "cluster.throughput.total",
+      "cluster.availability",
+      "topic.throughput.in/out",
+      "topic.consumer.lag",
+      "broker.cpu.usage",
+      "broker.memory.usage",
+      "broker.request.latency",
+      "queue.depth",
+      "queue.processing.time"
+    ]
+  }
+}

@@ -1,0 +1,24 @@
+{
+  "platform": {
+    "defaultMode": "infrastructure"
+  },
+  "streaming": {
+    "batchSize": 5000,
+    "flushInterval": 60000,
+    "maxRetries": 5,
+    "compression": true
+  },
+  "monitoring": {
+    "metrics": {
+      "enabled": true,
+      "interval": 60000
+    },
+    "health": {
+      "enabled": true
+    }
+  },
+  "logging": {
+    "level": "warn",
+    "pretty": false
+  }
+}

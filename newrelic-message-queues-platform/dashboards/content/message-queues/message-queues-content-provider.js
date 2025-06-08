@@ -68,7 +68,7 @@ class MessageQueuesContentProvider extends BaseContentProvider {
   registerTemplates() {
     // Cluster Overview Template
     this.registerTemplate('cluster-overview', this.buildTemplate({
-      name: 'Message Queue Cluster Overview',
+      title: 'Message Queue Cluster Overview',
       description: 'Comprehensive overview of message queue cluster health and performance',
       entityType: 'MESSAGE_QUEUE_CLUSTER',
       variables: [
@@ -180,7 +180,7 @@ class MessageQueuesContentProvider extends BaseContentProvider {
 
     // Topic Analysis Template
     this.registerTemplate('topic-analysis', this.buildTemplate({
-      name: 'Topic Performance Analysis',
+      title: 'Topic Performance Analysis',
       description: 'Detailed analysis of topic throughput, lag, and performance metrics',
       entityType: 'MESSAGE_QUEUE_TOPIC',
       variables: [
@@ -238,7 +238,7 @@ class MessageQueuesContentProvider extends BaseContentProvider {
 
     // Broker Health Template
     this.registerTemplate('broker-health', this.buildTemplate({
-      name: 'Broker Health Monitoring',
+      title: 'Broker Health Monitoring',
       description: 'Monitor broker CPU, memory, and network performance',
       entityType: 'MESSAGE_QUEUE_BROKER',
       variables: [
@@ -294,7 +294,7 @@ class MessageQueuesContentProvider extends BaseContentProvider {
 
     // Queue Monitoring Template  
     this.registerTemplate('queue-monitoring', this.buildTemplate({
-      name: 'Queue Monitoring Dashboard',
+      title: 'Queue Monitoring Dashboard',
       description: 'Monitor queue depth, processing time, and throughput',
       entityType: 'MESSAGE_QUEUE_QUEUE',
       variables: [

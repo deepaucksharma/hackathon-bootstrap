@@ -362,13 +362,13 @@ async function verifyDashboardsOffline() {
         timeRange: 'SINCE 1 hour ago'
       };
 
-      const result = await framework.buildDashboard(template.name, variables, {
+      const result = await framework.buildDashboard(template.id || template.name, variables, {
         name: `${template.title} - Verified`,
         description: `Verified dashboard for ${template.description}`
       });
 
       // Save dashboard
-      const filename = `${template.name}-verified.json`;
+      const filename = `${template.id || template.name}-verified.json`;
       await fs.writeFile(
         path.join(dashboardsDir, filename),
         JSON.stringify(result, null, 2)
@@ -398,7 +398,7 @@ async function verifyDashboardsOffline() {
       console.log(`      ✓ Entities: All ${entityResults.length} entity types verified`);
 
       verificationResults.push({
-        template: template.name,
+        template: template.id || template.name,
         dashboard: filename,
         verification: {
           structure: structureResult,

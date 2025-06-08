@@ -18,7 +18,8 @@ class MessageQueueBroker extends BaseEntity {
 
     // Broker-specific properties
     this.brokerId = config.brokerId;
-    this.hostname = config.hostname;
+    this.hostname = config.hostname || config.host; // Support both hostname and host
+    this.host = this.hostname; // Add host property for compatibility
     this.port = config.port || 9092;
     this.clusterName = config.clusterName;
     this.isController = config.isController || false;

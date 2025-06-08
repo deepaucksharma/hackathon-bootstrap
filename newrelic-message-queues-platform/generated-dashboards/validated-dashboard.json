@@ -1,0 +1,383 @@
+{
+  "name": "Message Queues Platform - Comprehensive Monitoring",
+  "description": "Production-ready dashboard for MESSAGE_QUEUE_* entities with validated NRQL queries",
+  "permissions": "PUBLIC_READ_WRITE",
+  "pages": [
+    {
+      "name": "Cluster Overview",
+      "description": "High-level view of all message queue clusters",
+      "widgets": [
+        {
+          "title": "Cluster Health Status",
+          "layout": {
+            "column": 1,
+            "row": 1,
+            "width": 3,
+            "height": 3
+          },
+          "visualization": {
+            "id": "viz.billboard"
+          },
+          "configuration": {
+            "nrqlQueries": [
+              {
+                "accountId": 3630072,
+                "query": "FROM MESSAGE_QUEUE_CLUSTER_SAMPLE SELECT latest(cluster.health.score) AS 'Health Score' WHERE provider = 'kafka' SINCE 1 hour ago"
+              }
+            ],
+            "thresholds": [
+              {
+                "value": 90,
+                "alertSeverity": "NOT_ALERTING"
+              },
+              {
+                "value": 70,
+                "alertSeverity": "WARNING"
+              },
+              {
+                "value": 50,
+                "alertSeverity": "CRITICAL"
+              }
+            ]
+          }
+        },
+        {
+          "title": "Active Clusters",
+          "layout": {
+            "column": 4,
+            "row": 1,
+            "width": 3,
+            "height": 3
+          },
+          "visualization": {
+            "id": "viz.billboard"
+          },
+          "configuration": {
+            "nrqlQueries": [
+              {
+                "accountId": 3630072,
+                "query": "FROM MESSAGE_QUEUE_CLUSTER_SAMPLE SELECT uniqueCount(entity.guid) AS 'Clusters' WHERE provider IN ('kafka', 'rabbitmq') SINCE 1 hour ago"
+              }
+            ]
+          }
+        },
+        {
+          "title": "Total Throughput",
+          "layout": {
+            "column": 7,
+            "row": 1,
+            "width": 3,
+            "height": 3
+          },
+          "visualization": {
+            "id": "viz.billboard"
+          },
+          "configuration": {
+            "nrqlQueries": [
+              {
+                "accountId": 3630072,
+                "query": "FROM MESSAGE_QUEUE_CLUSTER_SAMPLE SELECT sum(cluster.throughput.total) AS 'Messages/sec' WHERE provider = 'kafka' SINCE 1 hour ago"
+              }
+            ]
+          }
+        },
+        {
+          "title": "Cluster Availability",
+          "layout": {
+            "column": 10,
+            "row": 1,
+            "width": 3,
+            "height": 3
+          },
+          "visualization": {
+            "id": "viz.billboard"
+          },
+          "configuration": {
+            "nrqlQueries": [
+              {
+                "accountId": 3630072,
+                "query": "FROM MESSAGE_QUEUE_CLUSTER_SAMPLE SELECT average(cluster.availability) AS 'Availability %' WHERE provider = 'kafka' SINCE 1 hour ago"
+              }
+            ],
+            "thresholds": [
+              {
+                "value": 99.9,
+                "alertSeverity": "NOT_ALERTING"
+              },
+              {
+                "value": 99,
+                "alertSeverity": "WARNING"
+              },
+              {
+                "value": 95,
+                "alertSeverity": "CRITICAL"
+              }
+            ]
+          }
+        },
+        {
+          "title": "Cluster Health Trends",
+          "layout": {
+            "column": 1,
+            "row": 4,
+            "width": 12,
+            "height": 4
+          },
+          "visualization": {
+            "id": "viz.line"
+          },
+          "configuration": {
+            "nrqlQueries": [
+              {
+                "accountId": 3630072,
+                "query": "FROM MESSAGE_QUEUE_CLUSTER_SAMPLE SELECT average(cluster.health.score) FACET clusterName WHERE provider = 'kafka' SINCE 1 hour ago TIMESERIES AUTO"
+              }
+            ],
+            "legend": {
+              "enabled": true
+            },
+            "yAxisLeft": {
+              "zero": false,
+              "min": 0,
+              "max": 100
+            }
+          }
+        },
+        {
+          "title": "Cluster Performance Summary",
+          "layout": {
+            "column": 1,
+            "row": 8,
+            "width": 12,
+            "height": 4
+          },
+          "visualization": {
+            "id": "viz.table"
+          },
+          "configuration": {
+            "nrqlQueries": [
+              {
+                "accountId": 3630072,
+                "query": "FROM MESSAGE_QUEUE_CLUSTER_SAMPLE SELECT latest(clusterName) AS 'Cluster', latest(cluster.health.score) AS 'Health', latest(cluster.throughput.total) AS 'Throughput', latest(cluster.error.rate) AS 'Error Rate', latest(cluster.availability) AS 'Availability' FACET entity.guid WHERE provider = 'kafka' SINCE 1 hour ago LIMIT 20"
+              }
+            ]
+          }
+        }
+      ]
+    },
+    {
+      "name": "Topic Analytics",
+      "description": "Detailed topic performance and consumer lag analysis",
+      "widgets": [
+        {
+          "title": "Topic Throughput Overview",
+          "layout": {
+            "column": 1,
+            "row": 1,
+            "width": 12,
+            "height": 4
+          },
+          "visualization": {
+            "id": "viz.area"
+          },
+          "configuration": {
+            "nrqlQueries": [
+              {
+                "accountId": 3630072,
+                "query": "FROM MESSAGE_QUEUE_TOPIC_SAMPLE SELECT sum(topic.throughput.in) AS 'Inbound', sum(topic.throughput.out) AS 'Outbound' WHERE provider = 'kafka' SINCE 1 hour ago TIMESERIES AUTO"
+              }
+            ],
+            "colors": [
+              "#00C9A7",
+              "#3CA8FF"
+            ],
+            "legend": {
+              "enabled": true
+            }
+          }
+        },
+        {
+          "title": "Consumer Lag by Topic",
+          "layout": {
+            "column": 1,
+            "row": 5,
+            "width": 8,
+            "height": 4
+          },
+          "visualization": {
+            "id": "viz.line"
+          },
+          "configuration": {
+            "nrqlQueries": [
+              {
+                "accountId": 3630072,
+                "query": "FROM MESSAGE_QUEUE_TOPIC_SAMPLE SELECT max(topic.consumer.lag) FACET topic WHERE provider = 'kafka' AND topic.consumer.lag > 0 SINCE 1 hour ago TIMESERIES AUTO LIMIT 10"
+              }
+            ],
+            "legend": {
+              "enabled": true
+            },
+            "yAxisLeft": {
+              "zero": true
+            }
+          }
+        },
+        {
+          "title": "Top Topics by Volume",
+          "layout": {
+            "column": 9,
+            "row": 5,
+            "width": 4,
+            "height": 4
+          },
+          "visualization": {
+            "id": "viz.pie"
+          },
+          "configuration": {
+            "nrqlQueries": [
+              {
+                "accountId": 3630072,
+                "query": "FROM MESSAGE_QUEUE_TOPIC_SAMPLE SELECT sum(topic.throughput.in + topic.throughput.out) FACET topic WHERE provider = 'kafka' SINCE 1 hour ago LIMIT 10"
+              }
+            ]
+          }
+        }
+      ]
+    },
+    {
+      "name": "Broker Health",
+      "description": "Broker resource utilization and performance",
+      "widgets": [
+        {
+          "title": "Broker CPU Usage",
+          "layout": {
+            "column": 1,
+            "row": 1,
+            "width": 6,
+            "height": 4
+          },
+          "visualization": {
+            "id": "viz.line"
+          },
+          "configuration": {
+            "nrqlQueries": [
+              {
+                "accountId": 3630072,
+                "query": "FROM MESSAGE_QUEUE_BROKER_SAMPLE SELECT average(broker.cpu.usage) FACET hostname WHERE clusterName LIKE 'kafka%' SINCE 1 hour ago TIMESERIES AUTO"
+              }
+            ],
+            "legend": {
+              "enabled": true
+            },
+            "yAxisLeft": {
+              "zero": true,
+              "max": 100
+            }
+          }
+        },
+        {
+          "title": "Broker Memory Usage",
+          "layout": {
+            "column": 7,
+            "row": 1,
+            "width": 6,
+            "height": 4
+          },
+          "visualization": {
+            "id": "viz.line"
+          },
+          "configuration": {
+            "nrqlQueries": [
+              {
+                "accountId": 3630072,
+                "query": "FROM MESSAGE_QUEUE_BROKER_SAMPLE SELECT average(broker.memory.usage) FACET hostname WHERE clusterName LIKE 'kafka%' SINCE 1 hour ago TIMESERIES AUTO"
+              }
+            ],
+            "legend": {
+              "enabled": true
+            },
+            "yAxisLeft": {
+              "zero": true,
+              "max": 100
+            }
+          }
+        },
+        {
+          "title": "Broker Request Latency",
+          "layout": {
+            "column": 1,
+            "row": 5,
+            "width": 12,
+            "height": 4
+          },
+          "visualization": {
+            "id": "viz.line"
+          },
+          "configuration": {
+            "nrqlQueries": [
+              {
+                "accountId": 3630072,
+                "query": "FROM MESSAGE_QUEUE_BROKER_SAMPLE SELECT average(broker.request.latency) AS 'Avg Latency', percentile(broker.request.latency, 95) AS 'P95 Latency', percentile(broker.request.latency, 99) AS 'P99 Latency' WHERE clusterName LIKE 'kafka%' SINCE 1 hour ago TIMESERIES AUTO"
+              }
+            ],
+            "legend": {
+              "enabled": true
+            },
+            "yAxisLeft": {
+              "zero": false
+            }
+          }
+        }
+      ]
+    },
+    {
+      "name": "Queue Monitoring",
+      "description": "Queue depth and processing metrics",
+      "widgets": [
+        {
+          "title": "Queue Depth Trends",
+          "layout": {
+            "column": 1,
+            "row": 1,
+            "width": 8,
+            "height": 4
+          },
+          "visualization": {
+            "id": "viz.line"
+          },
+          "configuration": {
+            "nrqlQueries": [
+              {
+                "accountId": 3630072,
+                "query": "FROM MESSAGE_QUEUE_QUEUE_SAMPLE SELECT average(queue.depth) FACET queueName WHERE provider IN ('rabbitmq', 'sqs') SINCE 1 hour ago TIMESERIES AUTO LIMIT 20"
+              }
+            ],
+            "legend": {
+              "enabled": true
+            }
+          }
+        },
+        {
+          "title": "Queue Processing Time",
+          "layout": {
+            "column": 9,
+            "row": 1,
+            "width": 4,
+            "height": 4
+          },
+          "visualization": {
+            "id": "viz.histogram"
+          },
+          "configuration": {
+            "nrqlQueries": [
+              {
+                "accountId": 3630072,
+                "query": "FROM MESSAGE_QUEUE_QUEUE_SAMPLE SELECT histogram(queue.processing.time, 50, 20) WHERE provider IN ('rabbitmq', 'sqs') SINCE 1 hour ago"
+              }
+            ]
+          }
+        }
+      ]
+    }
+  ]
+}

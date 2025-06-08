@@ -1,0 +1,73 @@
+{
+  "name": "Message Queues Platform - Test Dashboard",
+  "description": "Test deployment of message queues monitoring dashboard",
+  "permissions": "PUBLIC_READ_WRITE",
+  "pages": [
+    {
+      "name": "Overview",
+      "description": "System overview",
+      "widgets": [
+        {
+          "title": "Total Entities",
+          "layout": {
+            "column": 1,
+            "row": 1,
+            "width": 4,
+            "height": 3
+          },
+          "visualization": {
+            "id": "viz.billboard"
+          },
+          "configuration": {
+            "nrqlQueries": [
+              {
+                "accountId": 3630072,
+                "query": "FROM MESSAGE_QUEUE_CLUSTER_SAMPLE SELECT count(*) SINCE 1 hour ago"
+              }
+            ]
+          }
+        },
+        {
+          "title": "Cluster Health",
+          "layout": {
+            "column": 5,
+            "row": 1,
+            "width": 8,
+            "height": 3
+          },
+          "visualization": {
+            "id": "viz.line"
+          },
+          "configuration": {
+            "nrqlQueries": [
+              {
+                "accountId": 3630072,
+                "query": "FROM MESSAGE_QUEUE_CLUSTER_SAMPLE SELECT average(cluster.health.score) TIMESERIES"
+              }
+            ]
+          }
+        },
+        {
+          "title": "Topic Throughput",
+          "layout": {
+            "column": 1,
+            "row": 4,
+            "width": 12,
+            "height": 4
+          },
+          "visualization": {
+            "id": "viz.area"
+          },
+          "configuration": {
+            "nrqlQueries": [
+              {
+                "accountId": 3630072,
+                "query": "FROM MESSAGE_QUEUE_TOPIC_SAMPLE SELECT sum(topic.throughput.in), sum(topic.throughput.out) TIMESERIES"
+              }
+            ]
+          }
+        }
+      ]
+    }
+  ]
+}

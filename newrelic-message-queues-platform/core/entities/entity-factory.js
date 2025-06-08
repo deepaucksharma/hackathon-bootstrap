@@ -13,7 +13,8 @@ const MessageQueueQueue = require('./message-queue-queue');
 class EntityFactory {
   constructor() {
     this.entityRegistry = new Map();
-    this.relationshipManager = new RelationshipManager();
+    // TODO: Implement RelationshipManager
+    // this.relationshipManager = new RelationshipManager();
   }
 
   /**
@@ -182,7 +183,7 @@ class EntityFactory {
       brokers,
       topics,
       queues,
-      relationships: this.relationshipManager.getClusterRelationships(clusterGuid)
+      relationships: [] // this.relationshipManager.getClusterRelationships(clusterGuid)
     };
   }
 
@@ -258,7 +259,7 @@ class EntityFactory {
    */
   clear() {
     this.entityRegistry.clear();
-    this.relationshipManager.clear();
+    // this.relationshipManager.clear();
   }
 }
 

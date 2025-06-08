@@ -15,7 +15,7 @@ class BaseEntity {
     this.name = config.name;
     this.provider = config.provider;
     this.metadata = config.metadata || {};
-    this.tags = config.tags || {};
+    this.tags = config.tags || [];
     this.relationships = [];
     this.lastSeenAt = new Date().toISOString();
     this.createdAt = config.createdAt || new Date().toISOString();
@@ -98,7 +98,10 @@ class BaseEntity {
    * Add or update tag
    */
   setTag(key, value) {
-    this.tags[key] = value;
+    // Remove existing tag with same key
+    this.tags = this.tags.filter(tag => tag.key !== key);
+    // Add new tag
+    this.tags.push({ key, value });
   }
 
   /**

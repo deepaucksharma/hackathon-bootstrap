@@ -135,6 +135,8 @@ class BaseContentProvider extends IContentProvider {
    * Register a template
    */
   registerTemplate(name, template) {
+    // Store the registration key in the template object
+    template.id = name;
     this.templates.set(name, template);
   }
 
@@ -162,7 +164,11 @@ class BaseContentProvider extends IContentProvider {
   // Interface implementations
 
   getTemplates() {
-    return Object.fromEntries(this.templates);
+    // Return array of template objects with name included
+    return Array.from(this.templates.entries()).map(([name, template]) => ({
+      ...template,
+      id: name // Include the key as 'id' for reference
+    }));
   }
 
   getTemplate(templateName) {
@@ -186,6 +192,7 @@ class BaseContentProvider extends IContentProvider {
    */
   buildTemplate({
     name,
+    title,
     description,
     entityType,
     variables = [],
@@ -194,7 +201,8 @@ class BaseContentProvider extends IContentProvider {
     tags = []
   }) {
     return {
-      name,
+      name: name || title, // For backward compatibility
+      title: title || name, // Display title
       description,
       entityType,
       variables,

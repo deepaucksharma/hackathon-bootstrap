@@ -27,8 +27,9 @@ program
       const templates = contentProvider.getTemplates();
       
       console.log(`\n📋 Available Templates (${options.provider}):`);
-      Object.entries(templates).forEach(([name, template]) => {
-        console.log(`  • ${name}: ${template.description}`);
+      templates.forEach((template) => {
+        console.log(`  • ${template.id}: ${template.title || template.name}`);
+        console.log(`    Description: ${template.description}`);
         console.log(`    Entity Type: ${template.entityType}`);
         console.log(`    Sections: ${template.sections?.length || 0}`);
         console.log(`    Variables: ${template.variables?.length || 0}`);
