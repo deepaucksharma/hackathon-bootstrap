@@ -1,93 +1,95 @@
 # New Relic Message Queues Platform
 
-A comprehensive platform for implementing sophisticated New Relic dashboards for message queue monitoring using the MESSAGE_QUEUE_* entity model. This system generates realistic simulated data and provides complete tooling for building, testing, and optimizing custom dashboards.
+A comprehensive platform for developing, simulating, and managing MESSAGE_QUEUE_* entities in New Relic, with dashboard generation and verification capabilities.
 
-## 🎯 Platform Objectives
+## 🚀 Overview
 
-**Primary Mission**: Create production-ready New Relic dashboards for heterogeneous messaging architectures using MESSAGE_QUEUE_* entities with realistic simulated data and comprehensive development tooling.
+The New Relic Message Queues Platform provides a complete solution for:
+
+- **Entity Development**: Create and propose new MESSAGE_QUEUE_* entity types
+- **Data Simulation**: Generate realistic metrics and events for testing
+- **Dashboard Generation**: Build production-ready dashboards automatically
+- **Verification**: Validate entity synthesis and dashboard functionality
+- **Multi-Provider Support**: Works with Kafka, RabbitMQ, SQS, Azure Service Bus, and more
+
+## 📋 Features
+
+### Three Operating Modes
+
+1. **Mode 1: Entity Proposal & Simulation**
+   - Prototype new entity types before official adoption
+   - Simulate realistic data patterns
+   - Test entity synthesis in New Relic
+   
+2. **Mode 2: Existing Entity Enhancement**
+   - Import official entity definitions from github.com/newrelic/entity-definitions
+   - Add custom golden metrics
+   - Extend with additional metadata
+
+3. **Mode 3: Hybrid Mode**
+   - Combine new proposals with existing definitions
+   - Create unified dashboards
+   - Maintain compatibility
 
 ### Core Capabilities
-- **Multi-Provider Support**: Kafka, RabbitMQ, SQS, Azure Service Bus, Google Pub/Sub
-- **Real-time Simulation**: Business-realistic data patterns with anomaly injection
-- **Dashboard Building**: Complete widget library and responsive design tools
-- **Performance Optimization**: Load testing, mobile optimization, cross-browser testing
-- **Enterprise Features**: Multi-account, RBAC, compliance reporting, SLA tracking
 
-## 🏗️ Architecture Overview
+- ✅ **Entity Factory**: Create MESSAGE_QUEUE_* entities with proper relationships
+- ✅ **Data Simulation**: Generate realistic metrics with business patterns
+- ✅ **Streaming**: Send events and metrics to New Relic APIs
+- ✅ **Dashboard Builder**: Generate dashboards from templates
+- ✅ **Verification Framework**: Validate entities, NRQL, and dashboards
+- ✅ **CLI Tools**: Command-line interface for all operations
+- ✅ **Dry-Run Mode**: Test without sending data to New Relic
 
-```mermaid
-graph TB
-    subgraph "Platform Core"
-        ENTITIES[Entity Model]
-        PROVIDERS[Provider Adapters]
-        METRICS[Golden Metrics]
-        RELATIONSHIPS[Entity Relationships]
-    end
-    
-    subgraph "Simulation Engine"
-        PATTERNS[Data Patterns]
-        STREAMING[Real-time Streaming]
-        SCENARIOS[Test Scenarios]
-        INJECTION[Anomaly Injection]
-    end
-    
-    subgraph "Dashboard System"
-        WIDGETS[Widget Library]
-        BUILDERS[Dashboard Builders]
-        TEMPLATES[Template System]
-        RESPONSIVE[Responsive Design]
-    end
-    
-    subgraph "Verification Suite"
-        FUNCTIONAL[Functional Tests]
-        PERFORMANCE[Performance Tests]
-        MOBILE[Mobile Tests]
-        COMPATIBILITY[Browser Tests]
-    end
-    
-    ENTITIES --> SIMULATION
-    SIMULATION --> DASHBOARDS
-    DASHBOARDS --> VERIFICATION
-```
+## 🛠️ Installation
 
-## 🚀 Quick Start
-
-### 1. Initialize Platform
 ```bash
-# Set up environment
+# Clone the repository
+git clone <repository-url>
+cd newrelic-message-queues-platform
+
+# Install dependencies
 npm install
-cp config/environments/development.json.template config/environments/development.json
 
-# Configure New Relic credentials
-export NEW_RELIC_API_KEY="your-api-key"
-export NEW_RELIC_ACCOUNT_ID="your-account-id"
+# Set up environment variables
+cp .env.example .env
+# Edit .env with your New Relic credentials
 ```
 
-### 2. Generate Simulated Data
-```bash
-# Start realistic message queue simulation
-node tools/cli/mq-simulate.js --provider=kafka --scenario=production --duration=1h
+## ⚡ Quick Start
 
-# Stream real-time data for development
-node simulation/streaming/real-time-streamer.js --refresh-interval=30s
+### 1. Test the Platform
+
+```bash
+# Run comprehensive test suite
+node test-suite.js
+
+# Check connectivity
+node test-connectivity.js
 ```
 
-### 3. Build Dashboards
-```bash
-# Create dashboard from template
-node tools/cli/mq-dashboard.js create --template=overview --provider=kafka
+### 2. Simple Streaming Example
 
-# Build custom widgets
-node dashboards/builders/widget-builder.js --type=billboard --entity=cluster
+```bash
+# Stream a single cluster with metrics
+node examples/simple-streaming.js
 ```
 
-### 4. Verify Implementation
-```bash
-# Run comprehensive verification
-node verification/tests/dashboard-suite.js --comprehensive
+### 3. Production Simulation
 
-# Performance testing
-node verification/benchmarks/load-test.js --concurrent-users=50
+```bash
+# Simulate production environment (dry-run)
+node examples/production-streaming.js --dry-run --duration=5 --interval=30
+
+# Stream real data
+node examples/production-streaming.js --duration=5
+```
+
+### 4. Interactive Showcase
+
+```bash
+# Launch interactive demo
+node showcase.js
 ```
 
 ## 📊 Entity Model
@@ -390,10 +392,14 @@ newrelic-message-queues-platform/
 
 ## 📞 Support
 
-- **Technical Issues**: Check verification logs and debugging tools
-- **Performance Problems**: Use benchmark suite for optimization
-- **Dashboard Questions**: Review dashboard building documentation
+- **Documentation**: [Full Documentation](./docs/)
+- **Issues**: [GitHub Issues](https://github.com/your-org/nri-kafka/issues)
+- **Examples**: [Example Workflows](./examples/)
 - **Entity Model**: Refer to [specification](../docs/README.md)
+
+## 🙏 Acknowledgments
+
+Built with ❤️ by the New Relic community. Special thanks to all contributors and the teams maintaining the message queue integrations.
 
 ---
 

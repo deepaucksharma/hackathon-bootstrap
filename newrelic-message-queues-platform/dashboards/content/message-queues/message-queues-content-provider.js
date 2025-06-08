@@ -446,6 +446,28 @@ class MessageQueuesContentProvider extends BaseContentProvider {
     return this.entityVariables[entityType] || [];
   }
 
+  /**
+   * Get template variables for dashboard generation
+   */
+  getTemplateVariables(options = {}) {
+    return {
+      // Common variables
+      timeRange: options.timeRange || 'SINCE 1 hour ago',
+      accountId: options.accountId || this.config.accountId || '{{accountId}}',
+      
+      // Provider-specific variables
+      provider: options.provider || '{{provider}}',
+      environment: options.environment || '{{environment}}',
+      
+      // Entity-specific variables
+      clusterName: options.clusterName || '{{clusterName}}',
+      hostname: options.hostname || '{{hostname}}',
+      topic: options.topic || '{{topic}}',
+      queueName: options.queueName || '{{queueName}}',
+      region: options.region || '{{region}}'
+    };
+  }
+
   getMetadata() {
     return {
       domain: this.domain,

@@ -21,8 +21,31 @@ class DataSimulator {
       ...config
     };
     
-    this.patterns = new DataPatterns();
-    this.anomalyInjector = new AnomalyInjector(this.config.anomalyRate);
+    // Initialize patterns and anomaly injection (inline for now)
+    this.patterns = {
+      getBusinessHourMultiplier: () => this.getBusinessHourMultiplier(),
+      getSeasonalMultiplier: () => this.getSeasonalMultiplier(),
+      getBrokerLoad: (isController) => {
+        const patterns = new DataPatterns();
+        return patterns.getBrokerLoad(isController);
+      },
+      getTopicLoad: (topicName) => {
+        const patterns = new DataPatterns();
+        return patterns.getTopicLoad(topicName);
+      },
+      getQueueLoad: (queueType) => {
+        const patterns = new DataPatterns();
+        return patterns.getQueueLoad(queueType);
+      }
+    };
+    this.anomalyInjector = {
+      shouldInjectAnomaly: () => Math.random() < this.config.anomalyRate,
+      generateAnomaly: (value) => value * (Math.random() * 2 + 0.5),
+      generateBrokerAnomaly: () => {
+        const injector = new AnomalyInjector(this.config.anomalyRate);
+        return injector.generateBrokerAnomaly();
+      }
+    };
     this.timeSeriesData = new Map();
     this.startTime = Date.now();
   }
@@ -470,6 +493,22 @@ class DataSimulator {
     );
     
     return isHighVolume ? 12 : 6;
+  }
+
+  /**
+   * Get business hour multiplier
+   */
+  getBusinessHourMultiplier(date = new Date()) {
+    const patterns = new DataPatterns();
+    return patterns.getBusinessHourMultiplier(date);
+  }
+
+  /**
+   * Get seasonal multiplier
+   */
+  getSeasonalMultiplier(date = new Date()) {
+    const patterns = new DataPatterns();
+    return patterns.getSeasonalMultiplier(date);
   }
 
   /**

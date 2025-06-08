@@ -19,10 +19,36 @@ class DashboardBuilder {
       ...config
     };
 
-    this.widgetBuilder = new WidgetBuilder(this.config);
-    this.templateEngine = new TemplateEngine();
+    // Initialize helper classes (some are defined at bottom of file)
     this.responsiveDesign = new ResponsiveDesign();
     this.variableManager = new VariableManager();
+    
+    // Widget builder (inline for now)
+    this.widgetBuilder = {
+      createWidget: (config) => this.createWidget(config)
+    };
+  }
+
+  /**
+   * Build dashboard configuration (alias for createDashboard)
+   */
+  buildDashboard(dashboardConfig) {
+    return this.createDashboardConfig(dashboardConfig);
+  }
+
+  /**
+   * Create dashboard configuration without deploying
+   */
+  createDashboardConfig(dashboardConfig) {
+    const dashboard = {
+      name: dashboardConfig.name,
+      description: dashboardConfig.description || '',
+      permissions: dashboardConfig.permissions || 'PUBLIC_READ_WRITE',
+      variables: dashboardConfig.variables || [],
+      pages: dashboardConfig.pages || []
+    };
+
+    return dashboard;
   }
 
   /**
@@ -402,6 +428,14 @@ class DashboardBuilder {
 
     return result.data.actor.entity;
   }
+
+  /**
+   * Create widget (delegated to WidgetBuilder)
+   */
+  createWidget(widgetConfig) {
+    const widgetBuilder = new WidgetBuilder(this.config);
+    return widgetBuilder.createWidget(widgetConfig);
+  }
 }
 
 /**
@@ -417,16 +451,19 @@ class WidgetBuilder {
   /**
    * Create widget based on configuration
    */
-  async createWidget(widgetConfig) {
+  createWidget(widgetConfig) {
+    // Handle both new format and legacy format
     const widget = {
       title: widgetConfig.title,
       layout: {
-        column: widgetConfig.position.column,
-        row: widgetConfig.position.row,
-        width: widgetConfig.position.width,
-        height: widgetConfig.position.height
+        column: widgetConfig.column || widgetConfig.position?.column || 1,
+        row: widgetConfig.row || widgetConfig.position?.row || 1,
+        width: widgetConfig.width || widgetConfig.position?.width || 6,
+        height: widgetConfig.height || widgetConfig.position?.height || 3
       },
-      visualization: { id: this.getVisualizationId(widgetConfig.type) },
+      visualization: { 
+        id: this.getVisualizationId(widgetConfig.visualization || widgetConfig.type || 'billboard') 
+      },
       configuration: this.buildWidgetConfiguration(widgetConfig)
     };
 

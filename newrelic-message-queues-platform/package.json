@@ -1,0 +1,56 @@
+{
+  "name": "newrelic-message-queues-platform",
+  "version": "1.0.0",
+  "description": "New Relic Message Queues Platform - Accelerate development of message queue monitoring solutions",
+  "main": "index.js",
+  "scripts": {
+    "test": "jest",
+    "test:coverage": "jest --coverage",
+    "lint": "eslint . --ext .js",
+    "dev": "nodemon",
+    "verify": "node verification/runners/verification-runner.js",
+    "simulate": "node tools/cli/mq-platform.js simulate stream",
+    "dashboard": "node tools/cli/mq-platform.js dashboard create",
+    "start": "node index.js"
+  },
+  "keywords": [
+    "newrelic",
+    "monitoring",
+    "message-queues",
+    "kafka",
+    "rabbitmq",
+    "sqs",
+    "observability"
+  ],
+  "author": "New Relic Community",
+  "license": "Apache-2.0",
+  "dependencies": {
+    "chalk": "^4.1.2",
+    "commander": "^9.4.1",
+    "inquirer": "^8.2.5",
+    "js-yaml": "^4.1.0",
+    "dotenv": "^16.0.3",
+    "axios": "^1.3.4",
+    "playwright": "^1.32.0",
+    "uuid": "^9.0.0",
+    "moment": "^2.29.4",
+    "lodash": "^4.17.21"
+  },
+  "devDependencies": {
+    "jest": "^29.5.0",
+    "eslint": "^8.36.0",
+    "nodemon": "^2.0.22",
+    "@types/node": "^18.15.3"
+  },
+  "engines": {
+    "node": ">=14.0.0"
+  },
+  "repository": {
+    "type": "git",
+    "url": "https://github.com/your-org/nri-kafka.git"
+  },
+  "bugs": {
+    "url": "https://github.com/your-org/nri-kafka/issues"
+  },
+  "homepage": "https://github.com/your-org/nri-kafka#readme"
+}

@@ -20,6 +20,8 @@ class NewRelicStreamer {
       maxRetries: config.maxRetries || 3,
       retryDelay: config.retryDelay || 1000,
       rateLimitBuffer: config.rateLimitBuffer || 0.8, // Use 80% of rate limit
+      dryRun: config.dryRun || false, // Enable dry-run mode for testing
+      verbose: config.verbose || false, // Enable verbose logging
       ...config
     };
 
@@ -159,8 +161,25 @@ class NewRelicStreamer {
    * Send data to New Relic API
    */
   async sendToNewRelic(url, data, dataType) {
+    const payload = JSON.stringify(data);
+    
+    // Handle dry-run mode
+    if (this.config.dryRun) {
+      if (this.config.verbose) {
+        console.log(`[DRY RUN] Would send ${dataType} to ${url}:`);
+        console.log(`[DRY RUN] Payload size: ${Buffer.byteLength(payload)} bytes`);
+        console.log(`[DRY RUN] Records: ${Array.isArray(data) ? data.length : 1}`);
+      }
+      
+      // Simulate success response
+      return Promise.resolve({
+        statusCode: 200,
+        data: '{"success": true, "dryRun": true}',
+        dryRun: true
+      });
+    }
+    
     return new Promise((resolve, reject) => {
-      const payload = JSON.stringify(data);
       const urlObj = new URL(url);
       
       const options = {

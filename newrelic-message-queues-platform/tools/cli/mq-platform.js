@@ -39,6 +39,69 @@ const simulate = program
   .description('Generate and stream simulated message queue data');
 
 simulate
+  .command('stream')
+  .description('Stream simulated message queue data to New Relic')
+  .option('-p, --provider <provider>', 'Message queue provider', 'kafka')
+  .option('-c, --clusters <count>', 'Number of clusters', '1')
+  .option('-b, --brokers <count>', 'Brokers per cluster', '3')
+  .option('-t, --topics <count>', 'Topics per cluster', '10')
+  .option('-e, --environment <env>', 'Environment name', 'production')
+  .option('-r, --region <region>', 'Region name', 'us-east-1')
+  .option('-i, --interval <seconds>', 'Streaming interval in seconds', '30')
+  .option('-d, --duration <minutes>', 'Duration in minutes (omit for continuous)', null)
+  .option('--events', 'Stream as events', true)
+  .option('--metrics', 'Stream as metrics', true)
+  .action(async (options) => {
+    try {
+      const { StreamingOrchestrator } = require('../../examples/streaming-example');
+      
+      const config = {
+        newRelic: {
+          apiKey: options.apiKey || program.opts().apiKey || process.env.NEW_RELIC_API_KEY,
+          accountId: options.accountId || program.opts().accountId || process.env.NEW_RELIC_ACCOUNT_ID,
+          batchSize: 50,
+          flushInterval: 5000
+        },
+        simulation: {
+          businessHoursStart: 9,
+          businessHoursEnd: 17,
+          anomalyRate: 0.05
+        },
+        topology: {
+          provider: options.provider.toUpperCase(),
+          environment: options.environment,
+          region: options.region,
+          clusterCount: parseInt(options.clusters),
+          brokersPerCluster: parseInt(options.brokers),
+          topicsPerCluster: parseInt(options.topics)
+        },
+        streaming: {
+          intervalMs: parseInt(options.interval) * 1000,
+          duration: options.duration ? parseInt(options.duration) : null,
+          streamEvents: options.events,
+          streamMetrics: options.metrics,
+          verbose: program.opts().verbose
+        }
+      };
+      
+      if (!config.newRelic.apiKey || !config.newRelic.accountId) {
+        throw new Error('NEW_RELIC_API_KEY and NEW_RELIC_ACCOUNT_ID are required');
+      }
+      
+      const orchestrator = new StreamingOrchestrator(config);
+      await orchestrator.initialize();
+      orchestrator.start();
+      
+      console.log(chalk.green('\n✅ Streaming started successfully!'));
+      console.log(chalk.gray('Press Ctrl+C to stop streaming...\n'));
+      
+    } catch (error) {
+      console.error(chalk.red(`Error: ${error.message}`));
+      process.exit(1);
+    }
+  });
+
+simulate
   .command('create-topology')
   .description('Create a message queue topology')
   .option('-p, --provider <provider>', 'Message queue provider', 'kafka')
@@ -176,38 +239,93 @@ dashboard
   .description('Create a new dashboard')
   .option('-t, --template <template>', 'Dashboard template', 'overview')
   .option('-n, --name <name>', 'Dashboard name')
-  .option('-p, --provider <provider>', 'Message queue provider filter')
+  .option('-p, --provider <provider>', 'Message queue provider', 'kafka')
+  .option('-e, --environment <env>', 'Environment', 'production')
   .option('-c, --cluster <cluster>', 'Specific cluster name (for cluster dashboard)')
+  .option('--dry-run', 'Preview dashboard without creating')
+  .option('--no-deploy', 'Build dashboard without deploying')
   .action(async (options) => {
     try {
       console.log(chalk.blue('🎨 Creating dashboard...'));
       
-      const builder = new DashboardBuilder({
-        apiKey: options.apiKey || process.env.NEW_RELIC_USER_API_KEY,
-        accountId: options.accountId || process.env.NEW_RELIC_ACCOUNT_ID
+      const DashboardGenerator = require('../../dashboards/lib/dashboard-generator');
+      
+      const generator = new DashboardGenerator({
+        apiKey: options.apiKey || program.opts().apiKey || process.env.NEW_RELIC_USER_API_KEY,
+        accountId: options.accountId || program.opts().accountId || process.env.NEW_RELIC_ACCOUNT_ID
       });
-
-      let dashboard;
-
-      if (options.template === 'cluster' && options.cluster) {
-        dashboard = await builder.createClusterDashboard(options.cluster, {
-          name: options.name
-        });
-      } else {
-        dashboard = await builder.createOverviewDashboard({
-          name: options.name || 'Message Queues Overview'
-        });
+      
+      let result;
+      
+      switch (options.template) {
+        case 'overview':
+          result = await generator.generateOverviewDashboard({
+            provider: options.provider,
+            environment: options.environment,
+            name: options.name,
+            deploy: !options.dryRun && options.deploy
+          });
+          break;
+          
+        case 'cluster':
+          if (!options.cluster) {
+            throw new Error('--cluster option is required for cluster template');
+          }
+          result = await generator.generateClusterDashboard(options.cluster, {
+            provider: options.provider,
+            name: options.name,
+            deploy: !options.dryRun && options.deploy
+          });
+          break;
+          
+        case 'topics':
+          result = await generator.generateTopicDashboard({
+            provider: options.provider,
+            environment: options.environment,
+            name: options.name,
+            deploy: !options.dryRun && options.deploy
+          });
+          break;
+          
+        case 'brokers':
+          result = await generator.generateBrokerDashboard({
+            provider: options.provider,
+            environment: options.environment,
+            name: options.name,
+            deploy: !options.dryRun && options.deploy
+          });
+          break;
+          
+        case 'queues':
+          result = await generator.generateQueueDashboard({
+            provider: options.provider,
+            environment: options.environment,
+            name: options.name,
+            deploy: !options.dryRun && options.deploy
+          });
+          break;
+          
+        default:
+          throw new Error(`Unknown template: ${options.template}`);
       }
 
-      console.log(chalk.green('✅ Dashboard created successfully!'));
-      console.log(chalk.white('📊 Dashboard Details:'));
-      console.log(`   • Name: ${dashboard.name}`);
-      console.log(`   • GUID: ${dashboard.guid}`);
-      console.log(`   • Permalink: ${dashboard.permalink}`);
+      if (options.dryRun) {
+        console.log(chalk.yellow('🔍 Dashboard Preview:'));
+        console.log(JSON.stringify(result.dashboard, null, 2));
+      } else if (result.guid) {
+        console.log(chalk.green('✅ Dashboard deployed successfully!'));
+        console.log(chalk.white('📊 Dashboard Details:'));
+        console.log(`   • Name: ${result.name}`);
+        console.log(`   • GUID: ${result.guid}`);
+        console.log(`   • URL: ${result.permalink}`);
+      } else {
+        console.log(chalk.green('✅ Dashboard built successfully'));
+        console.log(chalk.gray(`   ${result.metadata.widgetCount} widgets across ${result.metadata.pageCount} pages`));
+      }
 
     } catch (error) {
       console.error(chalk.red('❌ Error creating dashboard:'), error.message);
-      if (options.verbose) {
+      if (program.opts().verbose) {
         console.error(error.stack);
       }
       process.exit(1);
@@ -217,12 +335,68 @@ dashboard
 dashboard
   .command('list-templates')
   .description('List available dashboard templates')
-  .action(() => {
-    console.log(chalk.blue('📋 Available Dashboard Templates:'));
-    console.log(chalk.white('• overview') + ' - High-level infrastructure overview');
-    console.log(chalk.white('• cluster') + ' - Detailed cluster analysis');
-    console.log(chalk.white('• performance') + ' - Performance optimization dashboard');
-    console.log(chalk.white('• operations') + ' - Operations and alerting dashboard');
+  .action(async () => {
+    try {
+      const DashboardGenerator = require('../../dashboards/lib/dashboard-generator');
+      const generator = new DashboardGenerator();
+      
+      const templates = generator.getAvailableTemplates();
+      
+      console.log(chalk.blue('📋 Available Dashboard Templates:'));
+      templates.forEach(template => {
+        console.log(chalk.white(`• ${template.name}`) + ` - ${template.description}`);
+      });
+    } catch (error) {
+      console.error(chalk.red('Error listing templates:'), error.message);
+    }
+  });
+
+dashboard
+  .command('generate-suite')
+  .description('Generate complete dashboard suite for a provider')
+  .requiredOption('-p, --provider <provider>', 'Message queue provider')
+  .requiredOption('-e, --environment <env>', 'Environment')
+  .option('--dry-run', 'Preview dashboards without creating')
+  .action(async (options) => {
+    try {
+      console.log(chalk.blue(`🚀 Generating dashboard suite for ${options.provider} - ${options.environment}...`));
+      
+      const DashboardGenerator = require('../../dashboards/lib/dashboard-generator');
+      
+      const generator = new DashboardGenerator({
+        apiKey: options.apiKey || program.opts().apiKey || process.env.NEW_RELIC_USER_API_KEY,
+        accountId: options.accountId || program.opts().accountId || process.env.NEW_RELIC_ACCOUNT_ID
+      });
+      
+      const results = await generator.generateProviderSuite(
+        options.provider, 
+        options.environment,
+        { deploy: !options.dryRun }
+      );
+      
+      console.log(chalk.green(`\n✅ Dashboard suite generation complete!`));
+      console.log(chalk.white('📊 Created Dashboards:'));
+      results.dashboards.forEach(dashboard => {
+        console.log(`   • ${dashboard.type}: ${dashboard.name}`);
+        if (dashboard.guid) {
+          console.log(chalk.gray(`     ${dashboard.permalink}`));
+        }
+      });
+      
+      if (results.errors.length > 0) {
+        console.log(chalk.yellow('\n⚠️  Errors:'));
+        results.errors.forEach(error => {
+          console.log(chalk.red(`   • ${error.type}: ${error.error}`));
+        });
+      }
+      
+    } catch (error) {
+      console.error(chalk.red('Error generating suite:'), error.message);
+      if (program.opts().verbose) {
+        console.error(error.stack);
+      }
+      process.exit(1);
+    }
   });
 
 /**
@@ -231,6 +405,62 @@ dashboard
 const entity = program
   .command('entity')
   .description('Manage message queue entities');
+
+entity
+  .command('import')
+  .description('Import entity definitions from github.com/newrelic/entity-definitions')
+  .option('-t, --types <types>', 'Entity types to import (comma-separated)')
+  .option('-o, --output <file>', 'Export imported definitions to file')
+  .option('--list', 'List available entity types')
+  .action(async (options) => {
+    try {
+      const EntityImporter = require('../../core/entities/entity-importer');
+      const importer = new EntityImporter();
+      
+      if (options.list) {
+        console.log(chalk.blue('📋 Available entity types to import:'));
+        const types = await importer.listAvailableEntityTypes();
+        types.forEach(type => {
+          console.log(`  • ${type}`);
+        });
+        return;
+      }
+      
+      if (!options.types) {
+        console.error(chalk.red('Error: --types option is required'));
+        process.exit(1);
+      }
+      
+      const entityTypes = options.types.split(',').map(t => t.trim());
+      console.log(chalk.blue(`📥 Importing entity definitions...`));
+      
+      const results = await importer.importFromGitHub(entityTypes);
+      
+      console.log(chalk.green(`\n✅ Import complete!`));
+      console.log(chalk.white('Summary:'));
+      console.log(`  • Successful: ${results.successful.length}`);
+      console.log(`  • Failed: ${results.failed.length}`);
+      
+      if (results.failed.length > 0) {
+        console.log(chalk.yellow('\n⚠️  Failed imports:'));
+        results.failed.forEach(failure => {
+          console.log(chalk.red(`  • ${failure.entityType}: ${failure.error}`));
+        });
+      }
+      
+      if (options.output) {
+        await importer.exportToFile(options.output);
+        console.log(chalk.gray(`\nExported to: ${options.output}`));
+      }
+      
+    } catch (error) {
+      console.error(chalk.red('Error:'), error.message);
+      if (program.opts().verbose) {
+        console.error(error.stack);
+      }
+      process.exit(1);
+    }
+  });
 
 entity
   .command('create')
@@ -404,6 +634,59 @@ verify
     } catch (error) {
       console.error(chalk.red('❌ Batch verification failed:'), error.message);
       if (options.verbose) {
+        console.error(error.stack);
+      }
+      process.exit(1);
+    }
+  });
+
+verify
+  .command('platform')
+  .description('Run comprehensive platform verification')
+  .option('--verify-entities', 'Verify entity synthesis', true)
+  .option('--verify-dashboards', 'Verify dashboards', true)
+  .option('--verify-browser', 'Run browser tests', true)
+  .option('--verify-e2e', 'Run end-to-end tests', false)
+  .option('-d, --dashboard-guids <guids>', 'Dashboard GUIDs to verify')
+  .option('-u, --dashboard-urls <urls>', 'Dashboard URLs for browser testing')
+  .option('-o, --output <dir>', 'Output directory', './verification-results')
+  .option('--browsers <browsers>', 'Browsers to test (comma-separated)', 'chromium')
+  .action(async (options) => {
+    try {
+      const VerificationOrchestrator = require('../../verification/lib/verification-orchestrator');
+      
+      const orchestrator = new VerificationOrchestrator({
+        apiKey: program.opts().apiKey || process.env.NEW_RELIC_API_KEY,
+        userApiKey: program.opts().apiKey || process.env.NEW_RELIC_USER_API_KEY,
+        accountId: program.opts().accountId || process.env.NEW_RELIC_ACCOUNT_ID,
+        outputDir: options.output,
+        runBrowserTests: options.verifyBrowser,
+        browsers: options.browsers.split(',')
+      });
+      
+      const verificationOptions = {
+        verifyEntities: options.verifyEntities,
+        verifyDashboards: options.verifyDashboards,
+        runE2E: options.verifyE2e,
+        dashboardGuids: options.dashboardGuids ? options.dashboardGuids.split(',') : undefined,
+        dashboardUrls: options.dashboardUrls ? options.dashboardUrls.split(',') : undefined
+      };
+      
+      console.log(chalk.blue('🚀 Starting platform verification...'));
+      
+      const { verification, reports } = await orchestrator.verifyPlatform(verificationOptions);
+      
+      console.log(chalk.green('\n✅ Verification complete!'));
+      console.log(chalk.white('Reports generated:'));
+      Object.entries(reports).forEach(([format, path]) => {
+        console.log(`  • ${format.toUpperCase()}: ${path}`);
+      });
+      
+      process.exit(verification.summary?.passed ? 0 : 1);
+      
+    } catch (error) {
+      console.error(chalk.red('Error:'), error.message);
+      if (program.opts().verbose) {
         console.error(error.stack);
       }
       process.exit(1);

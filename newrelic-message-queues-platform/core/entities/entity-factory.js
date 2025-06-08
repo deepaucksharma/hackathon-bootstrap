@@ -20,6 +20,20 @@ class EntityFactory {
    * Create a MESSAGE_QUEUE_CLUSTER entity
    */
   createCluster(config) {
+    // Validate required fields
+    if (!config || typeof config !== 'object') {
+      throw new Error('Configuration object is required');
+    }
+    if (!config.name) {
+      throw new Error('Cluster name is required');
+    }
+    if (!config.provider) {
+      throw new Error('Provider is required');
+    }
+    if (!config.accountId && !process.env.NEW_RELIC_ACCOUNT_ID) {
+      throw new Error('Account ID is required');
+    }
+    
     const cluster = new MessageQueueCluster(config);
     this.entityRegistry.set(cluster.guid, cluster);
     return cluster;

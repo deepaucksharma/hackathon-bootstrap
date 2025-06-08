@@ -1,0 +1,218 @@
+{
+  "timestamp": "2025-06-07T22:33:07.516Z",
+  "summary": {
+    "total": 40,
+    "passed": 40,
+    "failed": 0,
+    "warnings": 0,
+    "passRate": "100.0"
+  },
+  "environment": {
+    "platform": "linux",
+    "nodeVersion": "v23.11.1",
+    "apiKeysConfigured": true
+  },
+  "tests": [
+    {
+      "name": "Directory: core/entities",
+      "passed": true,
+      "details": ""
+    },
+    {
+      "name": "Directory: simulation/engines",
+      "passed": true,
+      "details": ""
+    },
+    {
+      "name": "Directory: simulation/streaming",
+      "passed": true,
+      "details": ""
+    },
+    {
+      "name": "Directory: dashboards/framework",
+      "passed": true,
+      "details": ""
+    },
+    {
+      "name": "Directory: dashboards/builders",
+      "passed": true,
+      "details": ""
+    },
+    {
+      "name": "Directory: verification/lib",
+      "passed": true,
+      "details": ""
+    },
+    {
+      "name": "Directory: examples",
+      "passed": true,
+      "details": ""
+    },
+    {
+      "name": "Directory: docs",
+      "passed": true,
+      "details": ""
+    },
+    {
+      "name": "Directory: tools/cli",
+      "passed": true,
+      "details": ""
+    },
+    {
+      "name": "File: package.json",
+      "passed": true,
+      "details": ""
+    },
+    {
+      "name": "File: index.js",
+      "passed": true,
+      "details": ""
+    },
+    {
+      "name": "File: README.md",
+      "passed": true,
+      "details": ""
+    },
+    {
+      "name": "File: core/entities/entity-factory.js",
+      "passed": true,
+      "details": ""
+    },
+    {
+      "name": "File: simulation/engines/data-simulator.js",
+      "passed": true,
+      "details": ""
+    },
+    {
+      "name": "File: dashboards/builders/dashboard-builder.js",
+      "passed": true,
+      "details": ""
+    },
+    {
+      "name": "File: tools/cli/mq-platform.js",
+      "passed": true,
+      "details": ""
+    },
+    {
+      "name": "Entity Factory",
+      "passed": true,
+      "details": ""
+    },
+    {
+      "name": "Data Simulator - Topology",
+      "passed": true,
+      "details": ""
+    },
+    {
+      "name": "Data Simulator - Metrics",
+      "passed": true,
+      "details": ""
+    },
+    {
+      "name": "Dashboard Builder",
+      "passed": true,
+      "details": ""
+    },
+    {
+      "name": "Dashboard Widgets",
+      "passed": true,
+      "details": ""
+    },
+    {
+      "name": "Env: NEW_RELIC_API_KEY",
+      "passed": true,
+      "details": ""
+    },
+    {
+      "name": "Env: NEW_RELIC_USER_API_KEY",
+      "passed": true,
+      "details": ""
+    },
+    {
+      "name": "Env: NEW_RELIC_ACCOUNT_ID",
+      "passed": true,
+      "details": ""
+    },
+    {
+      "name": "User API Key",
+      "passed": true,
+      "details": ""
+    },
+    {
+      "name": "Dry-run Mode",
+      "passed": true,
+      "details": ""
+    },
+    {
+      "name": "CLI Exists",
+      "passed": true,
+      "details": ""
+    },
+    {
+      "name": "CLI Executable",
+      "passed": true,
+      "details": ""
+    },
+    {
+      "name": "Example: mode1-entity-proposal.js",
+      "passed": true,
+      "details": ""
+    },
+    {
+      "name": "Example: mode2-existing-entities.js",
+      "passed": true,
+      "details": ""
+    },
+    {
+      "name": "Example: mode3-hybrid.js",
+      "passed": true,
+      "details": ""
+    },
+    {
+      "name": "Doc: DEVELOPER_GUIDE.md",
+      "passed": true,
+      "details": ""
+    },
+    {
+      "name": "Doc: API_REFERENCE.md",
+      "passed": true,
+      "details": ""
+    },
+    {
+      "name": "Doc: QUICKSTART.md",
+      "passed": true,
+      "details": ""
+    },
+    {
+      "name": "Doc: ARCHITECTURE.md",
+      "passed": true,
+      "details": ""
+    },
+    {
+      "name": "Integration Flow",
+      "passed": true,
+      "details": ""
+    },
+    {
+      "name": "Performance - Topology",
+      "passed": true,
+      "details": ""
+    },
+    {
+      "name": "Performance - Metrics",
+      "passed": true,
+      "details": ""
+    },
+    {
+      "name": "Error Handling - Validation",
+      "passed": true,
+      "details": ""
+    },
+    {
+      "name": "Error Handling - Dry-run",
+      "passed": true,
+      "details": ""
+    }
+  ],
+  "recommendations": []
+}
