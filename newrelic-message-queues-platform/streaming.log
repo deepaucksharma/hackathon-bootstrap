@@ -1,0 +1,53 @@
+
+⚙️  Configuration:
+   • Duration: 5 minutes
+   • Interval: 30 seconds
+   • Dry run: false
+   • Verbose: false
+
+🏭 Production Streaming Example
+============================================================
+Streaming realistic production data to New Relic
+
+📋 Step 1: Creating production topology...
+✅ Created production topology:
+   • Clusters: 3
+   • Brokers: 30
+   • Topics: 150
+   • Total entities: 183
+
+📤 Step 2: Initializing New Relic streamer...
+✅ Streamer initialized
+   • Dry run: NO
+   • Account ID: 3630072
+
+🔄 Step 3: Initial entity sync...
+Successfully sent 100 events to New Relic
+Successfully sent 83 events to New Relic
+✅ Initial sync complete:
+   • Entities synced: 183
+
+📊 Step 4: Streaming metrics for 5 minutes...
+   Interval: Every 30 seconds
+
+⏱️  Iteration 1 (5 min remaining)
+Successfully sent 100 metrics to New Relic
+Successfully sent 100 metrics to New Relic
+Successfully sent 100 metrics to New Relic
+Successfully sent 100 metrics to New Relic
+Successfully sent 100 metrics to New Relic
+Successfully sent 100 metrics to New Relic
+Successfully sent 100 metrics to New Relic
+Successfully sent 32 metrics to New Relic
+   • Metrics sent: 732
+
+⏱️  Iteration 2 (4 min remaining)
+Successfully sent 32 metrics to New Relic
+   • Metrics sent: 732
+Successfully sent 100 metrics to New Relic
+Successfully sent 100 metrics to New Relic
+Successfully sent 100 metrics to New Relic
+Successfully sent 100 metrics to New Relic
+Successfully sent 100 metrics to New Relic
+Successfully sent 100 metrics to New Relic
+Successfully sent 100 metrics to New Relic

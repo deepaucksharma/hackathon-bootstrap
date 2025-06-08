@@ -7,11 +7,15 @@
 require('dotenv').config();
 const chalk = require('chalk');
 const inquirer = require('inquirer');
+const { getConfig } = require('./config');
 const { EntityFactory } = require('./core/entities');
 const DataSimulator = require('./simulation/engines/data-simulator');
 const NewRelicStreamer = require('./simulation/streaming/new-relic-streamer');
 const DashboardGenerator = require('./dashboards/lib/dashboard-generator');
 const VerificationOrchestrator = require('./verification/lib/verification-orchestrator');
+
+// Initialize configuration
+const config = getConfig();
 
 async function showcase() {
   console.clear();
@@ -407,12 +411,16 @@ async function showcase() {
   await mainMenu();
 }
 
-// Check environment
-const hasApiKeys = process.env.NEW_RELIC_API_KEY && process.env.NEW_RELIC_USER_API_KEY;
-
-if (!hasApiKeys) {
-  console.log(chalk.yellow('⚠️  Warning: New Relic API keys not found in environment.'));
-  console.log(chalk.gray('Some features will run in dry-run mode.\n'));
+// Check environment using centralized config
+try {
+  const newRelicConfig = config.getNewRelicConfig();
+  if (!newRelicConfig.apiKey || !newRelicConfig.accountId) {
+    console.log(chalk.yellow('⚠️  Warning: New Relic API key or Account ID not configured.'));
+    console.log(chalk.gray('Some features will run in dry-run mode.\n'));
+  }
+} catch (error) {
+  console.error(chalk.red(`\n❌ Configuration Error: ${error.message}`));
+  console.log(chalk.gray('Please ensure NEW_RELIC_USER_API_KEY and NEW_RELIC_ACCOUNT_ID are set.\n'));
 }
 
 // Run showcase

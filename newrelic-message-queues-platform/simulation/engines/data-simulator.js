@@ -6,19 +6,26 @@
  */
 
 const { EntityFactory, PROVIDERS } = require('../../core/entities');
+const { getConfig } = require('../../config');
 
 class DataSimulator {
-  constructor(config = {}) {
+  constructor(customConfig = {}) {
     this.entityFactory = new EntityFactory();
+    
+    // Get simulation config from centralized configuration
+    const appConfig = getConfig();
+    const simulationConfig = appConfig.getSimulationConfig();
+    
+    // Merge with custom config
     this.config = {
-      businessHoursStart: config.businessHoursStart || 9,
-      businessHoursEnd: config.businessHoursEnd || 17,
-      timeZone: config.timeZone || 'UTC',
-      seasonalVariation: config.seasonalVariation !== false,
-      weekendReduction: config.weekendReduction || 0.3,
-      anomalyRate: config.anomalyRate || 0.05,
-      dataPattern: config.dataPattern || 'realistic',
-      ...config
+      businessHoursStart: customConfig.businessHoursStart || simulationConfig.businessHoursStart,
+      businessHoursEnd: customConfig.businessHoursEnd || simulationConfig.businessHoursEnd,
+      timeZone: customConfig.timeZone || simulationConfig.timeZone,
+      seasonalVariation: customConfig.seasonalVariation !== undefined ? customConfig.seasonalVariation : true,
+      weekendReduction: customConfig.weekendReduction || simulationConfig.weekendReduction,
+      anomalyRate: customConfig.anomalyRate || simulationConfig.anomalyRate,
+      dataPattern: customConfig.dataPattern || simulationConfig.dataPattern,
+      ...customConfig
     };
     
     // Initialize patterns and anomaly injection (inline for now)
