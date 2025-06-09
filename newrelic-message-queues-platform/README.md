@@ -2,6 +2,8 @@
 
 A comprehensive platform for monitoring message queue infrastructure using New Relic's ecosystem, combining real infrastructure data from nri-kafka with simulation capabilities for testing and development.
 
+> **📋 Technical Specification**: For the complete technical architecture and implementation details, see the [Technical Specification](../docs/TECHNICAL_SPECIFICATION.md).
+
 ## 🎯 Platform Goals
 
 1. **Real Infrastructure Monitoring**: Leverage nri-kafka and New Relic Infrastructure agent for production Kafka monitoring
@@ -12,16 +14,18 @@ A comprehensive platform for monitoring message queue infrastructure using New R
 
 ## 🏗️ Architecture
 
+The platform implements a Unified Data Model (UDM) architecture that bridges production Kafka monitoring (via nri-kafka) with development/testing capabilities through simulation:
+
 ```
 ┌─────────────────┐     ┌──────────────────┐     ┌─────────────────┐
-│   Kafka Broker  │────▶│   nri-kafka      │────▶│  Infrastructure │
-│   (Real)        │ JMX │  Integration     │     │     Agent       │
+│   Kafka Cluster │────▶│   nri-kafka      │────▶│  Infrastructure │
+│  (JMX/Admin API)│     │  Integration     │     │     Agent       │
 └─────────────────┘     └──────────────────┘     └────────┬────────┘
                                                            │
                         ┌──────────────────────────────────┘
                         ▼
              ┌──────────────────┐                 ┌──────────────────┐
-             │ Entity Transform │                 │    Simulation    │
+             │ UDM Transform    │                 │    Simulation    │
              │     Layer        │                 │     Engine       │
              └────────┬─────────┘                 └────────┬─────────┘
                       │                                     │
@@ -29,12 +33,12 @@ A comprehensive platform for monitoring message queue infrastructure using New R
                                      ▼
                         ┌────────────────────────┐
                         │  MESSAGE_QUEUE_*       │
-                        │     Entities           │
+                        │  Entities (UDM)        │
                         └───────────┬────────────┘
                                     │
                         ┌───────────▼────────────┐
-                        │   Dashboard Builder    │
-                        │   & Verification       │
+                        │   Dashboard CI/CD      │
+                        │   Platform             │
                         └────────────────────────┘
 ```
 
@@ -149,14 +153,13 @@ newrelic-message-queues-platform/
 - Multiple provider support
 - API and WebSocket control interface
 
-## 📊 Entity Types
+## 📊 Entity Types (Unified Data Model)
 
-| Entity Type | Source | Description |
-|------------|--------|-------------|
-| MESSAGE_QUEUE_CLUSTER | Aggregated | Cluster-level metrics and health |
-| MESSAGE_QUEUE_BROKER | KafkaBrokerSample | Individual broker performance |
-| MESSAGE_QUEUE_TOPIC | KafkaTopicSample | Topic-level throughput and lag |
-| MESSAGE_QUEUE_CONSUMER_GROUP | KafkaConsumerSample | Consumer group lag and performance |
+| Entity Type | Source Event | Key Metrics | GUID Pattern |
+|------------|--------------|-------------|-------------|
+| MESSAGE_QUEUE_BROKER | MessageQueueBrokerSample | throughput, partitions, controller status | `MESSAGE_QUEUE_BROKER\|{accountId}\|kafka\|{clusterName}\|{brokerId}` |
+| MESSAGE_QUEUE_TOPIC | MessageQueueTopicSample | partitions, replication, throughput | `MESSAGE_QUEUE_TOPIC\|{accountId}\|kafka\|{clusterName}\|{topicName}` |
+| MESSAGE_QUEUE_CONSUMER | MessageQueueOffsetSample | lag, offset, partition details | `MESSAGE_QUEUE_CONSUMER\|{accountId}\|kafka\|{clusterName}\|{consumerGroupId}` |
 
 ## 🛠️ Common Commands
 
@@ -208,20 +211,23 @@ node platform.js --mode simulation --clusters 2 --brokers 3 --topics 10
 ## 🚦 Current Status & Roadmap
 
 ### ✅ Completed
-- [x] nri-kafka data transformation with proper entity GUIDs
-- [x] MESSAGE_QUEUE entity framework (CLUSTER, BROKER, TOPIC, CONSUMER_GROUP)
+- [x] Unified Data Model (UDM) implementation
+- [x] nri-kafka data transformation with correct entity GUIDs
+- [x] MESSAGE_QUEUE entity framework (BROKER, TOPIC, CONSUMER)
 - [x] Entity relationship mapping with bidirectional tracking
-- [x] Dashboard generation from templates
+- [x] Dashboard CI/CD platform with verification
 - [x] Simulation engine with realistic patterns
 - [x] Infrastructure mode with NerdGraph integration
 - [x] Hybrid mode with gap detection and filling
+- [x] Configuration validation with helpful error messages
 - [x] End-to-end test suite for all modes
 - [x] Docker-compose setup for local testing
+- [x] Consumer offset collection via Admin API
 
 ### 🚧 In Progress
-- [ ] Gap detection for hybrid mode (identify missing entities)
-- [ ] Configuration validation with helpful error messages
 - [ ] Health checks and monitoring for the platform itself
+- [ ] RabbitMQ provider support
+- [ ] Advanced anomaly detection patterns
 
 ### 📋 Future
 - [ ] Data caching to reduce NerdGraph query load
@@ -232,25 +238,18 @@ node platform.js --mode simulation --clusters 2 --brokers 3 --topics 10
 
 ## 📚 Documentation
 
-- [Architecture Overview](docs/ARCHITECTURE.md)
-- [Developer Guide](docs/DEVELOPER_GUIDE.md)
-- [Infrastructure Setup Guide](INFRASTRUCTURE_SETUP_GUIDE.md)
-- [Entity Framework](docs/ENTITY_FRAMEWORK.md)
-- [API Reference](docs/API_REFERENCE.md)
-- [Quick Start Guide](docs/QUICKSTART.md)
+**Unified documentation is now available at**: [/docs/README.md](../docs/README.md)
+
+### Key Documents
+- [Technical Specification](../docs/TECHNICAL_SPECIFICATION.md) - Complete architecture and UDM details
+- [Getting Started](../docs/getting-started/README.md) - Installation and quick start
+- [Developer Guide](../docs/developer-guide/README.md) - API reference and extension guide
+- [Operations Guide](../docs/operations/README.md) - Infrastructure setup and deployment
 
 ## 🤝 Contributing
 
-See [CONTRIBUTING.md](CONTRIBUTING.md) for development setup and guidelines.
+See our [Developer Guide](../docs/developer-guide/README.md) for contribution guidelines.
 
 ## 📄 License
 
 Apache License 2.0
-## 📚 Documentation
-
-**New unified documentation location**: [/docs/README.md](../docs/README.md)
-
-- [Getting Started](../docs/getting-started/README.md)
-- [User Guide](../docs/user-guide/README.md)
-- [Developer Guide](../docs/developer-guide/README.md)
-- [Operations](../docs/operations/README.md)

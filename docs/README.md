@@ -1,10 +1,12 @@
 # New Relic Message Queues Platform Documentation
 
-> **Platform Version**: 1.0.0  
+> **Platform Version**: 1.1.0  
 > **Last Updated**: January 2025  
 > **Status**: Production Ready
 
 Welcome to the New Relic Message Queues Platform - a comprehensive solution for monitoring Kafka and other message queue systems in New Relic.
+
+> **📋 Technical Specification**: For the complete technical architecture and implementation details, see the [Technical Specification](TECHNICAL_SPECIFICATION.md).
 
 ## 🎯 What is This Platform?
 
@@ -50,17 +52,15 @@ node dashboards/cli.js create --template=cluster-overview --provider=kafka
 - [**Troubleshooting**](user-guide/troubleshooting.md) - Common issues and solutions
 
 ### For Developers
+- [**Technical Specification**](TECHNICAL_SPECIFICATION.md) - Complete technical architecture
 - [**Architecture Overview**](developer-guide/architecture.md) - System design and components
 - [**Entity Framework**](developer-guide/entity-framework.md) - MESSAGE_QUEUE entity model
-- [**Extending the Platform**](developer-guide/extending-platform.md) - Add new providers
 - [**API Reference**](developer-guide/api-reference.md) - Programmatic access
-- [**Contributing Guide**](developer-guide/contributing.md) - How to contribute
 
 ### For Infrastructure Teams
 - [**Infrastructure Setup**](operations/infrastructure-setup.md) - Connect to real Kafka
-- [**Docker Deployment**](operations/docker-deployment.md) - Local testing setup
-- [**Production Deployment**](operations/production-deployment.md) - Best practices
-- [**Performance Tuning**](operations/performance-tuning.md) - Optimization guide
+- [**Configuration Reference**](reference/configuration-reference.md) - All configuration options
+- [**Metrics Reference**](reference/metrics-reference.md) - Complete metrics catalog
 
 ## 🔧 Platform Modes
 
@@ -183,10 +183,12 @@ node test-infrastructure-mode.js
 
 ### ✅ Completed Features
 - Three operating modes (Simulation, Infrastructure, Hybrid)
+- Unified Data Model (UDM) implementation
 - Entity synthesis for MESSAGE_QUEUE_* types
-- Dashboard generator with templates
-- Consumer lag tracking
-- Comprehensive testing suite
+- Dashboard CI/CD platform with verification
+- Consumer lag tracking via Admin API
+- Integration with nri-kafka for production data
+- Comprehensive testing and verification suite
 
 ### 🚧 In Progress
 - RabbitMQ provider support
@@ -194,8 +196,9 @@ node test-infrastructure-mode.js
 - Automated alerting templates
 
 ### 📅 Roadmap
-- ActiveMQ integration
-- AWS SQS/SNS support
+- Multi-provider architecture expansion
+- ML-based anomaly detection
+- Cost optimization features
 - Kubernetes operator
 
 [**→ Full Roadmap**](project/roadmap.md)

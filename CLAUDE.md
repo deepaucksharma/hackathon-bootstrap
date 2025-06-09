@@ -4,12 +4,15 @@ This file provides guidance to Claude Code (claude.ai/code) when working with co
 
 ## Project Overview
 
-This is the New Relic Message Queues Platform that bridges nri-kafka (real infrastructure data) with the MESSAGE_QUEUE_* entity framework, while maintaining simulation capabilities for testing.
+This is the New Relic Message Queues Platform implementing a Unified Data Model (UDM) that bridges nri-kafka (real infrastructure data) with the MESSAGE_QUEUE_* entity framework, while maintaining simulation capabilities for testing.
+
+> **📋 Reference**: See the [Technical Specification](docs/TECHNICAL_SPECIFICATION.md) for complete architecture details.
 
 ### Current Architecture
-- **Infrastructure Mode**: Transforms real nri-kafka data → MESSAGE_QUEUE entities
-- **Simulation Mode**: Generates test data for development/demos
+- **Infrastructure Mode**: Transforms real nri-kafka data → UDM → MESSAGE_QUEUE entities
+- **Simulation Mode**: Generates UDM-compliant test data for development/demos
 - **Hybrid Mode**: Combines real and simulated data for complete coverage
+- **Dashboard CI/CD**: Automated dashboard build, deploy, and verification pipeline
 
 ## Development Philosophy
 
@@ -105,12 +108,23 @@ node verification/verify-platform.js
 
 ## Recent Accomplishments
 
+### Unified Data Model (UDM) Implementation ✅
+- Defined canonical schema for all MQ telemetry (MessageQueueBrokerSample, MessageQueueTopicSample, MessageQueueOffsetSample)
+- Implemented proper entity GUID generation: `{entityType}|{accountId}|{provider}|{identifiers}`
+- Created UDM transformation layer for nri-kafka data
+- Aligned simulation engine to generate UDM-compliant events
+
 ### Infrastructure Mode Improvements ✅
-- Fixed entity GUID generation to match New Relic standards: `{entityType}|{accountId}|{provider}|{identifiers}`
-- Added comprehensive error handling and retry logic
+- Added consumer offset collection via Kafka Admin API (--consumer_offset mode)
 - Created docker-compose setup for local Kafka testing
 - Built integration tests with 28 test cases
 - Added performance benchmarking (400K+ samples/second capability)
+
+### Dashboard CI/CD Platform ✅
+- Built automated dashboard generation from templates
+- Added API validation for all NRQL queries
+- Implemented browser-based render validation with Playwright
+- Created end-to-end deployment pipeline
 
 ### Hybrid Mode Implementation ✅
 - Created HybridModeManager for gap detection and filling
@@ -136,45 +150,50 @@ node verification/verify-platform.js
 
 ### Core Platform
 - `platform.js` - Main entry point supporting all three modes with ConfigValidator integration
-- `core/entities/` - Entity definitions and factory
+- `core/entities/` - Entity definitions implementing UDM schema
 - `core/config-validator.js` - Comprehensive configuration validation with helpful errors
 - `core/hybrid-mode-manager.js` - Orchestrates gap detection and entity combination
 - `core/gap-detector.js` - Analyzes gaps between infrastructure and desired topology
-- `infrastructure/transformers/nri-kafka-transformer.js` - Transforms nri-kafka data (GUID fix applied)
-- `infrastructure/collectors/infra-agent-collector.js` - Queries NRDB for data
+- `infrastructure/transformers/nri-kafka-transformer.js` - Transforms nri-kafka → UDM events
+- `infrastructure/collectors/infra-agent-collector.js` - Queries NRDB for KafkaBrokerSample data
 
 ### Simulation (Keep Working)
-- `simulation/engines/data-simulator.js` - Generates realistic patterns
-- `simulation/streaming/new-relic-streamer.js` - Streams data to New Relic
+- `simulation/engines/data-simulator.js` - Generates UDM-compliant realistic patterns
+- `simulation/streaming/new-relic-streamer.js` - Streams UDM events to New Relic
 
-### Dashboards
+### Dashboard CI/CD
 - `dashboards/cli.js` - CLI for dashboard operations
-- `dashboards/framework/` - Core dashboard framework
-- `dashboards/templates/` - Reusable dashboard templates
+- `dashboards/framework/` - Core dashboard engine (build, validate, deploy)
+- `dashboards/templates/` - Infrastructure and platform dashboard templates
+- `dashboards/content/message-queues/message-queues-content-provider.js` - Dashboard content definition
+- `tools/testing/build-and-verify-dashboards.js` - End-to-end dashboard pipeline
 
 ### Verification
 - `verification/verify-entities.js` - Validates entity synthesis
 - `verification/verify-platform.js` - Comprehensive platform tests
+- `tools/testing/programmatic-dashboard-deploy.js` - Dashboard deployment with validation
 
 ## Common Development Patterns
 
 ### Testing Infrastructure Mode
 ```javascript
-// 1. Create test data that mimics nri-kafka
-const sampleData = {
+// 1. Create test data that mimics nri-kafka output
+const kafkaSample = {
   eventType: 'KafkaBrokerSample',
   'broker.id': 1,
   'broker.bytesInPerSecond': 1024000,
+  'kafka.broker.logFlushRate': 0.5,
   clusterName: 'test-kafka'
 };
 
-// 2. Test transformation
+// 2. Test transformation to UDM
 const transformer = new NriKafkaTransformer();
-const entity = transformer.transformBroker(sampleData);
+const udmEvent = transformer.transformBroker(kafkaSample);
 
-// 3. Verify entity structure
-console.log(entity.entityGuid); // Should match pattern
-console.log(entity.metrics);    // Should have all required metrics
+// 3. Verify UDM compliance
+console.log(udmEvent.eventType); // 'MessageQueueBrokerSample'
+console.log(udmEvent['broker.throughput.in.bytesPerSecond']); // 1024000
+console.log(udmEvent.entityGuid); // MESSAGE_QUEUE_BROKER|123456|kafka|test-kafka|1
 ```
 
 ### Adding New Features
@@ -227,17 +246,18 @@ console.log(entity.metrics);    // Should have all required metrics
 ## Next Priorities (Always 10+)
 
 Current active tasks:
-1. **End-to-End Test Suite** (IN PROGRESS) - Comprehensive tests for all three modes
-2. **Health Checks** - Add monitoring for the platform itself
-3. **Data Caching** - Reduce NerdGraph query load
-4. **RabbitMQ Support** - Add nri-rabbitmq integration
-5. **Migration Guide** - Document path from simulation to infrastructure
-6. **Deployment Scripts** - Automate platform deployment
-7. **Performance Metrics** - Monitor platform performance
-8. **Troubleshooting Guide** - Common infrastructure issues
-9. **Entity Relationships** - Complete cluster-broker-topic mapping
-10. **Consumer Group Lag** - Support from infrastructure data
-11. **Alert Conditions** - Infrastructure-based alerting
+1. **Platform Health Dashboard** - Create dashboard to monitor the platform itself
+2. **RabbitMQ Provider** - Extend UDM for RabbitMQ, add nri-rabbitmq transformer
+3. **Performance Optimization** - Implement data caching for NerdGraph queries
+4. **Alert Templates** - Pre-built alerts based on UDM metrics
+5. **Multi-Account Support** - Handle cross-account data collection
+6. **Kubernetes Operator** - Deploy platform as K8s operator
+7. **API Rate Limiting** - Smart throttling for API calls
+8. **Cost Analytics** - Track infrastructure costs via metrics
+9. **ML Anomaly Detection** - Integrate with New Relic Applied Intelligence
+10. **ActiveMQ Support** - Add provider and UDM extensions
+11. **Dashboard Versioning** - Track dashboard changes over time
+12. **Automated Testing** - CI/CD pipeline for PRs
 
 ## Development Workflow
 

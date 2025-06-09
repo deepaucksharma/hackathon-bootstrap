@@ -1,12 +1,15 @@
 # Architecture Overview
 
+> **📋 Note**: This document provides a high-level architectural overview. For the complete technical specification including the Unified Data Model (UDM) details, see the [Technical Specification](../TECHNICAL_SPECIFICATION.md).
+
 ## Platform Design Philosophy
 
-The New Relic Message Queues Platform follows a hybrid architecture that combines:
+The New Relic Message Queues Platform implements a Unified Data Model (UDM) architecture that combines:
 1. **Real infrastructure monitoring** using nri-kafka and New Relic Infrastructure agent
-2. **Entity transformation** to standardize data as MESSAGE_QUEUE_* entities
-3. **Simulation capabilities** for testing and development scenarios
-4. **Dashboard generation** from reusable templates
+2. **UDM transformation** to standardize all MQ telemetry into canonical event types
+3. **Entity synthesis** creating MESSAGE_QUEUE_* entities from UDM events
+4. **Simulation capabilities** generating UDM-compliant data for testing
+5. **Dashboard CI/CD** with automated build, deploy, and verification
 
 ## High-Level Architecture
 
@@ -66,10 +69,11 @@ The New Relic Message Queues Platform follows a hybrid architecture that combine
 ### 1. Data Sources Layer
 
 #### Real Infrastructure (nri-kafka)
-- Collects JMX metrics from Kafka brokers
-- Auto-discovers brokers via Zookeeper
-- Sends data to New Relic as KafkaBrokerSample, KafkaTopicSample events
-- Handles authentication, retries, and error recovery
+- Collects metrics via JMX (default mode) or Admin API (consumer offset mode)
+- Auto-discovers brokers and topics
+- Outputs KafkaBrokerSample, KafkaTopicSample, KafkaConsumerSample events
+- Integrates with newrelic-infra-agent for data transport
+- Supports MSK shim for AWS-specific transformations
 
 #### Simulation Engine
 - Generates realistic metric patterns for testing
@@ -79,36 +83,42 @@ The New Relic Message Queues Platform follows a hybrid architecture that combine
 
 ### 2. Transformation Layer
 
-#### NRI-Kafka Transformer
+#### UDM Transformation Layer
 ```javascript
-// Transforms infrastructure agent data to entities
+// Transforms nri-kafka data to Unified Data Model (UDM) events
 class NriKafkaTransformer {
   transform(sample) {
     if (sample.eventType === 'KafkaBrokerSample') {
-      return this.transformBroker(sample);
+      return this.transformToUDM(sample, 'MessageQueueBrokerSample');
     } else if (sample.eventType === 'KafkaTopicSample') {
-      return this.transformTopic(sample);
+      return this.transformToUDM(sample, 'MessageQueueTopicSample');
+    } else if (sample.eventType === 'KafkaConsumerSample') {
+      return this.transformToUDM(sample, 'MessageQueueOffsetSample');
     }
   }
   
-  transformBroker(sample) {
+  transformToUDM(sample, udmEventType) {
     return {
-      entityType: 'MESSAGE_QUEUE_BROKER',
+      eventType: udmEventType,
       entityGuid: this.generateGuid(sample),
-      metrics: this.mapBrokerMetrics(sample),
-      tags: this.extractTags(sample)
+      // Map to UDM attributes like broker.throughput.in.bytesPerSecond
+      ...this.mapToUDMAttributes(sample),
+      timestamp: Date.now()
     };
   }
 }
 ```
 
-### 3. Entity Framework
+### 3. Entity Framework (UDM-Based)
 
 #### Entity Types
-- **MESSAGE_QUEUE_CLUSTER**: Aggregated cluster-level view
-- **MESSAGE_QUEUE_BROKER**: Individual broker instances
-- **MESSAGE_QUEUE_TOPIC**: Topic-level metrics
-- **MESSAGE_QUEUE_CONSUMER_GROUP**: Consumer group performance
+Entities are synthesized from UDM events:
+
+| Entity Type | UDM Event Source | Key Attributes |
+|-------------|------------------|----------------|
+| MESSAGE_QUEUE_BROKER | MessageQueueBrokerSample | broker.id, broker.hostname, throughput metrics |
+| MESSAGE_QUEUE_TOPIC | MessageQueueTopicSample | topic.name, partition counts, replication |
+| MESSAGE_QUEUE_CONSUMER | MessageQueueOffsetSample | consumer.group.id, lag metrics |
 
 #### Entity Relationships
 ```
@@ -141,23 +151,24 @@ Each entity type has defined golden metrics:
 
 ## Data Flow
 
-### Infrastructure Mode
+### Infrastructure Mode (UDM Flow)
 ```
-1. Kafka Broker → JMX Metrics
-2. nri-kafka → Collect Metrics
-3. Infrastructure Agent → Send to New Relic
-4. Platform → Query via NerdGraph
-5. Transformer → Convert to MESSAGE_QUEUE entities
-6. Dashboard → Display entity metrics
+1. Kafka Broker → JMX/Admin API Metrics
+2. nri-kafka → Collect raw metrics
+3. nri-kafka → Transform to UDM events
+4. Infrastructure Agent → Send UDM events to NRDB
+5. New Relic → Synthesize MESSAGE_QUEUE entities
+6. Platform → Query entities via NerdGraph
+7. Dashboard → Display unified metrics
 ```
 
-### Simulation Mode
+### Simulation Mode (UDM-Native)
 ```
-1. Simulation Engine → Generate metrics
-2. Entity Factory → Create entities
-3. Metric Calculator → Apply patterns
-4. Streaming Client → Send to New Relic
-5. Dashboard → Display simulated data
+1. Simulation Engine → Generate UDM-compliant events
+2. Pattern Engine → Apply realistic patterns
+3. Streaming Client → Send MessageQueue*Sample events
+4. New Relic → Synthesize entities from UDM events
+5. Dashboard → Display simulated data (identical to real)
 ```
 
 ### Hybrid Mode
@@ -263,9 +274,21 @@ class BaseEntity {
 
 ## Technology Stack
 
-- **Runtime**: Node.js 14+
-- **Entity Storage**: In-memory with New Relic backend
-- **API Communication**: HTTPS with retry logic
-- **Dashboard Rendering**: New Relic One platform
-- **Testing**: Jest, Playwright for browser tests
-- **Configuration**: Environment variables, YAML
+### Platform Components
+- **Runtime**: Node.js 14+ (simulation, dashboard CI/CD)
+- **Data Collection**: Go-based nri-kafka integration
+- **Entity Storage**: New Relic NRDB with UDM events
+- **API Communication**: NerdGraph, Event API, Query API
+- **Dashboard Platform**: New Relic One
+
+### Development & Testing
+- **Unit Testing**: Jest with comprehensive mocks
+- **Integration Testing**: Docker Compose for local Kafka
+- **E2E Testing**: Playwright for dashboard validation
+- **Configuration**: Environment variables, JSON/YAML configs
+
+### Key Libraries
+- **Metrics Collection**: Shopify/sarama (Go), JMX client
+- **Data Streaming**: New Relic SDK
+- **Dashboard Generation**: Custom framework with NRQL builders
+- **Validation**: JSON Schema, custom validators

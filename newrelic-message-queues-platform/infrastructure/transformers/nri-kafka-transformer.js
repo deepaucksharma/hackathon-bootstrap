@@ -565,86 +565,110 @@ class NriKafkaTransformer {
   }
 
   /**
-   * Create a cluster entity by aggregating broker data
+   * Create a cluster entity by aggregating broker data with enhanced metrics
    */
-  createClusterEntity(brokerSamples) {
-    if (!brokerSamples || brokerSamples.length === 0) {
+  createClusterEntity(brokerSamples, topicSamples = [], consumerGroupSamples = []) {
+    const startTime = performance.now();
+    
+    try {
+      if (!brokerSamples || brokerSamples.length === 0) {
+        return null;
+      }
+
+      const clusterName = brokerSamples[0].clusterName || 'default';
+      const kafkaVersion = brokerSamples[0].kafkaVersion || 'unknown';
+      
+      // Generate GUID for cluster
+      const entityGuid = this.generateGuid('MESSAGE_QUEUE_CLUSTER', 'kafka', clusterName);
+      
+      // Enhanced aggregation with topic and consumer group data
+      const aggregatedMetrics = this.aggregateClusterMetrics(brokerSamples, topicSamples, consumerGroupSamples);
+      const brokerCount = brokerSamples.length;
+      
+      // Create cluster entity with comprehensive metrics
+      const entity = {
+        // Required entity fields
+        eventType: 'MessageQueue',
+        entityType: 'MESSAGE_QUEUE_CLUSTER',
+        entityGuid: entityGuid,
+        displayName: `Kafka Cluster: ${clusterName}`,
+        entityName: clusterName,
+        
+        // Provider info
+        provider: 'kafka',
+        
+        // Cluster attributes
+        clusterName: clusterName,
+        
+        // Enhanced broker metrics
+        'cluster.brokerCount': brokerCount,
+        'cluster.brokersOnline': aggregatedMetrics.brokersOnline,
+        'cluster.brokersOffline': Math.max(0, brokerCount - aggregatedMetrics.brokersOnline),
+        
+        // Throughput metrics with additional calculations
+        'cluster.throughput.messagesPerSecond': aggregatedMetrics.messagesIn + aggregatedMetrics.messagesOut,
+        'cluster.throughput.bytesPerSecond': aggregatedMetrics.bytesIn + aggregatedMetrics.bytesOut,
+        'cluster.messagesInPerSecond': aggregatedMetrics.messagesIn,
+        'cluster.messagesOutPerSecond': aggregatedMetrics.messagesOut,
+        'cluster.bytesInPerSecond': aggregatedMetrics.bytesIn,
+        'cluster.bytesOutPerSecond': aggregatedMetrics.bytesOut,
+        
+        // Average and peak resource utilization
+        'cluster.cpu.avgUsage': aggregatedMetrics.avgCpuUsage,
+        'cluster.cpu.maxUsage': aggregatedMetrics.maxCpuUsage,
+        'cluster.memory.avgUsage': aggregatedMetrics.avgMemoryUsage,
+        'cluster.memory.maxUsage': aggregatedMetrics.maxMemoryUsage,
+        'cluster.disk.avgUsage': aggregatedMetrics.avgDiskUsage,
+        'cluster.disk.maxUsage': aggregatedMetrics.maxDiskUsage,
+        
+        // Enhanced health metrics
+        'cluster.underReplicatedPartitions': aggregatedMetrics.underReplicatedPartitions,
+        'cluster.offlinePartitions': aggregatedMetrics.offlinePartitions,
+        'cluster.health.score': this.calculateEnhancedHealthScore(aggregatedMetrics, brokerCount),
+        'cluster.health.brokerHealthScore': aggregatedMetrics.brokerHealthScore,
+        'cluster.health.replicationHealthScore': aggregatedMetrics.replicationHealthScore,
+        
+        // Topic aggregations
+        'cluster.topicCount': aggregatedMetrics.topicCount,
+        'cluster.totalPartitions': aggregatedMetrics.totalPartitions,
+        'cluster.avgPartitionsPerTopic': aggregatedMetrics.avgPartitionsPerTopic,
+        'cluster.avgReplicationFactor': aggregatedMetrics.avgReplicationFactor,
+        
+        // Consumer group aggregations
+        'cluster.consumerGroupCount': aggregatedMetrics.consumerGroupCount,
+        'cluster.totalConsumerLag': aggregatedMetrics.totalConsumerLag,
+        'cluster.maxConsumerLag': aggregatedMetrics.maxConsumerLag,
+        'cluster.avgConsumerLag': aggregatedMetrics.avgConsumerLag,
+        
+        // Network and request metrics
+        'cluster.requestsPerSecond': aggregatedMetrics.requestsPerSecond,
+        'cluster.avgNetworkProcessorIdle': aggregatedMetrics.avgNetworkProcessorIdle,
+        'cluster.avgRequestHandlerIdle': aggregatedMetrics.avgRequestHandlerIdle,
+        
+        // Enhanced tags with additional metadata
+        'tags.clusterName': clusterName,
+        'tags.brokerCount': String(brokerCount),
+        'tags.kafkaVersion': kafkaVersion,
+        'tags.environment': this.inferEnvironment(clusterName),
+        'tags.provider': 'kafka',
+        'tags.topicCount': String(aggregatedMetrics.topicCount),
+        'tags.consumerGroupCount': String(aggregatedMetrics.consumerGroupCount),
+        'tags.healthStatus': this.getHealthStatus(this.calculateEnhancedHealthScore(aggregatedMetrics, brokerCount))
+      };
+      
+      // Apply metric definitions and validation
+      const processedEntity = this.applyMetricDefinitions(entity, 'cluster');
+      
+      // Track performance
+      const duration = performance.now() - startTime;
+      this.updatePerformanceStats(duration);
+      
+      return processedEntity;
+      
+    } catch (error) {
+      console.error(chalk.red(`❌ Cluster entity creation failed: ${error.message}`));
       return null;
     }
-
-    const clusterName = brokerSamples[0].clusterName || 'default';
-    const kafkaVersion = brokerSamples[0].kafkaVersion || 'unknown';
-    
-    // Generate GUID for cluster
-    const entityGuid = this.generateGuid('MESSAGE_QUEUE_CLUSTER', 'kafka', clusterName);
-    
-    // Aggregate metrics from all brokers
-    const aggregatedMetrics = {
-      messagesIn: 0,
-      messagesOut: 0,
-      bytesIn: 0,
-      bytesOut: 0,
-      cpuTotal: 0,
-      memoryTotal: 0,
-      underReplicatedPartitions: 0,
-      offlinePartitions: 0
-    };
-    
-    brokerSamples.forEach(sample => {
-      aggregatedMetrics.messagesIn += sample['broker.messagesInPerSecond'] || 0;
-      aggregatedMetrics.messagesOut += sample['broker.messagesOutPerSecond'] || 0;
-      aggregatedMetrics.bytesIn += sample['broker.bytesInPerSecond'] || 0;
-      aggregatedMetrics.bytesOut += sample['broker.bytesOutPerSecond'] || 0;
-      aggregatedMetrics.cpuTotal += sample['broker.cpuPercent'] || 0;
-      aggregatedMetrics.memoryTotal += sample['broker.JVMMemoryUsedPercent'] || 0;
-      aggregatedMetrics.underReplicatedPartitions += sample['broker.underReplicatedPartitions'] || 0;
-      aggregatedMetrics.offlinePartitions += sample['broker.offlinePartitions'] || 0;
-    });
-    
-    const brokerCount = brokerSamples.length;
-    
-    // Create cluster entity
-    const entity = {
-      // Required entity fields
-      eventType: 'MessageQueue',
-      entityType: 'MESSAGE_QUEUE_CLUSTER',
-      entityGuid: entityGuid,
-      displayName: `Kafka Cluster: ${clusterName}`,
-      entityName: clusterName,
-      
-      // Provider info
-      provider: 'kafka',
-      
-      // Cluster attributes
-      clusterName: clusterName,
-      
-      // Aggregated metrics
-      'cluster.brokerCount': brokerCount,
-      'cluster.throughput.messagesPerSecond': aggregatedMetrics.messagesIn + aggregatedMetrics.messagesOut,
-      'cluster.throughput.bytesPerSecond': aggregatedMetrics.bytesIn + aggregatedMetrics.bytesOut,
-      'cluster.messagesInPerSecond': aggregatedMetrics.messagesIn,
-      'cluster.messagesOutPerSecond': aggregatedMetrics.messagesOut,
-      'cluster.bytesInPerSecond': aggregatedMetrics.bytesIn,
-      'cluster.bytesOutPerSecond': aggregatedMetrics.bytesOut,
-      
-      // Average resource utilization
-      'cluster.cpu.avgUsage': brokerCount > 0 ? aggregatedMetrics.cpuTotal / brokerCount : 0,
-      'cluster.memory.avgUsage': brokerCount > 0 ? aggregatedMetrics.memoryTotal / brokerCount : 0,
-      
-      // Health metrics
-      'cluster.underReplicatedPartitions': aggregatedMetrics.underReplicatedPartitions,
-      'cluster.offlinePartitions': aggregatedMetrics.offlinePartitions,
-      'cluster.health.score': this.calculateHealthScore(aggregatedMetrics, brokerCount),
-      
-      // Tags
-      'tags.clusterName': clusterName,
-      'tags.brokerCount': String(brokerCount),
-      'tags.kafkaVersion': kafkaVersion,
-      'tags.environment': this.inferEnvironment(clusterName),
-      'tags.provider': 'kafka'
-    };
-    
-    return entity;
   }
 
   /**
@@ -684,7 +708,7 @@ class NriKafkaTransformer {
   }
 
   /**
-   * Transform a batch of nri-kafka samples to MESSAGE_QUEUE entities with error handling
+   * Transform a batch of nri-kafka samples to MESSAGE_QUEUE entities with enhanced error handling
    */
   transformSamples(samples) {
     if (!samples || !Array.isArray(samples)) {
@@ -693,9 +717,14 @@ class NriKafkaTransformer {
 
     const entities = [];
     const brokerSamples = [];
+    const topicSamples = [];
+    const consumerGroupSamples = [];
     const transformationErrors = [];
     const startTime = Date.now();
     
+    console.log(chalk.blue(`🔄 Transforming ${samples.length} samples...`));
+    
+    // First pass: categorize and validate samples
     samples.forEach((sample, index) => {
       try {
         if (!sample || !sample.eventType) {
@@ -707,16 +736,13 @@ class NriKafkaTransformer {
           return;
         }
 
+        // Categorize samples for later processing
         if (sample.eventType === 'KafkaBrokerSample') {
-          brokerSamples.push(sample);
-          const entity = this.transformBrokerSample(sample);
-          entities.push(entity);
+          brokerSamples.push({ sample, index });
         } else if (sample.eventType === 'KafkaTopicSample') {
-          const entity = this.transformTopicSample(sample);
-          entities.push(entity);
+          topicSamples.push({ sample, index });
         } else if (sample.eventType === 'KafkaConsumerSample') {
-          const entity = this.transformConsumerSample(sample);
-          entities.push(entity);
+          consumerGroupSamples.push({ sample, index });
         } else {
           transformationErrors.push({
             index,
@@ -727,25 +753,65 @@ class NriKafkaTransformer {
       } catch (error) {
         transformationErrors.push({
           index,
-          error: error.message,
-          eventType: sample?.eventType,
-          sample: sample
+          error: `Sample categorization failed: ${error.message}`,
+          eventType: sample?.eventType
         });
       }
     });
     
-    // Create cluster entity from broker samples
+    // Second pass: transform entities with retry logic
+    const processSamplesWithRetry = (sampleInfoArray, transformFn, entityType) => {
+      sampleInfoArray.forEach(({ sample, index }) => {
+        let retryCount = 0;
+        const maxRetries = this.options.strictMode ? 0 : 1;
+        
+        while (retryCount <= maxRetries) {
+          try {
+            const entity = transformFn.call(this, sample);
+            if (entity) {
+              entities.push(entity);
+            }
+            break; // Success, exit retry loop
+          } catch (error) {
+            retryCount++;
+            if (retryCount > maxRetries) {
+              transformationErrors.push({
+                index,
+                error: `${entityType} transformation failed after ${maxRetries + 1} attempts: ${error.message}`,
+                eventType: sample.eventType,
+                retryCount
+              });
+            } else {
+              console.warn(chalk.yellow(`⚠️  Retrying ${entityType} transformation for sample ${index}: ${error.message}`));
+            }
+          }
+        }
+      });
+    };
+    
+    // Transform each entity type
+    processSamplesWithRetry(brokerSamples, this.transformBrokerSample, 'Broker');
+    processSamplesWithRetry(topicSamples, this.transformTopicSample, 'Topic');
+    processSamplesWithRetry(consumerGroupSamples, this.transformConsumerSample, 'Consumer Group');
+    
+    // Create cluster entity with all available data
     if (brokerSamples.length > 0) {
       try {
-        const clusterEntity = this.createClusterEntity(brokerSamples);
+        const clusterEntity = this.createClusterEntity(
+          brokerSamples.map(bs => bs.sample),
+          topicSamples.map(ts => ts.sample),
+          consumerGroupSamples.map(cgs => cgs.sample)
+        );
         if (clusterEntity) {
           entities.push(clusterEntity);
         }
       } catch (error) {
         transformationErrors.push({
           type: 'cluster',
-          error: error.message,
-          brokerCount: brokerSamples.length
+          error: `Cluster aggregation failed: ${error.message}`,
+          brokerCount: brokerSamples.length,
+          topicCount: topicSamples.length,
+          consumerGroupCount: consumerGroupSamples.length
         });
       }
     }
@@ -773,20 +839,446 @@ class NriKafkaTransformer {
       }
     }
     
+    // Enhanced statistics
+    const stats = {
+      totalSamples: samples.length,
+      entitiesCreated: entities.length,
+      brokerEntities: entities.filter(e => e.entityType === 'MESSAGE_QUEUE_BROKER').length,
+      topicEntities: entities.filter(e => e.entityType === 'MESSAGE_QUEUE_TOPIC').length,
+      clusterEntities: entities.filter(e => e.entityType === 'MESSAGE_QUEUE_CLUSTER').length,
+      consumerGroupEntities: entities.filter(e => e.entityType === 'MESSAGE_QUEUE_CONSUMER_GROUP').length,
+      transformationErrors: transformationErrors.length,
+      transformationDuration: duration,
+      transformationRate: samples.length / (duration / 1000), // samples per second
+      successRate: ((samples.length - transformationErrors.length) / samples.length * 100).toFixed(2),
+      
+      // Performance metrics
+      performanceMetrics: {
+        samplesPerSecond: (samples.length / (duration / 1000)).toFixed(0),
+        avgTransformationTime: this.stats.performanceMetrics.avgTransformationTime.toFixed(2),
+        maxTransformationTime: this.stats.performanceMetrics.maxTransformationTime.toFixed(2)
+      },
+      
+      // Validation metrics
+      validationMetrics: {
+        validationErrors: this.stats.validationErrors,
+        metricValidationErrors: this.stats.metricValidationErrors,
+        skippedSamples: this.stats.skippedSamples
+      }
+    };
+    
+    console.log(chalk.green(`✅ Transformation completed: ${stats.entitiesCreated} entities created from ${stats.totalSamples} samples (${stats.successRate}% success rate)`));
+    
     return {
       entities,
-      stats: {
-        totalSamples: samples.length,
-        entitiesCreated: entities.length,
-        brokerEntities: entities.filter(e => e.entityType === 'MESSAGE_QUEUE_BROKER').length,
-        topicEntities: entities.filter(e => e.entityType === 'MESSAGE_QUEUE_TOPIC').length,
-        clusterEntities: entities.filter(e => e.entityType === 'MESSAGE_QUEUE_CLUSTER').length,
-        consumerGroupEntities: entities.filter(e => e.entityType === 'MESSAGE_QUEUE_CONSUMER_GROUP').length,
-        transformationErrors: transformationErrors.length,
-        transformationDuration: duration
-      },
-      errors: transformationErrors
+      stats,
+      errors: transformationErrors,
+      transformerStats: this.stats
     };
+  }
+
+  /**
+   * Cache consumer group metrics for aggregation
+   */
+  cacheConsumerGroupMetrics(consumerGroupId, clusterName, topicName, entity) {
+    const key = `${clusterName}:${consumerGroupId}`;
+    if (!this.consumerGroupCache.has(key)) {
+      this.consumerGroupCache.set(key, []);
+    }
+    this.consumerGroupCache.get(key).push({
+      topicName,
+      entity,
+      timestamp: Date.now()
+    });
+  }
+
+  /**
+   * Extract metric with fallback values
+   */
+  extractMetricWithFallbacks(sample, fieldPaths, defaultValue = 0) {
+    for (const path of fieldPaths) {
+      const value = sample[path];
+      if (value !== undefined && value !== null && !isNaN(value)) {
+        return Number(value);
+      }
+    }
+    return defaultValue;
+  }
+
+  /**
+   * Calculate CPU usage with fallbacks and calculations
+   */
+  calculateCpuUsage(sample) {
+    // Try direct CPU percentage first
+    const directCpu = this.extractMetricWithFallbacks(sample, [
+      'broker.cpuPercent', 'cpuPercent', 'cpu.usage'
+    ]);
+    
+    if (directCpu > 0) {
+      return directCpu;
+    }
+    
+    // Calculate from IO wait if available
+    const ioWait = this.extractMetricWithFallbacks(sample, [
+      'broker.IOWaitPercent', 'IOWaitPercent'
+    ]);
+    
+    if (ioWait > 0) {
+      return Math.max(0, 100 - ioWait);
+    }
+    
+    return 0;
+  }
+
+  /**
+   * Calculate consumer lag metrics with trend analysis
+   */
+  calculateConsumerLagMetrics(sample) {
+    const totalLag = this.extractMetricWithFallbacks(sample, [
+      'consumer.totalLag', 'consumer.lag', 'totalLag'
+    ]);
+    
+    const maxLag = this.extractMetricWithFallbacks(sample, [
+      'consumer.maxLag', 'maxLag'
+    ]);
+    
+    const avgLag = this.extractMetricWithFallbacks(sample, [
+      'consumer.avgLag', 'avgLag'
+    ]);
+    
+    const lagPerPartition = this.extractMetricWithFallbacks(sample, [
+      'consumer.lagPerPartition', 'lagPerPartition'
+    ]);
+    
+    // Calculate lag trend (simplified)
+    const previousLag = this.extractMetricWithFallbacks(sample, [
+      'consumer.previousLag', 'previousTotalLag'
+    ]);
+    
+    let lagTrend = 'stable';
+    if (previousLag > 0) {
+      const lagChange = totalLag - previousLag;
+      const changePercent = (lagChange / previousLag) * 100;
+      
+      if (changePercent > 10) {
+        lagTrend = 'increasing';
+      } else if (changePercent < -10) {
+        lagTrend = 'decreasing';
+      }
+    }
+    
+    // Calculate stability score (0-100)
+    let stabilityScore = 100;
+    if (totalLag > 1000) stabilityScore -= 30;
+    if (maxLag > 5000) stabilityScore -= 20;
+    if (lagTrend === 'increasing') stabilityScore -= 25;
+    
+    return {
+      totalLag,
+      maxLag,
+      avgLag,
+      lagPerPartition,
+      lagTrend,
+      stabilityScore: Math.max(0, stabilityScore)
+    };
+  }
+
+  /**
+   * Get consumer state flag
+   */
+  getConsumerStateFlag(sample, targetState) {
+    const state = this.extractMetricWithFallbacks(sample, [
+      'consumer.state', 'state', 'group.state'
+    ], 'STABLE');
+    
+    return state === targetState ? 1 : 0;
+  }
+
+  /**
+   * Cache topic-broker metrics for aggregation
+   */
+  cacheTopicBrokerMetrics(topicName, clusterName, brokerId, entity) {
+    const key = `${clusterName}:${topicName}`;
+    if (!this.topicBrokerMetricsCache.has(key)) {
+      this.topicBrokerMetricsCache.set(key, []);
+    }
+    this.topicBrokerMetricsCache.get(key).push({
+      brokerId,
+      entity,
+      timestamp: Date.now()
+    });
+  }
+
+  /**
+   * Update performance statistics
+   */
+  updatePerformanceStats(duration) {
+    this.stats.totalTransformations++;
+    this.stats.performanceMetrics.totalTransformationTime += duration;
+    this.stats.performanceMetrics.maxTransformationTime = Math.max(
+      this.stats.performanceMetrics.maxTransformationTime,
+      duration
+    );
+    this.stats.performanceMetrics.avgTransformationTime = 
+      this.stats.performanceMetrics.totalTransformationTime / this.stats.totalTransformations;
+  }
+
+  /**
+   * Get comprehensive transformer statistics
+   */
+  getTransformerStats() {
+    return {
+      ...this.stats,
+      cacheStats: {
+        topicBrokerMetricsCacheSize: this.topicBrokerMetricsCache.size,
+        consumerGroupCacheSize: this.consumerGroupCache.size
+      },
+      configuration: {
+        enableValidation: this.options.enableValidation,
+        enablePerTopicBrokerMetrics: this.options.enablePerTopicBrokerMetrics,
+        strictMode: this.options.strictMode
+      }
+    };
+  }
+
+  /**
+   * Clear caches and reset statistics
+   */
+  reset() {
+    this.topicBrokerMetricsCache.clear();
+    this.consumerGroupCache.clear();
+    this.stats = {
+      totalTransformations: 0,
+      validationErrors: 0,
+      metricValidationErrors: 0,
+      successfulTransformations: 0,
+      skippedSamples: 0,
+      performanceMetrics: {
+        avgTransformationTime: 0,
+        maxTransformationTime: 0,
+        totalTransformationTime: 0
+      }
+    };
+    console.log(chalk.blue('🔄 Transformer statistics and caches reset'));
+  }
+
+  /**
+   * Aggregate cluster metrics from all entity types
+   */
+  aggregateClusterMetrics(brokerSamples, topicSamples = [], consumerGroupSamples = []) {
+    const metrics = {
+      // Broker aggregations
+      messagesIn: 0,
+      messagesOut: 0,
+      bytesIn: 0,
+      bytesOut: 0,
+      requestsPerSecond: 0,
+      brokersOnline: 0,
+      
+      // Resource aggregations
+      totalCpuUsage: 0,
+      totalMemoryUsage: 0,
+      totalDiskUsage: 0,
+      maxCpuUsage: 0,
+      maxMemoryUsage: 0,
+      maxDiskUsage: 0,
+      
+      // Health aggregations
+      underReplicatedPartitions: 0,
+      offlinePartitions: 0,
+      
+      // Network aggregations
+      totalNetworkProcessorIdle: 0,
+      totalRequestHandlerIdle: 0,
+      
+      // Topic aggregations
+      topicCount: 0,
+      totalPartitions: 0,
+      totalReplicationFactor: 0,
+      
+      // Consumer group aggregations
+      consumerGroupCount: 0,
+      totalConsumerLag: 0,
+      maxConsumerLag: 0,
+      totalConsumerGroups: 0
+    };
+    
+    // Aggregate broker metrics
+    brokerSamples.forEach(sample => {
+      if (sample && typeof sample === 'object') {
+        metrics.messagesIn += this.extractMetricWithFallbacks(sample, ['broker.messagesInPerSecond', 'messagesInPerSecond']);
+        metrics.messagesOut += this.extractMetricWithFallbacks(sample, ['broker.messagesOutPerSecond', 'messagesOutPerSecond']);
+        metrics.bytesIn += this.extractMetricWithFallbacks(sample, ['broker.bytesInPerSecond', 'bytesInPerSecond']);
+        metrics.bytesOut += this.extractMetricWithFallbacks(sample, ['broker.bytesOutPerSecond', 'bytesOutPerSecond']);
+        metrics.requestsPerSecond += this.extractMetricWithFallbacks(sample, ['broker.requestsPerSecond', 'requestsPerSecond']);
+        
+        const cpuUsage = this.calculateCpuUsage(sample);
+        const memoryUsage = this.extractMetricWithFallbacks(sample, ['broker.JVMMemoryUsedPercent', 'memoryUsage']);
+        const diskUsage = this.extractMetricWithFallbacks(sample, ['broker.diskUsedPercent', 'diskUsage']);
+        
+        metrics.totalCpuUsage += cpuUsage;
+        metrics.totalMemoryUsage += memoryUsage;
+        metrics.totalDiskUsage += diskUsage;
+        metrics.maxCpuUsage = Math.max(metrics.maxCpuUsage, cpuUsage);
+        metrics.maxMemoryUsage = Math.max(metrics.maxMemoryUsage, memoryUsage);
+        metrics.maxDiskUsage = Math.max(metrics.maxDiskUsage, diskUsage);
+        
+        metrics.underReplicatedPartitions += this.extractMetricWithFallbacks(sample, ['broker.underReplicatedPartitions', 'underReplicatedPartitions']);
+        metrics.offlinePartitions += this.extractMetricWithFallbacks(sample, ['broker.offlinePartitions', 'offlinePartitions']);
+        
+        metrics.totalNetworkProcessorIdle += this.extractMetricWithFallbacks(sample, ['broker.networkProcessorIdlePercent', 'networkProcessorIdlePercent']);
+        metrics.totalRequestHandlerIdle += this.extractMetricWithFallbacks(sample, ['broker.requestHandlerIdlePercent', 'requestHandlerIdlePercent']);
+        
+        if (cpuUsage > 0 || memoryUsage > 0) {
+          metrics.brokersOnline++;
+        }
+      }
+    });
+    
+    // Aggregate topic metrics
+    const uniqueTopics = new Set();
+    topicSamples.forEach(sample => {
+      if (sample && typeof sample === 'object') {
+        const topicName = sample['topic.name'] || sample.topic_name;
+        if (topicName) {
+          uniqueTopics.add(topicName);
+          metrics.totalPartitions += this.extractMetricWithFallbacks(sample, ['topic.partitionCount', 'partitionCount']);
+          metrics.totalReplicationFactor += this.extractMetricWithFallbacks(sample, ['topic.replicationFactor', 'replicationFactor']);
+        }
+      }
+    });
+    metrics.topicCount = uniqueTopics.size;
+    
+    // Aggregate consumer group metrics
+    const uniqueConsumerGroups = new Set();
+    consumerGroupSamples.forEach(sample => {
+      if (sample && typeof sample === 'object') {
+        const groupId = sample['consumer.groupId'] || sample.consumer_group_id;
+        if (groupId) {
+          uniqueConsumerGroups.add(groupId);
+          const lag = this.extractMetricWithFallbacks(sample, ['consumer.totalLag', 'consumer.lag', 'totalLag']);
+          metrics.totalConsumerLag += lag;
+          metrics.maxConsumerLag = Math.max(metrics.maxConsumerLag, lag);
+        }
+      }
+    });
+    metrics.consumerGroupCount = uniqueConsumerGroups.size;
+    
+    // Calculate averages
+    const brokerCount = brokerSamples.length;
+    return {
+      ...metrics,
+      avgCpuUsage: brokerCount > 0 ? metrics.totalCpuUsage / brokerCount : 0,
+      avgMemoryUsage: brokerCount > 0 ? metrics.totalMemoryUsage / brokerCount : 0,
+      avgDiskUsage: brokerCount > 0 ? metrics.totalDiskUsage / brokerCount : 0,
+      avgNetworkProcessorIdle: brokerCount > 0 ? metrics.totalNetworkProcessorIdle / brokerCount : 0,
+      avgRequestHandlerIdle: brokerCount > 0 ? metrics.totalRequestHandlerIdle / brokerCount : 0,
+      avgPartitionsPerTopic: metrics.topicCount > 0 ? metrics.totalPartitions / metrics.topicCount : 0,
+      avgReplicationFactor: metrics.topicCount > 0 ? metrics.totalReplicationFactor / metrics.topicCount : 0,
+      avgConsumerLag: metrics.consumerGroupCount > 0 ? metrics.totalConsumerLag / metrics.consumerGroupCount : 0,
+      
+      // Health scores
+      brokerHealthScore: this.calculateBrokerHealthScore(metrics, brokerCount),
+      replicationHealthScore: this.calculateReplicationHealthScore(metrics),
+      healthScore: 0 // Will be calculated in calculateEnhancedHealthScore
+    };
+  }
+
+  /**
+   * Calculate enhanced cluster health score (0-100)
+   */
+  calculateEnhancedHealthScore(metrics, brokerCount) {
+    let score = 100;
+    
+    // Critical issues (high impact)
+    if (metrics.offlinePartitions > 0) {
+      score -= Math.min(40, metrics.offlinePartitions * 20);
+    }
+    
+    const brokersOffline = Math.max(0, brokerCount - metrics.brokersOnline);
+    if (brokersOffline > 0) {
+      score -= Math.min(30, (brokersOffline / brokerCount) * 100);
+    }
+    
+    // Important issues (medium impact)
+    if (metrics.underReplicatedPartitions > 0) {
+      score -= Math.min(25, metrics.underReplicatedPartitions * 3);
+    }
+    
+    if (metrics.maxCpuUsage > 90) {
+      score -= 15;
+    }
+    
+    if (metrics.maxMemoryUsage > 90) {
+      score -= 15;
+    }
+    
+    // Performance issues (low impact)
+    if (metrics.avgNetworkProcessorIdle < 20) {
+      score -= 10;
+    }
+    
+    if (metrics.avgRequestHandlerIdle < 20) {
+      score -= 10;
+    }
+    
+    if (metrics.totalConsumerLag > 10000) {
+      score -= Math.min(15, (metrics.totalConsumerLag / 50000) * 15);
+    }
+    
+    return Math.max(0, Math.round(score));
+  }
+
+  /**
+   * Calculate broker health score
+   */
+  calculateBrokerHealthScore(metrics, brokerCount) {
+    if (brokerCount === 0) return 0;
+    
+    let score = 100;
+    
+    const onlineRatio = metrics.brokersOnline / brokerCount;
+    if (onlineRatio < 1) {
+      score -= (1 - onlineRatio) * 50;
+    }
+    
+    if (metrics.avgCpuUsage > 80) {
+      score -= Math.min(20, (metrics.avgCpuUsage - 80) * 2);
+    }
+    
+    if (metrics.avgMemoryUsage > 80) {
+      score -= Math.min(20, (metrics.avgMemoryUsage - 80) * 2);
+    }
+    
+    return Math.max(0, Math.round(score));
+  }
+
+  /**
+   * Calculate replication health score
+   */
+  calculateReplicationHealthScore(metrics) {
+    let score = 100;
+    
+    if (metrics.offlinePartitions > 0) {
+      score -= Math.min(60, metrics.offlinePartitions * 15);
+    }
+    
+    if (metrics.underReplicatedPartitions > 0) {
+      score -= Math.min(40, metrics.underReplicatedPartitions * 5);
+    }
+    
+    return Math.max(0, Math.round(score));
+  }
+
+  /**
+   * Get health status text
+   */
+  getHealthStatus(score) {
+    if (score >= 90) return 'excellent';
+    if (score >= 75) return 'good';
+    if (score >= 60) return 'fair';
+    if (score >= 40) return 'poor';
+    return 'critical';
   }
 }
 
