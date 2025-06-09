@@ -41,16 +41,15 @@ class BaseEntity {
 
   /**
    * Generate Entity GUID
-   * Format: {accountId}|{domain}|{entityType}|{uniqueHash}
+   * Format: {entityType}|{accountId}|{provider}|{hierarchical_identifiers}
    */
   generateGUID() {
     const compositeKey = this.generateCompositeKey();
-    const hash = crypto.createHash('sha256')
-      .update(compositeKey)
-      .digest('hex')
-      .substring(0, 32);
+    const identifiers = compositeKey.split(':').filter(Boolean);
     
-    return `${this.accountId}|${this.domain}|${this.entityType}|${hash}`;
+    // Use consistent format with transformer
+    const parts = [this.entityType, this.accountId, this.provider, ...identifiers];
+    return parts.filter(Boolean).join('|');
   }
 
   /**
@@ -121,11 +120,13 @@ class BaseEntity {
    */
   toEventPayload() {
     return {
-      eventType: `${this.entityType}_SAMPLE`,
+      eventType: 'MessageQueue',
       timestamp: Date.now(),
       'entity.guid': this.guid,
       'entity.name': this.name,
       'entity.type': this.entityType,
+      entityType: this.entityType,
+      entityGuid: this.guid,
       provider: this.provider,
       ...this.metadata,
       ...this.tags,

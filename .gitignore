@@ -8,6 +8,11 @@ _obj
 _test
 bin
 
+# Secrets
+.secrets/
+*.secret
+docker-compose.override.yml
+
 # Architecture specific extensions/prefixes
 *.[568vq]
 [568vq].out
@@ -99,3 +104,17 @@ kafka-verification-*.json
 kafka-verification-*.html
 kafka-verification-*.md
 test-results.json
+
+# Audio and Gemini TTS files (exclude from repo)
+*.wav
+*.mp3
+*.m4a
+audio/
+chapters/
+gemini-*
+extract-*
+*-tts*.sh
+*chapter*.py
+*chapter*.json
+process-*chapter*.sh
+*-audio*.py

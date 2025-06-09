@@ -13,6 +13,8 @@ This is the New Relic Message Queues Platform implementing a Unified Data Model 
 - **Simulation Mode**: Generates UDM-compliant test data for development/demos
 - **Hybrid Mode**: Combines real and simulated data for complete coverage
 - **Dashboard CI/CD**: Automated dashboard build, deploy, and verification pipeline
+- **Multi-Cluster Support**: Monitor multiple Kafka clusters efficiently
+- **Custom Metrics**: Define and track custom metrics via YAML/JSON
 
 ## Development Philosophy
 
@@ -22,255 +24,115 @@ This is the New Relic Message Queues Platform implementing a Unified Data Model 
 3. **Incremental Improvements**: Small, focused changes that can be tested immediately
 4. **Always Have a Backlog**: Maintain 10+ todo items for continuous improvement
 
-## Build and Development Commands
+### Priority Guidance
+- It's a priority to make everything work end to end and our primary focus should be on making end to end functional flows work.
 
-### Core Platform Commands
-```bash
-# Install dependencies
-cd newrelic-message-queues-platform
-npm install
+### Security Practices
+- .env file has credentials, do not hardcode keys in source code
+- Never commit API keys or secrets to the repository
+- Use environment variables for all sensitive configuration
 
-# Run platform in different modes
-node platform.js --mode=infrastructure    # Transform real nri-kafka data
-node platform.js --mode=simulation       # Generate test data
-node platform.js --mode=hybrid          # Combine real + simulated
+## Important Implementation Notes
 
-# Run tests
-npm test                    # Run all tests
-npm test:coverage          # Run tests with coverage report
-npm test:e2e               # Run end-to-end tests for all modes
-npm test:integration       # Run integration tests (requires live services)
-npm test EntityFactory     # Run specific test file
+### Event Type Pattern
+The platform uses a dynamic event type pattern: `{entityType}_SAMPLE`
+- Example: `MESSAGE_QUEUE_BROKER` → `MESSAGE_QUEUE_BROKER_SAMPLE`
+- NOT: `MessageQueueBrokerSample` (this is incorrect documentation)
+- See: `docs/EVENT_TYPE_MIGRATION_GUIDE.md` for details
 
-# Linting
-npm run lint              # Run ESLint
-npm run lint -- --fix     # Auto-fix issues
-```
+### Entity GUID Pattern
+Standardized format: `{entityType}|{accountId}|{provider}|{identifiers}`
+- Example: `MESSAGE_QUEUE_BROKER|12345|kafka|prod-cluster|broker-1`
+- Consistent across all components (base-entity.js and transformers)
+
+### Advanced Features Available
+The platform includes several undocumented but powerful features:
+- **Worker Pools**: Parallel processing with configurable pool sizes
+- **Circuit Breaker**: Prevents cascading failures with external services
+- **Error Recovery**: Exponential backoff and dead letter queue
+- **API Server**: REST API for monitoring and control
+- **Prometheus Metrics**: Built-in metrics exporter
+- **Health Checks**: Comprehensive component health monitoring
+- See: `docs/ADVANCED_FEATURES.md` for complete documentation
+
+## Current Todo List (Priority Order)
+
+### ✅ Completed
+1. Fixed event type naming to match implementation
+2. Standardized entity GUID pattern across components
+3. Created end-to-end test for infrastructure mode
+4. Documented all advanced features
+5. Created migration guide for event type changes
+
+### 🚧 In Progress
+- Platform health dashboard implementation
+- Performance optimization for large clusters
+- Enhanced monitoring capabilities
+
+### 📋 Future Priorities
+1. **Platform Health Dashboard** - Monitor the platform itself
+2. **Cache Layer** - Reduce NerdGraph API calls
+3. **WebSocket Support** - Real-time metric streaming
+4. **Alert Templates** - Pre-built alerts for common scenarios
+5. **Kubernetes Operator** - Deploy as K8s operator
+6. **Cost Analytics** - Track infrastructure costs via metrics
+7. **ML Anomaly Detection** - Integrate with Applied Intelligence
+8. **Dashboard Versioning** - Track dashboard changes over time
+9. **Multi-Account Support** - Cross-account data collection
+10. **Performance Benchmarking** - Automated performance tests
+
+## Common Development Tasks
 
 ### Testing Infrastructure Mode
 ```bash
-# 1. Start local Kafka (requires Docker)
+# With real Kafka
 docker-compose -f infrastructure/docker-compose.infra.yml up -d
+node platform.js --mode infrastructure --interval 30
 
-# 2. Wait for Kafka to be ready
-docker-compose logs -f kafka
-
-# 3. Test infrastructure collection
-node infrastructure/test-infra-collection.js
-
-# 4. Run platform in infrastructure mode
-DEBUG=platform:*,transform:* node platform.js --mode=infrastructure --interval=30
+# With multi-cluster support
+node platform.js --mode infrastructure --multi-cluster --cluster-filter "prod-*"
 ```
 
-### Dashboard Operations
+### Running Tests
 ```bash
-# Create dashboard from template
-node dashboards/cli.js create --template=cluster-overview --provider=kafka
+# Run all tests
+npm test
 
-# List available templates
-node dashboards/cli.js list-templates
+# Run specific test
+node test-infrastructure-e2e.js
 
-# Generate dashboard suite
-node dashboards/cli.js generate-suite --provider=kafka --environment=production
+# Run with debug logging
+DEBUG=platform:*,transform:* npm test
 ```
 
-### CLI Tool Commands
+### Creating Dashboards
 ```bash
-# Main CLI tool
-./tools/cli/mq-platform.js <command> [options]
+# Generate full suite
+node dashboards/cli.js generate-suite --provider kafka --environment production
 
-# Simulation commands
-mq-platform.js simulate create-topology --provider kafka --clusters 2
-mq-platform.js simulate stream --duration 5 --interval 30
-
-# Dashboard commands  
-mq-platform.js dashboard create --template overview --name "Production Overview"
-mq-platform.js dashboard list-templates
-mq-platform.js dashboard generate-suite --output ./dashboards
-
-# Verification commands
-mq-platform.js verify dashboard --guid <dashboard-guid>
-mq-platform.js verify batch --guids guid1,guid2,guid3
-mq-platform.js verify platform --comprehensive
+# Create specific dashboard
+node dashboards/cli.js create --template cluster-overview --provider kafka
 ```
 
-### Verification Commands
-```bash
-# Verify entity synthesis
-node verification/verify-entities.js --type=MESSAGE_QUEUE_BROKER
+## Key Files to Know
 
-# Verify dashboard
-node verification/verify-dashboard.js --guid=YOUR_DASHBOARD_GUID
+- `platform.js` - Main entry point with all three modes
+- `infrastructure/transformers/nri-kafka-transformer.js` - Critical transformation logic
+- `core/entities/base-entity.js` - Base entity class with GUID generation
+- `test-infrastructure-e2e.js` - Comprehensive infrastructure mode test
+- `docs/ADVANCED_FEATURES.md` - Documentation for hidden features
+- `docs/EVENT_TYPE_MIGRATION_GUIDE.md` - Event type pattern explanation
 
-# Run platform verification
-node verification/verify-platform.js
-```
+## Debugging Tips
 
-## Recent Accomplishments
+1. **No data showing?** Check event types match `MESSAGE_QUEUE_*_SAMPLE` pattern
+2. **Entity synthesis failing?** Verify GUID format and wait 2-3 minutes
+3. **Transformation errors?** Enable debug: `DEBUG=transform:*`
+4. **API errors?** Check circuit breaker status in logs
 
-### Unified Data Model (UDM) Implementation ✅
-- Defined canonical schema for all MQ telemetry (MessageQueueBrokerSample, MessageQueueTopicSample, MessageQueueOffsetSample)
-- Implemented proper entity GUID generation: `{entityType}|{accountId}|{provider}|{identifiers}`
-- Created UDM transformation layer for nri-kafka data
-- Aligned simulation engine to generate UDM-compliant events
-
-### Infrastructure Mode Improvements ✅
-- Added consumer offset collection via Kafka Admin API (--consumer_offset mode)
-- Created docker-compose setup for local Kafka testing
-- Built integration tests with 28 test cases
-- Added performance benchmarking (400K+ samples/second capability)
-
-### Dashboard CI/CD Platform ✅
-- Built automated dashboard generation from templates
-- Added API validation for all NRQL queries
-- Implemented browser-based render validation with Playwright
-- Created end-to-end deployment pipeline
-
-### Hybrid Mode Implementation ✅
-- Created HybridModeManager for gap detection and filling
-- Built GapDetector to identify missing entities and stale metrics
-- Added InfraEntitySimulator wrapper for safe metric updates
-- Integrated comprehensive ConfigValidator with helpful error messages
-
-## Current Focus Areas
-
-### 2. Testing & Validation
-- Create integration tests with sample nri-kafka data
-- Build end-to-end test suite for all modes
-- Add performance benchmarking
-- Test with various scales (1 broker to 100+ brokers)
-
-### 3. Dashboard Integration
-- Ensure dashboards work with infrastructure-generated entities
-- Create infrastructure-specific templates
-- Test dashboard deployment end-to-end
-- Optimize NRQL queries for performance
-
-## Key Files and Their Purpose
-
-### Core Platform
-- `platform.js` - Main entry point supporting all three modes with ConfigValidator integration
-- `core/entities/` - Entity definitions implementing UDM schema
-- `core/config-validator.js` - Comprehensive configuration validation with helpful errors
-- `core/hybrid-mode-manager.js` - Orchestrates gap detection and entity combination
-- `core/gap-detector.js` - Analyzes gaps between infrastructure and desired topology
-- `infrastructure/transformers/nri-kafka-transformer.js` - Transforms nri-kafka → UDM events
-- `infrastructure/collectors/infra-agent-collector.js` - Queries NRDB for KafkaBrokerSample data
-
-### Simulation (Keep Working)
-- `simulation/engines/data-simulator.js` - Generates UDM-compliant realistic patterns
-- `simulation/streaming/new-relic-streamer.js` - Streams UDM events to New Relic
-
-### Dashboard CI/CD
-- `dashboards/cli.js` - CLI for dashboard operations
-- `dashboards/framework/` - Core dashboard engine (build, validate, deploy)
-- `dashboards/templates/` - Infrastructure and platform dashboard templates
-- `dashboards/content/message-queues/message-queues-content-provider.js` - Dashboard content definition
-- `tools/testing/build-and-verify-dashboards.js` - End-to-end dashboard pipeline
-
-### Verification
-- `verification/verify-entities.js` - Validates entity synthesis
-- `verification/verify-platform.js` - Comprehensive platform tests
-- `tools/testing/programmatic-dashboard-deploy.js` - Dashboard deployment with validation
-
-## Common Development Patterns
-
-### Testing Infrastructure Mode
-```javascript
-// 1. Create test data that mimics nri-kafka output
-const kafkaSample = {
-  eventType: 'KafkaBrokerSample',
-  'broker.id': 1,
-  'broker.bytesInPerSecond': 1024000,
-  'kafka.broker.logFlushRate': 0.5,
-  clusterName: 'test-kafka'
-};
-
-// 2. Test transformation to UDM
-const transformer = new NriKafkaTransformer();
-const udmEvent = transformer.transformBroker(kafkaSample);
-
-// 3. Verify UDM compliance
-console.log(udmEvent.eventType); // 'MessageQueueBrokerSample'
-console.log(udmEvent['broker.throughput.in.bytesPerSecond']); // 1024000
-console.log(udmEvent.entityGuid); // MESSAGE_QUEUE_BROKER|123456|kafka|test-kafka|1
-```
-
-### Adding New Features
-1. Start with failing test
-2. Implement minimal code to pass
-3. Test with real data if possible
-4. Refactor for clarity
-5. Update documentation
-
-## Troubleshooting Common Issues
-
-### No Data in Infrastructure Mode
-1. Check nri-kafka is sending data: `FROM KafkaBrokerSample SELECT count(*) SINCE 5 minutes ago`
-2. Verify API credentials are correct
-3. Enable debug logging: `DEBUG=platform:*,transform:*`
-4. Check entity synthesis: `FROM MessageQueue SELECT count(*) WHERE entityType LIKE 'MESSAGE_QUEUE_%'`
-
-### Entity Synthesis Failing
-1. Verify GUID format exactly matches pattern
-2. Check all required tags are present
-3. Wait 2-3 minutes for synthesis
-4. Use correct event type: 'MessageQueue'
-
-### Dashboard Creation Issues
-1. Ensure data has been streaming for 5+ minutes
-2. Verify User API key has dashboard permissions
-3. Try with --dry-run first
-4. Check account ID matches data account
-
-## Architecture Decisions
-
-### Why nri-kafka Instead of Custom JMX?
-- Battle-tested in production
-- Handles all edge cases
-- Maintained by New Relic
-- No JMX complexity to manage
-
-### Why Keep Simulation Mode?
-- Essential for testing without infrastructure
-- Enables demos and training
-- Allows load testing
-- Development doesn't require Kafka
-
-### Why MESSAGE_QUEUE Entities?
-- Standardized across all queue types
-- Enables consistent dashboards
-- Future-proof for other providers
-- Clear golden metrics
-
-## Next Priorities (Always 10+)
-
-Current active tasks:
-1. **Platform Health Dashboard** - Create dashboard to monitor the platform itself
-2. **RabbitMQ Provider** - Extend UDM for RabbitMQ, add nri-rabbitmq transformer
-3. **Performance Optimization** - Implement data caching for NerdGraph queries
-4. **Alert Templates** - Pre-built alerts based on UDM metrics
-5. **Multi-Account Support** - Handle cross-account data collection
-6. **Kubernetes Operator** - Deploy platform as K8s operator
-7. **API Rate Limiting** - Smart throttling for API calls
-8. **Cost Analytics** - Track infrastructure costs via metrics
-9. **ML Anomaly Detection** - Integrate with New Relic Applied Intelligence
-10. **ActiveMQ Support** - Add provider and UDM extensions
-11. **Dashboard Versioning** - Track dashboard changes over time
-12. **Automated Testing** - CI/CD pipeline for PRs
-
-## Development Workflow
-
-1. **Pick High Priority Todo**: Focus on items that make core features work
-2. **Test Locally First**: Use docker-compose for local Kafka testing
-3. **Verify with Real Data**: Always test transformations with actual samples
-4. **Add Tests**: Every fix should include a test
-5. **Document Changes**: Update relevant docs immediately
-
-## Important Reminders
-
-- **Test with real nri-kafka data** before claiming infrastructure mode works
-- **Entity GUIDs must be exact** for synthesis to work
-- **Don't over-engineer** - make it work first, optimize later
-- **Keep simulation working** - it's essential for testing
-- **Always maintain the todo list** with at least 10 items
+## Important: Do NOT
+- Change event type pattern back to old format
+- Modify GUID generation without updating all components
+- Hardcode API keys or secrets
+- Commit .env files
+- Add RabbitMQ features (not required per user guidance)
