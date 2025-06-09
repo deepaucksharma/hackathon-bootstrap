@@ -2,6 +2,23 @@
 
 This file provides guidance to Claude Code (claude.ai/code) when working with code in this repository.
 
+## Project Overview
+
+This is the New Relic Message Queues Platform that bridges nri-kafka (real infrastructure data) with the MESSAGE_QUEUE_* entity framework, while maintaining simulation capabilities for testing.
+
+### Current Architecture
+- **Infrastructure Mode**: Transforms real nri-kafka data → MESSAGE_QUEUE entities
+- **Simulation Mode**: Generates test data for development/demos
+- **Hybrid Mode**: Combines real and simulated data for complete coverage
+
+## Development Philosophy
+
+### Make It Work First, Then Extend
+1. **Core Functionality First**: Ensure basic features work reliably before adding complexity
+2. **Test with Real Data**: Use actual nri-kafka data to validate transformations
+3. **Incremental Improvements**: Small, focused changes that can be tested immediately
+4. **Always Have a Backlog**: Maintain 10+ todo items for continuous improvement
+
 ## Build and Development Commands
 
 ### Core Platform Commands
@@ -10,31 +27,48 @@ This file provides guidance to Claude Code (claude.ai/code) when working with co
 cd newrelic-message-queues-platform
 npm install
 
+# Run platform in different modes
+node platform.js --mode=infrastructure    # Transform real nri-kafka data
+node platform.js --mode=simulation       # Generate test data
+node platform.js --mode=hybrid          # Combine real + simulated
+
 # Run tests
 npm test                    # Run all tests
 npm test:coverage          # Run tests with coverage report
-npm test -- --watch       # Run tests in watch mode
-npm test EntityFactory    # Run specific test file
+npm test:e2e               # Run end-to-end tests for all modes
+npm test:integration       # Run integration tests (requires live services)
+npm test EntityFactory     # Run specific test file
 
 # Linting
 npm run lint              # Run ESLint
-npm run lint -- --fix     # Auto-fix linting issues
+npm run lint -- --fix     # Auto-fix issues
+```
 
-# Development
-npm run dev               # Start with nodemon (auto-reload)
-npm start                 # Start the platform
+### Testing Infrastructure Mode
+```bash
+# 1. Start local Kafka (requires Docker)
+docker-compose -f infrastructure/docker-compose.infra.yml up -d
 
-# Verification
-npm run verify            # Run verification framework
-node verification/runners/verification-runner.js --dashboard-guid <guid>
+# 2. Wait for Kafka to be ready
+docker-compose logs -f kafka
 
-# Simulation
-npm run simulate          # Stream simulated data
-node examples/production-streaming.js --dry-run --duration=5
+# 3. Test infrastructure collection
+node infrastructure/test-infra-collection.js
 
-# Dashboard operations
-npm run dashboard         # Create dashboard
-node tools/cli/mq-platform.js dashboard create --template=overview
+# 4. Run platform in infrastructure mode
+DEBUG=platform:*,transform:* node platform.js --mode=infrastructure --interval=30
+```
+
+### Dashboard Operations
+```bash
+# Create dashboard from template
+node dashboards/cli.js create --template=cluster-overview --provider=kafka
+
+# List available templates
+node dashboards/cli.js list-templates
+
+# Generate dashboard suite
+node dashboards/cli.js generate-suite --provider=kafka --environment=production
 ```
 
 ### CLI Tool Commands
@@ -55,205 +89,168 @@ mq-platform.js dashboard generate-suite --output ./dashboards
 mq-platform.js verify dashboard --guid <dashboard-guid>
 mq-platform.js verify batch --guids guid1,guid2,guid3
 mq-platform.js verify platform --comprehensive
-
-# Entity management
-mq-platform.js entity create --type cluster --provider kafka
-mq-platform.js entity import --source github --repo newrelic/entity-definitions
-
-# Interactive mode
-mq-platform.js interactive
 ```
 
-### Quick Development Tasks
+### Verification Commands
 ```bash
-# Test connectivity to New Relic
-node test-connectivity.js
+# Verify entity synthesis
+node verification/verify-entities.js --type=MESSAGE_QUEUE_BROKER
 
-# Run the interactive showcase
-node showcase.js
+# Verify dashboard
+node verification/verify-dashboard.js --guid=YOUR_DASHBOARD_GUID
 
-# Verify platform installation
-node test-suite.js
-
-# Create and verify dashboards offline
-node verify-dashboards-offline.js
+# Run platform verification
+node verification/verify-platform.js
 ```
 
-## High-Level Architecture
+## Recent Accomplishments
 
-### Platform Structure
-The platform is organized into distinct layers with clear separation of concerns:
+### Infrastructure Mode Improvements ✅
+- Fixed entity GUID generation to match New Relic standards: `{entityType}|{accountId}|{provider}|{identifiers}`
+- Added comprehensive error handling and retry logic
+- Created docker-compose setup for local Kafka testing
+- Built integration tests with 28 test cases
+- Added performance benchmarking (400K+ samples/second capability)
 
-1. **Core Layer** (`core/`)
-   - **Entities**: MESSAGE_QUEUE_* entity definitions with BaseEntity abstraction
-   - **Relationships**: Bidirectional relationship management between entities
-   - **Metrics**: Golden metric calculations and aggregation
-   - **Providers**: Provider-specific adapters (Kafka, RabbitMQ, SQS, etc.)
+### Hybrid Mode Implementation ✅
+- Created HybridModeManager for gap detection and filling
+- Built GapDetector to identify missing entities and stale metrics
+- Added InfraEntitySimulator wrapper for safe metric updates
+- Integrated comprehensive ConfigValidator with helpful error messages
 
-2. **Simulation Layer** (`simulation/`)
-   - **Engines**: DataSimulator generates realistic patterns (business hours, anomalies)
-   - **Streaming**: NewRelicStreamer handles reliable data transmission with retry logic
-   - **Patterns**: Configurable data patterns for different scenarios
-   - **Scenarios**: Pre-built simulation scenarios (production, development, chaos)
+## Current Focus Areas
 
-3. **Dashboard Layer** (`dashboards/`)
-   - **Framework**: Generic dashboard framework with content provider pattern
-   - **Builders**: Dashboard generation from templates with variable substitution
-   - **Templates**: JSON-based dashboard definitions
-   - **Components**: Reusable widget and layout components
+### 2. Testing & Validation
+- Create integration tests with sample nri-kafka data
+- Build end-to-end test suite for all modes
+- Add performance benchmarking
+- Test with various scales (1 broker to 100+ brokers)
 
-4. **Verification Layer** (`verification/`)
-   - **Orchestrator**: Coordinates multi-stage verification workflows
-   - **Verifiers**: Entity, Dashboard, NRQL, and Browser verification
-   - **Reports**: HTML, Markdown, and JSON report generation
-   - **Browser Testing**: Playwright-based cross-browser validation
+### 3. Dashboard Integration
+- Ensure dashboards work with infrastructure-generated entities
+- Create infrastructure-specific templates
+- Test dashboard deployment end-to-end
+- Optimize NRQL queries for performance
 
-### Key Design Patterns
+## Key Files and Their Purpose
 
-1. **Factory Pattern**: EntityFactory creates valid entities with proper GUIDs and relationships
-2. **Template Method**: BaseEntity defines entity lifecycle, subclasses implement specifics
-3. **Content Provider**: Dashboard framework uses pluggable content providers for different domains
-4. **Builder Pattern**: DashboardBuilder constructs dashboards from templates and variables
-5. **Strategy Pattern**: Different simulation patterns can be applied dynamically
+### Core Platform
+- `platform.js` - Main entry point supporting all three modes with ConfigValidator integration
+- `core/entities/` - Entity definitions and factory
+- `core/config-validator.js` - Comprehensive configuration validation with helpful errors
+- `core/hybrid-mode-manager.js` - Orchestrates gap detection and entity combination
+- `core/gap-detector.js` - Analyzes gaps between infrastructure and desired topology
+- `infrastructure/transformers/nri-kafka-transformer.js` - Transforms nri-kafka data (GUID fix applied)
+- `infrastructure/collectors/infra-agent-collector.js` - Queries NRDB for data
 
-### Data Flow Architecture
+### Simulation (Keep Working)
+- `simulation/engines/data-simulator.js` - Generates realistic patterns
+- `simulation/streaming/new-relic-streamer.js` - Streams data to New Relic
 
-#### Entity Creation and Streaming
+### Dashboards
+- `dashboards/cli.js` - CLI for dashboard operations
+- `dashboards/framework/` - Core dashboard framework
+- `dashboards/templates/` - Reusable dashboard templates
+
+### Verification
+- `verification/verify-entities.js` - Validates entity synthesis
+- `verification/verify-platform.js` - Comprehensive platform tests
+
+## Common Development Patterns
+
+### Testing Infrastructure Mode
+```javascript
+// 1. Create test data that mimics nri-kafka
+const sampleData = {
+  eventType: 'KafkaBrokerSample',
+  'broker.id': 1,
+  'broker.bytesInPerSecond': 1024000,
+  clusterName: 'test-kafka'
+};
+
+// 2. Test transformation
+const transformer = new NriKafkaTransformer();
+const entity = transformer.transformBroker(sampleData);
+
+// 3. Verify entity structure
+console.log(entity.entityGuid); // Should match pattern
+console.log(entity.metrics);    // Should have all required metrics
 ```
-User Input → EntityFactory → Entity Instance → DataSimulator → Metrics
-                                                      ↓
-                                            NewRelicStreamer
-                                                      ↓
-                                              Event/Metric API
-```
 
-#### Dashboard Generation
-```
-Template + Variables → DashboardFramework → ContentProvider → NRQL Generation
-                                                    ↓
-                                              Layout Engine
-                                                    ↓
-                                             NerdGraph API
-```
+### Adding New Features
+1. Start with failing test
+2. Implement minimal code to pass
+3. Test with real data if possible
+4. Refactor for clarity
+5. Update documentation
 
-#### Verification Pipeline
-```
-Dashboard GUID → VerificationOrchestrator → Parallel Verifiers → Score Calculation
-                            ↓                         ↓
-                     Entity Verifier          Browser Verifier
-                     NRQL Verifier           Performance Tests
-                            ↓                         ↓
-                        Report Generator → HTML/JSON/Markdown
-```
+## Troubleshooting Common Issues
 
-### Critical Integration Points
+### No Data in Infrastructure Mode
+1. Check nri-kafka is sending data: `FROM KafkaBrokerSample SELECT count(*) SINCE 5 minutes ago`
+2. Verify API credentials are correct
+3. Enable debug logging: `DEBUG=platform:*,transform:*`
+4. Check entity synthesis: `FROM MessageQueue SELECT count(*) WHERE entityType LIKE 'MESSAGE_QUEUE_%'`
 
-1. **New Relic APIs**
-   - Event API: High-volume event ingestion (batch size: 1000)
-   - Metric API: Dimensional metrics with 1-minute resolution
-   - NerdGraph: Dashboard CRUD operations
-   - Entity Synthesis: GUID format must match pattern
+### Entity Synthesis Failing
+1. Verify GUID format exactly matches pattern
+2. Check all required tags are present
+3. Wait 2-3 minutes for synthesis
+4. Use correct event type: 'MessageQueue'
 
-2. **Environment Configuration**
-   - Required: `NEW_RELIC_ACCOUNT_ID`, `NEW_RELIC_USER_API_KEY`
-   - Optional: `NEW_RELIC_INGEST_KEY`, `NEW_RELIC_REGION`
-   - Config precedence: ENV vars → config files → defaults
+### Dashboard Creation Issues
+1. Ensure data has been streaming for 5+ minutes
+2. Verify User API key has dashboard permissions
+3. Try with --dry-run first
+4. Check account ID matches data account
 
-3. **Provider-Specific Logic**
-   - Each provider (Kafka, RabbitMQ, etc.) has unique entity mappings
-   - Metric names and calculations vary by provider
-   - Dashboard templates are provider-aware
+## Architecture Decisions
 
-### Performance Considerations
+### Why nri-kafka Instead of Custom JMX?
+- Battle-tested in production
+- Handles all edge cases
+- Maintained by New Relic
+- No JMX complexity to manage
 
-1. **Streaming Optimization**
-   - Batch events/metrics for efficient API usage
-   - Implement exponential backoff for retries
-   - Use circuit breaker pattern for API protection
+### Why Keep Simulation Mode?
+- Essential for testing without infrastructure
+- Enables demos and training
+- Allows load testing
+- Development doesn't require Kafka
 
-2. **Memory Management**
-   - Entity registry uses Maps for O(1) lookups
-   - Streaming uses chunking to avoid memory spikes
-   - Verification runs tests in parallel with controlled concurrency
+### Why MESSAGE_QUEUE Entities?
+- Standardized across all queue types
+- Enables consistent dashboards
+- Future-proof for other providers
+- Clear golden metrics
 
-3. **Dashboard Performance**
-   - NRQL queries optimized with proper time windows
-   - Widget count limited to prevent UI slowness
-   - Layout engine ensures responsive design
+## Next Priorities (Always 10+)
 
-### Extension Points
+Current active tasks:
+1. **End-to-End Test Suite** (IN PROGRESS) - Comprehensive tests for all three modes
+2. **Health Checks** - Add monitoring for the platform itself
+3. **Data Caching** - Reduce NerdGraph query load
+4. **RabbitMQ Support** - Add nri-rabbitmq integration
+5. **Migration Guide** - Document path from simulation to infrastructure
+6. **Deployment Scripts** - Automate platform deployment
+7. **Performance Metrics** - Monitor platform performance
+8. **Troubleshooting Guide** - Common infrastructure issues
+9. **Entity Relationships** - Complete cluster-broker-topic mapping
+10. **Consumer Group Lag** - Support from infrastructure data
+11. **Alert Conditions** - Infrastructure-based alerting
 
-1. **Adding New Providers**
-   - Extend BaseEntity for provider-specific entities
-   - Implement provider adapter in `core/providers/`
-   - Create dashboard templates in `dashboards/templates/`
-   - Add simulation patterns in `simulation/patterns/`
+## Development Workflow
 
-2. **Custom Entity Types**
-   - Define new entity type constant
-   - Implement entity class extending BaseEntity
-   - Add factory method in EntityFactory
-   - Create golden metrics definition
+1. **Pick High Priority Todo**: Focus on items that make core features work
+2. **Test Locally First**: Use docker-compose for local Kafka testing
+3. **Verify with Real Data**: Always test transformations with actual samples
+4. **Add Tests**: Every fix should include a test
+5. **Document Changes**: Update relevant docs immediately
 
-3. **Dashboard Templates**
-   - JSON format with variable substitution
-   - Widget definitions with NRQL queries
-   - Layout specifications for responsive grid
-   - Provider-specific optimizations
+## Important Reminders
 
-### Testing Strategy
-
-1. **Unit Tests** (`__tests__/`)
-   - Mock external dependencies
-   - Test individual components in isolation
-   - Focus on business logic and calculations
-
-2. **Integration Tests**
-   - Test API interactions with mock servers
-   - Verify entity relationships
-   - Dashboard generation end-to-end
-
-3. **Verification Tests**
-   - Automated dashboard validation
-   - Cross-browser compatibility
-   - Performance benchmarking
-
-### Common Development Patterns
-
-1. **Entity Creation**
-   ```javascript
-   const factory = new EntityFactory();
-   const cluster = factory.createCluster({
-     name: 'prod-kafka-01',
-     provider: 'kafka',
-     region: 'us-east-1'
-   });
-   ```
-
-2. **Metric Simulation**
-   ```javascript
-   const simulator = new DataSimulator();
-   simulator.updateClusterMetrics(cluster);
-   ```
-
-3. **Dashboard Generation**
-   ```javascript
-   const framework = new DashboardFramework({ apiKey, accountId });
-   framework.setContentProvider(new MessageQueuesContentProvider());
-   const dashboard = await framework.buildAndDeploy('cluster-overview', variables);
-   ```
-
-### v2.0 Evolution Context
-
-The platform is evolving from simulation-only (v1.0) to support real infrastructure monitoring (v2.0):
-
-1. **Dual-Mode Architecture**: Simulation mode + Infrastructure mode
-2. **Foundation Layer**: New transformation pipeline for real metrics
-3. **Discovery Service**: Auto-discovery of Kubernetes/Docker resources
-4. **SHIM Layer**: Transforms infrastructure data to MESSAGE_QUEUE entities
-
-Implementation follows two parallel tracks over 8 weeks:
-- Track 1: Infrastructure & Foundation (Backend)
-- Track 2: Simulation & Dashboard Enhancement (Frontend)
-
-See `vision/IMPLEMENTATION_PLAN_V2.md` for detailed roadmap.
+- **Test with real nri-kafka data** before claiming infrastructure mode works
+- **Entity GUIDs must be exact** for synthesis to work
+- **Don't over-engineer** - make it work first, optimize later
+- **Keep simulation working** - it's essential for testing
+- **Always maintain the todo list** with at least 10 items

@@ -762,7 +762,6 @@ WHERE provider.accountId = '123456789'
    - Performance optimization insights
 
 3. **Enhanced Visualizations**
-   - 3D topology views
    - Consumer group tracking
    - Message flow visualization
    - Custom dashboard builder

@@ -1,0 +1,149 @@
+version: '3.8'
+
+# Complete setup for Kafka + New Relic Infrastructure Agent with nri-kafka
+services:
+  # Zookeeper - required for Kafka
+  zookeeper:
+    image: confluentinc/cp-zookeeper:7.4.0
+    hostname: zookeeper
+    container_name: zookeeper
+    ports:
+      - "2181:2181"
+    environment:
+      ZOOKEEPER_CLIENT_PORT: 2181
+      ZOOKEEPER_TICK_TIME: 2000
+    networks:
+      - kafka-network
+
+  # Kafka Broker with JMX enabled
+  kafka:
+    image: confluentinc/cp-kafka:7.4.0
+    hostname: kafka
+    container_name: kafka
+    depends_on:
+      - zookeeper
+    ports:
+      - "9092:9092"
+      - "9999:9999"  # JMX port for metrics
+    environment:
+      KAFKA_BROKER_ID: 1
+      KAFKA_ZOOKEEPER_CONNECT: 'zookeeper:2181'
+      KAFKA_LISTENER_SECURITY_PROTOCOL_MAP: PLAINTEXT:PLAINTEXT,PLAINTEXT_INTERNAL:PLAINTEXT
+      KAFKA_ADVERTISED_LISTENERS: PLAINTEXT://localhost:9092,PLAINTEXT_INTERNAL://kafka:29092
+      KAFKA_OFFSETS_TOPIC_REPLICATION_FACTOR: 1
+      KAFKA_TRANSACTION_STATE_LOG_MIN_ISR: 1
+      KAFKA_TRANSACTION_STATE_LOG_REPLICATION_FACTOR: 1
+      KAFKA_GROUP_INITIAL_REBALANCE_DELAY_MS: 0
+      # JMX Configuration
+      KAFKA_JMX_PORT: 9999
+      KAFKA_JMX_HOSTNAME: localhost
+      KAFKA_JMX_OPTS: "-Dcom.sun.management.jmxremote -Dcom.sun.management.jmxremote.authenticate=false -Dcom.sun.management.jmxremote.ssl=false -Djava.rmi.server.hostname=localhost -Dcom.sun.management.jmxremote.rmi.port=9999"
+    networks:
+      - kafka-network
+
+  # Kafka UI for visual monitoring (optional but helpful)
+  kafka-ui:
+    image: provectuslabs/kafka-ui:latest
+    container_name: kafka-ui
+    depends_on:
+      - kafka
+    ports:
+      - "8080:8080"
+    environment:
+      KAFKA_CLUSTERS_0_NAME: local
+      KAFKA_CLUSTERS_0_BOOTSTRAPSERVERS: kafka:29092
+      KAFKA_CLUSTERS_0_ZOOKEEPER: zookeeper:2181
+      KAFKA_CLUSTERS_0_METRICS_PORT: 9999
+      KAFKA_CLUSTERS_0_METRICS_TYPE: JMX
+    networks:
+      - kafka-network
+
+  # New Relic Infrastructure Agent with nri-kafka
+  newrelic-infra:
+    image: newrelic/infrastructure:latest
+    container_name: newrelic-infra
+    cap_add:
+      - SYS_PTRACE
+    network_mode: host  # Required for JMX access to Kafka
+    pid: host
+    privileged: true
+    volumes:
+      # Mount host filesystem (read-only)
+      - "/:/host:ro"
+      - "/var/run/docker.sock:/var/run/docker.sock"
+      # Configuration files
+      - "./config/newrelic-infra.yml:/etc/newrelic-infra.yml"
+      - "./config/kafka-config.yml:/etc/newrelic-infra/integrations.d/kafka-config.yml"
+    environment:
+      # Override with your actual license key
+      NRIA_LICENSE_KEY: ${NEW_RELIC_LICENSE_KEY}
+      NRIA_DISPLAY_NAME: "kafka-monitoring-host"
+      # Verbose logging for debugging
+      NRIA_VERBOSE: ${NRIA_VERBOSE:-0}
+      # Pass through integration config
+      NRIA_PASSTHROUGH_ENVIRONMENT: "CLUSTER_NAME,KAFKA_VERSION"
+    depends_on:
+      - kafka
+
+  # Test producer to generate some traffic
+  kafka-producer:
+    image: confluentinc/cp-kafka:7.4.0
+    container_name: kafka-producer
+    depends_on:
+      - kafka
+    networks:
+      - kafka-network
+    command: |
+      bash -c "
+        echo 'Waiting for Kafka to be ready...'
+        cub kafka-ready -b kafka:29092 1 40
+        
+        echo 'Creating test topic...'
+        kafka-topics --bootstrap-server kafka:29092 --create --if-not-exists --topic test-events --partitions 3 --replication-factor 1
+        
+        echo 'Starting producer...'
+        while true; do
+          echo \"Message \$$(date +%s): Hello from Kafka producer\" | kafka-console-producer --bootstrap-server kafka:29092 --topic test-events
+          sleep 5
+        done
+      "
+
+  # Test consumer to create consumer group metrics
+  kafka-consumer:
+    image: confluentinc/cp-kafka:7.4.0
+    container_name: kafka-consumer
+    depends_on:
+      - kafka
+      - kafka-producer
+    networks:
+      - kafka-network
+    command: |
+      bash -c "
+        echo 'Waiting for Kafka to be ready...'
+        sleep 30
+        
+        echo 'Starting consumer...'
+        kafka-console-consumer --bootstrap-server kafka:29092 --topic test-events --from-beginning --group test-consumer-group
+      "
+
+networks:
+  kafka-network:
+    driver: bridge
+
+# Usage Instructions:
+# 1. Create a .env file with your New Relic license key:
+#    echo "NEW_RELIC_LICENSE_KEY=your_key_here" > .env
+#
+# 2. Start the stack:
+#    docker-compose -f docker-compose.infra.yml up -d
+#
+# 3. Wait a few minutes for data to appear in New Relic
+#
+# 4. Check logs:
+#    docker logs newrelic-infra | grep -i kafka
+#
+# 5. Access Kafka UI:
+#    http://localhost:8080
+#
+# 6. Stop everything:
+#    docker-compose -f docker-compose.infra.yml down

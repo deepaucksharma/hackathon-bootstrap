@@ -9,12 +9,22 @@ const MessageQueueCluster = require('./message-queue-cluster');
 const MessageQueueBroker = require('./message-queue-broker');
 const MessageQueueTopic = require('./message-queue-topic');
 const MessageQueueQueue = require('./message-queue-queue');
+const MessageQueueConsumerGroup = require('./message-queue-consumer-group');
 
 class EntityFactory {
   constructor() {
     this.entityRegistry = new Map();
-    // TODO: Implement RelationshipManager
-    // this.relationshipManager = new RelationshipManager();
+    // Simple relationship tracking (can be expanded later)
+    this.relationshipManager = {
+      relationships: new Map(),
+      addRelationship: (sourceGuid, targetGuid, type) => {
+        if (!this.relationshipManager.relationships.has(sourceGuid)) {
+          this.relationshipManager.relationships.set(sourceGuid, []);
+        }
+        this.relationshipManager.relationships.get(sourceGuid).push({ targetGuid, type });
+      },
+      getRelationships: (guid) => this.relationshipManager.relationships.get(guid) || []
+    };
   }
 
   /**
@@ -94,6 +104,37 @@ class EntityFactory {
   }
 
   /**
+   * Create a MESSAGE_QUEUE_CONSUMER_GROUP entity
+   */
+  createConsumerGroup(config) {
+    // Validate required fields
+    if (!config || typeof config !== 'object') {
+      throw new Error('Configuration object is required');
+    }
+    if (!config.consumerGroupId && !config.groupId) {
+      throw new Error('Consumer group ID is required');
+    }
+    if (!config.clusterName) {
+      throw new Error('Cluster name is required');
+    }
+    
+    const consumerGroup = new MessageQueueConsumerGroup(config);
+    this.entityRegistry.set(consumerGroup.entityGuid, consumerGroup);
+    
+    // Auto-link to cluster if specified
+    if (config.clusterGuid || config.clusterName) {
+      const clusterGuid = config.clusterGuid || 
+        `MESSAGE_QUEUE_CLUSTER|${config.accountId}|${config.provider || 'kafka'}|${config.clusterName}`;
+      const cluster = this.entityRegistry.get(clusterGuid);
+      if (cluster && cluster.addConsumerGroup) {
+        cluster.addConsumerGroup(consumerGroup.entityGuid);
+      }
+    }
+    
+    return consumerGroup;
+  }
+
+  /**
    * Create entities from topology configuration
    */
   createTopology(topologyConfig) {
@@ -101,7 +142,8 @@ class EntityFactory {
       clusters: [],
       brokers: [],
       topics: [],
-      queues: []
+      queues: [],
+      consumerGroups: []
     };
 
     // Create clusters first
@@ -133,6 +175,14 @@ class EntityFactory {
       topologyConfig.queues.forEach(queueConfig => {
         const queue = this.createQueue(queueConfig);
         entities.queues.push(queue);
+      });
+    }
+
+    // Create consumer groups
+    if (topologyConfig.consumerGroups) {
+      topologyConfig.consumerGroups.forEach(consumerGroupConfig => {
+        const consumerGroup = this.createConsumerGroup(consumerGroupConfig);
+        entities.consumerGroups.push(consumerGroup);
       });
     }
 
@@ -238,7 +288,7 @@ class EntityFactory {
 
     summary.healthPercentage = summary.totalEntities > 0 
       ? (summary.healthyEntities / summary.totalEntities * 100).toFixed(1)
-      : 100;
+      : '100.0';
 
     return summary;
   }

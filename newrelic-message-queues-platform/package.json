@@ -6,6 +6,8 @@
   "scripts": {
     "test": "jest",
     "test:coverage": "jest --coverage",
+    "test:e2e": "node test/run-e2e-tests.js",
+    "test:integration": "node test/run-e2e-tests.js --integration",
     "test:v2": "node v2/tests/test-runner.js",
     "test:v2:unit": "node v2/tests/test-runner.js -c unit",
     "test:v2:integration": "node v2/tests/test-runner.js -c integration",
@@ -13,13 +15,13 @@
     "test:v2:transitions": "node v2/tests/test-runner.js -c mode-transition",
     "test:v2:all": "node v2/tests/test-runner.js -v --coverage --report",
     "lint": "eslint . --ext .js",
-    "dev": "nodemon",
+    "dev": "nodemon platform.js",
     "verify": "node verification/runners/verification-runner.js",
     "simulate": "node tools/cli/mq-platform.js simulate stream",
     "dashboard": "node tools/cli/mq-platform.js dashboard create",
-    "start": "node index.js",
-    "api": "node api/simulation-api.js",
-    "api:dev": "nodemon api/simulation-api.js"
+    "start": "node platform.js",
+    "api": "node simulation/api/simulation-api.js",
+    "api:dev": "nodemon simulation/api/simulation-api.js"
   },
   "keywords": [
     "newrelic",
@@ -33,10 +35,13 @@
   "author": "New Relic Community",
   "license": "Apache-2.0",
   "dependencies": {
+    "@kubernetes/client-node": "^1.3.0",
+    "async-mutex": "^0.5.0",
     "axios": "^1.3.4",
     "chalk": "^4.1.2",
     "commander": "^9.4.1",
     "cors": "^2.8.5",
+    "dockerode": "^4.0.7",
     "dotenv": "^16.0.3",
     "express": "^5.1.0",
     "inquirer": "^8.2.5",

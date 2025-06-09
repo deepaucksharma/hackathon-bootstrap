@@ -1,0 +1,306 @@
+{
+  "name": "Kafka Infrastructure Overview",
+  "description": "Real-time monitoring of Kafka infrastructure collected via nri-kafka",
+  "pages": [
+    {
+      "name": "Cluster Health",
+      "description": "Overall health and performance of Kafka clusters",
+      "widgets": [
+        {
+          "title": "Cluster Health Score",
+          "visualization": "billboard",
+          "gridX": 1,
+          "gridY": 1,
+          "gridWidth": 4,
+          "gridHeight": 3,
+          "config": {
+            "nrqlQuery": "FROM MessageQueue SELECT latest(cluster.health.score) WHERE entityType = 'MESSAGE_QUEUE_CLUSTER' AND provider = 'kafka' FACET clusterName",
+            "thresholds": [
+              { "value": 90, "color": "green" },
+              { "value": 70, "color": "yellow" },
+              { "value": 0, "color": "red" }
+            ]
+          }
+        },
+        {
+          "title": "Total Brokers",
+          "visualization": "billboard",
+          "gridX": 5,
+          "gridY": 1,
+          "gridWidth": 4,
+          "gridHeight": 3,
+          "config": {
+            "nrqlQuery": "FROM MessageQueue SELECT uniqueCount(entityGuid) WHERE entityType = 'MESSAGE_QUEUE_BROKER' AND provider = 'kafka'"
+          }
+        },
+        {
+          "title": "Total Topics",
+          "visualization": "billboard",
+          "gridX": 9,
+          "gridY": 1,
+          "gridWidth": 4,
+          "gridHeight": 3,
+          "config": {
+            "nrqlQuery": "FROM MessageQueue SELECT uniqueCount(entityGuid) WHERE entityType = 'MESSAGE_QUEUE_TOPIC' AND provider = 'kafka'"
+          }
+        },
+        {
+          "title": "Cluster Throughput (Messages/sec)",
+          "visualization": "line",
+          "gridX": 1,
+          "gridY": 4,
+          "gridWidth": 6,
+          "gridHeight": 3,
+          "config": {
+            "nrqlQuery": "FROM MessageQueue SELECT rate(sum(cluster.messagesInPerSecond), 1 second) as 'Messages In', rate(sum(cluster.messagesOutPerSecond), 1 second) as 'Messages Out' WHERE entityType = 'MESSAGE_QUEUE_CLUSTER' AND provider = 'kafka' TIMESERIES AUTO"
+          }
+        },
+        {
+          "title": "Cluster Throughput (Bytes/sec)",
+          "visualization": "line",
+          "gridX": 7,
+          "gridY": 4,
+          "gridWidth": 6,
+          "gridHeight": 3,
+          "config": {
+            "nrqlQuery": "FROM MessageQueue SELECT rate(sum(cluster.bytesInPerSecond), 1 second) as 'Bytes In', rate(sum(cluster.bytesOutPerSecond), 1 second) as 'Bytes Out' WHERE entityType = 'MESSAGE_QUEUE_CLUSTER' AND provider = 'kafka' TIMESERIES AUTO"
+          }
+        },
+        {
+          "title": "Under-Replicated Partitions by Cluster",
+          "visualization": "bar",
+          "gridX": 1,
+          "gridY": 7,
+          "gridWidth": 6,
+          "gridHeight": 3,
+          "config": {
+            "nrqlQuery": "FROM MessageQueue SELECT sum(cluster.underReplicatedPartitions) WHERE entityType = 'MESSAGE_QUEUE_CLUSTER' AND provider = 'kafka' FACET clusterName"
+          }
+        },
+        {
+          "title": "Offline Partitions by Cluster",
+          "visualization": "bar",
+          "gridX": 7,
+          "gridY": 7,
+          "gridWidth": 6,
+          "gridHeight": 3,
+          "config": {
+            "nrqlQuery": "FROM MessageQueue SELECT sum(cluster.offlinePartitions) WHERE entityType = 'MESSAGE_QUEUE_CLUSTER' AND provider = 'kafka' FACET clusterName"
+          }
+        }
+      ]
+    },
+    {
+      "name": "Broker Performance",
+      "description": "Individual broker health and performance metrics",
+      "widgets": [
+        {
+          "title": "Broker CPU Usage",
+          "visualization": "line",
+          "gridX": 1,
+          "gridY": 1,
+          "gridWidth": 6,
+          "gridHeight": 3,
+          "config": {
+            "nrqlQuery": "FROM MessageQueue SELECT average(broker.cpu.usage) WHERE entityType = 'MESSAGE_QUEUE_BROKER' AND provider = 'kafka' FACET displayName TIMESERIES AUTO"
+          }
+        },
+        {
+          "title": "Broker Memory Usage",
+          "visualization": "line",
+          "gridX": 7,
+          "gridY": 1,
+          "gridWidth": 6,
+          "gridHeight": 3,
+          "config": {
+            "nrqlQuery": "FROM MessageQueue SELECT average(broker.memory.usage) WHERE entityType = 'MESSAGE_QUEUE_BROKER' AND provider = 'kafka' FACET displayName TIMESERIES AUTO"
+          }
+        },
+        {
+          "title": "Broker Messages In/Out",
+          "visualization": "line",
+          "gridX": 1,
+          "gridY": 4,
+          "gridWidth": 6,
+          "gridHeight": 3,
+          "config": {
+            "nrqlQuery": "FROM MessageQueue SELECT rate(sum(broker.messagesInPerSecond), 1 second) as 'Messages/sec' WHERE entityType = 'MESSAGE_QUEUE_BROKER' AND provider = 'kafka' FACET displayName TIMESERIES AUTO"
+          }
+        },
+        {
+          "title": "Broker Network Throughput",
+          "visualization": "line",
+          "gridX": 7,
+          "gridY": 4,
+          "gridWidth": 6,
+          "gridHeight": 3,
+          "config": {
+            "nrqlQuery": "FROM MessageQueue SELECT rate(sum(broker.bytesInPerSecond + broker.bytesOutPerSecond), 1 second) as 'Bytes/sec' WHERE entityType = 'MESSAGE_QUEUE_BROKER' AND provider = 'kafka' FACET displayName TIMESERIES AUTO"
+          }
+        },
+        {
+          "title": "Broker Request Handler Idle %",
+          "visualization": "line",
+          "gridX": 1,
+          "gridY": 7,
+          "gridWidth": 6,
+          "gridHeight": 3,
+          "config": {
+            "nrqlQuery": "FROM MessageQueue SELECT average(broker.requestHandlerIdlePercent) WHERE entityType = 'MESSAGE_QUEUE_BROKER' AND provider = 'kafka' FACET displayName TIMESERIES AUTO"
+          }
+        },
+        {
+          "title": "Broker Disk Usage",
+          "visualization": "line",
+          "gridX": 7,
+          "gridY": 7,
+          "gridWidth": 6,
+          "gridHeight": 3,
+          "config": {
+            "nrqlQuery": "FROM MessageQueue SELECT average(broker.disk.usage) WHERE entityType = 'MESSAGE_QUEUE_BROKER' AND provider = 'kafka' FACET displayName TIMESERIES AUTO"
+          }
+        }
+      ]
+    },
+    {
+      "name": "Topic Analytics",
+      "description": "Topic-level performance and usage metrics",
+      "widgets": [
+        {
+          "title": "Top Topics by Message Rate",
+          "visualization": "bar",
+          "gridX": 1,
+          "gridY": 1,
+          "gridWidth": 6,
+          "gridHeight": 3,
+          "config": {
+            "nrqlQuery": "FROM MessageQueue SELECT rate(sum(topic.messagesInPerSecond), 1 second) WHERE entityType = 'MESSAGE_QUEUE_TOPIC' AND provider = 'kafka' FACET topicName LIMIT 10"
+          }
+        },
+        {
+          "title": "Top Topics by Bytes",
+          "visualization": "bar",
+          "gridX": 7,
+          "gridY": 1,
+          "gridWidth": 6,
+          "gridHeight": 3,
+          "config": {
+            "nrqlQuery": "FROM MessageQueue SELECT rate(sum(topic.bytesInPerSecond + topic.bytesOutPerSecond), 1 second) WHERE entityType = 'MESSAGE_QUEUE_TOPIC' AND provider = 'kafka' FACET topicName LIMIT 10"
+          }
+        },
+        {
+          "title": "Topic Partition Distribution",
+          "visualization": "pie",
+          "gridX": 1,
+          "gridY": 4,
+          "gridWidth": 6,
+          "gridHeight": 3,
+          "config": {
+            "nrqlQuery": "FROM MessageQueue SELECT sum(topic.partitions.count) WHERE entityType = 'MESSAGE_QUEUE_TOPIC' AND provider = 'kafka' FACET topicName LIMIT 20"
+          }
+        },
+        {
+          "title": "Topic Replication Factor",
+          "visualization": "table",
+          "gridX": 7,
+          "gridY": 4,
+          "gridWidth": 6,
+          "gridHeight": 3,
+          "config": {
+            "nrqlQuery": "FROM MessageQueue SELECT latest(topic.replicationFactor) as 'Replication Factor', latest(topic.partitions.count) as 'Partitions' WHERE entityType = 'MESSAGE_QUEUE_TOPIC' AND provider = 'kafka' FACET topicName LIMIT 20"
+          }
+        },
+        {
+          "title": "Topic Size Growth",
+          "visualization": "line",
+          "gridX": 1,
+          "gridY": 7,
+          "gridWidth": 12,
+          "gridHeight": 3,
+          "config": {
+            "nrqlQuery": "FROM MessageQueue SELECT average(topic.sizeBytes) / 1024 / 1024 as 'Size (MB)' WHERE entityType = 'MESSAGE_QUEUE_TOPIC' AND provider = 'kafka' FACET topicName TIMESERIES AUTO LIMIT 10"
+          }
+        }
+      ]
+    },
+    {
+      "name": "Infrastructure Alerts",
+      "description": "Critical infrastructure issues and alerts",
+      "widgets": [
+        {
+          "title": "Critical Issues",
+          "visualization": "event-table",
+          "gridX": 1,
+          "gridY": 1,
+          "gridWidth": 12,
+          "gridHeight": 3,
+          "config": {
+            "nrqlQuery": "FROM MessageQueue SELECT timestamp, displayName, tags.environment, broker.offlinePartitions, broker.underReplicatedPartitions WHERE entityType = 'MESSAGE_QUEUE_BROKER' AND provider = 'kafka' AND (broker.offlinePartitions > 0 OR broker.underReplicatedPartitions > 0) LIMIT 50"
+          }
+        },
+        {
+          "title": "High CPU Brokers (>80%)",
+          "visualization": "table",
+          "gridX": 1,
+          "gridY": 4,
+          "gridWidth": 6,
+          "gridHeight": 3,
+          "config": {
+            "nrqlQuery": "FROM MessageQueue SELECT latest(broker.cpu.usage) as 'CPU %', latest(broker.memory.usage) as 'Memory %' WHERE entityType = 'MESSAGE_QUEUE_BROKER' AND provider = 'kafka' AND broker.cpu.usage > 80 FACET displayName, hostname"
+          }
+        },
+        {
+          "title": "Low Disk Space Brokers (<20% free)",
+          "visualization": "table",
+          "gridX": 7,
+          "gridY": 4,
+          "gridWidth": 6,
+          "gridHeight": 3,
+          "config": {
+            "nrqlQuery": "FROM MessageQueue SELECT latest(broker.disk.usage) as 'Disk Usage %' WHERE entityType = 'MESSAGE_QUEUE_BROKER' AND provider = 'kafka' AND broker.disk.usage > 80 FACET displayName, hostname"
+          }
+        },
+        {
+          "title": "Leader Election Rate",
+          "visualization": "line",
+          "gridX": 1,
+          "gridY": 7,
+          "gridWidth": 6,
+          "gridHeight": 3,
+          "config": {
+            "nrqlQuery": "FROM MessageQueue SELECT average(broker.leaderElectionRate) WHERE entityType = 'MESSAGE_QUEUE_BROKER' AND provider = 'kafka' FACET displayName TIMESERIES AUTO"
+          }
+        },
+        {
+          "title": "Unclean Leader Elections",
+          "visualization": "billboard",
+          "gridX": 7,
+          "gridY": 7,
+          "gridWidth": 6,
+          "gridHeight": 3,
+          "config": {
+            "nrqlQuery": "FROM MessageQueue SELECT sum(broker.uncleanLeaderElections) WHERE entityType = 'MESSAGE_QUEUE_BROKER' AND provider = 'kafka' FACET clusterName",
+            "thresholds": [
+              { "value": 0, "color": "green" },
+              { "value": 1, "color": "red" }
+            ]
+          }
+        }
+      ]
+    }
+  ],
+  "variables": [
+    {
+      "name": "cluster",
+      "type": "nrql",
+      "title": "Cluster",
+      "query": "FROM MessageQueue SELECT uniques(clusterName) WHERE entityType = 'MESSAGE_QUEUE_CLUSTER' AND provider = 'kafka'"
+    },
+    {
+      "name": "environment",
+      "type": "nrql",
+      "title": "Environment",
+      "query": "FROM MessageQueue SELECT uniques(tags.environment) WHERE provider = 'kafka'"
+    }
+  ]
+}

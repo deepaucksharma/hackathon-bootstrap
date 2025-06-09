@@ -9,6 +9,7 @@ const MessageQueueCluster = require('./message-queue-cluster');
 const MessageQueueBroker = require('./message-queue-broker');
 const MessageQueueTopic = require('./message-queue-topic');
 const MessageQueueQueue = require('./message-queue-queue');
+const MessageQueueConsumerGroup = require('./message-queue-consumer-group');
 const EntityFactory = require('./entity-factory');
 
 module.exports = {
@@ -17,6 +18,7 @@ module.exports = {
   MessageQueueBroker,
   MessageQueueTopic,
   MessageQueueQueue,
+  MessageQueueConsumerGroup,
   EntityFactory,
   
   // Convenience methods
@@ -27,7 +29,8 @@ module.exports = {
     CLUSTER: 'MESSAGE_QUEUE_CLUSTER',
     BROKER: 'MESSAGE_QUEUE_BROKER',
     TOPIC: 'MESSAGE_QUEUE_TOPIC',
-    QUEUE: 'MESSAGE_QUEUE_QUEUE'
+    QUEUE: 'MESSAGE_QUEUE_QUEUE',
+    CONSUMER_GROUP: 'MESSAGE_QUEUE_CONSUMER_GROUP'
   },
   
   // Provider constants

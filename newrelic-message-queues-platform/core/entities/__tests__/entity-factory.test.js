@@ -11,11 +11,15 @@ jest.mock('../message-queue-topic');
 jest.mock('../message-queue-queue');
 
 const EntityFactory = require('../entity-factory');
+const TestHelpers = require('../../../test/utils/test-helpers');
 
 describe('EntityFactory', () => {
   let factory;
+  let testHelper;
 
-  beforeEach(() => {
+  beforeEach(async () => {
+    testHelper = new TestHelpers();
+    await testHelper.initializeTestEnvironment();
     factory = new EntityFactory();
   });
 
@@ -323,8 +327,8 @@ describe('EntityFactory', () => {
     beforeEach(() => {
       factory.createCluster({ name: 'cluster1', provider: 'kafka', accountId: '123' });
       factory.createCluster({ name: 'cluster2', provider: 'rabbitmq', accountId: '123' });
-      factory.createBroker({ brokerId: 1 });
-      factory.createTopic({ name: 'topic1' });
+      factory.createBroker({ brokerId: 1, provider: 'rabbitmq', accountId: '123' });
+      factory.createTopic({ name: 'topic1', provider: 'kafka', accountId: '123' });
     });
 
     test('should return correct summary statistics', () => {
@@ -334,8 +338,8 @@ describe('EntityFactory', () => {
       expect(summary.byType['MESSAGE_QUEUE_CLUSTER']).toBe(2);
       expect(summary.byType['MESSAGE_QUEUE_BROKER']).toBe(1);
       expect(summary.byType['MESSAGE_QUEUE_TOPIC']).toBe(1);
-      expect(summary.byProvider['kafka']).toBe(1);
-      expect(summary.byProvider['rabbitmq']).toBe(1);
+      expect(summary.byProvider['kafka']).toBe(2);
+      expect(summary.byProvider['rabbitmq']).toBe(2);
       expect(summary.healthPercentage).toBeDefined();
     });
 

@@ -1,11 +1,11 @@
 # Dashboard Generator
 
-An intelligent dashboard generation platform for New Relic that automatically creates optimized dashboards based on available metrics.
+A dashboard generation platform for New Relic that automatically creates optimized dashboards based on available metrics.
 
 ## Features
 
 - **Automatic Metric Discovery**: Discovers available metrics from your New Relic account
-- **Intelligent Classification**: Classifies metrics by type, category, and characteristics
+- **Metric Classification**: Classifies metrics by type, category, and characteristics
 - **Template-Based Generation**: Pre-built templates for common dashboard patterns
 - **Query Optimization**: Generates optimized NRQL queries for each metric
 - **Layout Optimization**: Arranges widgets for optimal visual hierarchy

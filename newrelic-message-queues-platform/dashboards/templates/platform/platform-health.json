@@ -1,0 +1,506 @@
+{
+  "name": "Message Queues Platform Health",
+  "description": "Monitor the health and performance of the Message Queues Platform itself",
+  "permissions": "PUBLIC_READ_WRITE",
+  "pages": [
+    {
+      "name": "Platform Overview",
+      "description": "High-level platform health metrics",
+      "widgets": [
+        {
+          "title": "Platform Status",
+          "layout": {
+            "column": 1,
+            "row": 1,
+            "width": 4,
+            "height": 2
+          },
+          "visualization": {
+            "id": "viz.billboard"
+          },
+          "rawConfiguration": {
+            "facet": {
+              "showOtherSeries": false
+            },
+            "nrqlQueries": [
+              {
+                "accountId": "{{accountId}}",
+                "query": "FROM Log SELECT latest(1) as 'Platform Running' WHERE message LIKE '%Platform started%' OR message LIKE '%Cycle completed%' SINCE 5 minutes ago LIMIT 1"
+              }
+            ],
+            "platformOptions": {
+              "ignoreTimeRange": false
+            },
+            "thresholds": [
+              {
+                "alertSeverity": "CRITICAL",
+                "value": 0
+              },
+              {
+                "alertSeverity": "WARNING", 
+                "value": 0.5
+              }
+            ]
+          }
+        },
+        {
+          "title": "Entity Processing Rate",
+          "layout": {
+            "column": 5,
+            "row": 1,
+            "width": 4,
+            "height": 2
+          },
+          "visualization": {
+            "id": "viz.line"
+          },
+          "rawConfiguration": {
+            "facet": {
+              "showOtherSeries": false
+            },
+            "legend": {
+              "enabled": true
+            },
+            "nrqlQueries": [
+              {
+                "accountId": "{{accountId}}",
+                "query": "FROM MessageQueue SELECT count(*) as 'Entities Processed' WHERE eventType = 'MessageQueue' FACET entityType TIMESERIES 1 minute SINCE 30 minutes ago"
+              }
+            ],
+            "platformOptions": {
+              "ignoreTimeRange": false
+            },
+            "yAxisLeft": {
+              "zero": true
+            }
+          }
+        },
+        {
+          "title": "Platform Mode Distribution",
+          "layout": {
+            "column": 9,
+            "row": 1,
+            "width": 4,
+            "height": 2
+          },
+          "visualization": {
+            "id": "viz.pie"
+          },
+          "rawConfiguration": {
+            "facet": {
+              "showOtherSeries": false
+            },
+            "nrqlQueries": [
+              {
+                "accountId": "{{accountId}}",
+                "query": "FROM MessageQueue SELECT count(*) WHERE eventType = 'MessageQueue' FACET source SINCE 30 minutes ago"
+              }
+            ],
+            "platformOptions": {
+              "ignoreTimeRange": false
+            }
+          }
+        },
+        {
+          "title": "Transformation Errors",
+          "layout": {
+            "column": 1,
+            "row": 3,
+            "width": 6,
+            "height": 3
+          },
+          "visualization": {
+            "id": "viz.line"
+          },
+          "rawConfiguration": {
+            "facet": {
+              "showOtherSeries": false
+            },
+            "legend": {
+              "enabled": true
+            },
+            "nrqlQueries": [
+              {
+                "accountId": "{{accountId}}",
+                "query": "FROM Log SELECT count(*) as 'Transformation Errors' WHERE level = 'error' AND message LIKE '%transformation%' TIMESERIES 5 minutes SINCE 1 hour ago"
+              }
+            ],
+            "platformOptions": {
+              "ignoreTimeRange": false
+            },
+            "yAxisLeft": {
+              "zero": true
+            }
+          }
+        },
+        {
+          "title": "Cycle Performance",
+          "layout": {
+            "column": 7,
+            "row": 3,
+            "width": 6,
+            "height": 3
+          },
+          "visualization": {
+            "id": "viz.line"
+          },
+          "rawConfiguration": {
+            "facet": {
+              "showOtherSeries": false
+            },
+            "legend": {
+              "enabled": true
+            },
+            "nrqlQueries": [
+              {
+                "accountId": "{{accountId}}",
+                "query": "FROM Log SELECT average(numeric(duration)) as 'Avg Cycle Duration (ms)' WHERE message LIKE '%Cycle completed%' TIMESERIES 5 minutes SINCE 1 hour ago"
+              }
+            ],
+            "platformOptions": {
+              "ignoreTimeRange": false
+            },
+            "yAxisLeft": {
+              "zero": true
+            }
+          }
+        }
+      ]
+    },
+    {
+      "name": "Entity Health",
+      "description": "Health of MESSAGE_QUEUE entities",
+      "widgets": [
+        {
+          "title": "Entity Count by Type",
+          "layout": {
+            "column": 1,
+            "row": 1,
+            "width": 4,
+            "height": 3
+          },
+          "visualization": {
+            "id": "viz.bar"
+          },
+          "rawConfiguration": {
+            "facet": {
+              "showOtherSeries": false
+            },
+            "nrqlQueries": [
+              {
+                "accountId": "{{accountId}}",
+                "query": "FROM MessageQueue SELECT uniqueCount(entityGuid) as 'Entity Count' WHERE eventType = 'MessageQueue' FACET entityType SINCE 30 minutes ago"
+              }
+            ],
+            "platformOptions": {
+              "ignoreTimeRange": false
+            }
+          }
+        },
+        {
+          "title": "Entity Creation Rate",
+          "layout": {
+            "column": 5,
+            "row": 1,
+            "width": 4,
+            "height": 3
+          },
+          "visualization": {
+            "id": "viz.area"
+          },
+          "rawConfiguration": {
+            "facet": {
+              "showOtherSeries": false
+            },
+            "legend": {
+              "enabled": true
+            },
+            "nrqlQueries": [
+              {
+                "accountId": "{{accountId}}",
+                "query": "FROM MessageQueue SELECT rate(uniqueCount(entityGuid), 1 minute) as 'Entities/min' WHERE eventType = 'MessageQueue' FACET entityType TIMESERIES 1 minute SINCE 30 minutes ago"
+              }
+            ],
+            "platformOptions": {
+              "ignoreTimeRange": false
+            },
+            "yAxisLeft": {
+              "zero": true
+            }
+          }
+        },
+        {
+          "title": "Clusters by Provider",
+          "layout": {
+            "column": 9,
+            "row": 1,
+            "width": 4,
+            "height": 3
+          },
+          "visualization": {
+            "id": "viz.table"
+          },
+          "rawConfiguration": {
+            "facet": {
+              "showOtherSeries": false
+            },
+            "nrqlQueries": [
+              {
+                "accountId": "{{accountId}}",
+                "query": "FROM MessageQueue SELECT latest(cluster.health.score) as 'Health Score', latest(cluster.brokerCount) as 'Brokers', latest(cluster.topicCount) as 'Topics' WHERE entityType = 'MESSAGE_QUEUE_CLUSTER' FACET clusterName, provider SINCE 30 minutes ago"
+              }
+            ],
+            "platformOptions": {
+              "ignoreTimeRange": false
+            }
+          }
+        },
+        {
+          "title": "Entity Relationships",
+          "layout": {
+            "column": 1,
+            "row": 4,
+            "width": 6,
+            "height": 3
+          },
+          "visualization": {
+            "id": "viz.line"
+          },
+          "rawConfiguration": {
+            "facet": {
+              "showOtherSeries": false
+            },
+            "legend": {
+              "enabled": true
+            },
+            "nrqlQueries": [
+              {
+                "accountId": "{{accountId}}",
+                "query": "FROM Relationship SELECT count(*) as 'Relationship Count' WHERE sourceEntityType LIKE 'MESSAGE_QUEUE_%' OR targetEntityType LIKE 'MESSAGE_QUEUE_%' FACET relationshipType TIMESERIES 5 minutes SINCE 1 hour ago"
+              }
+            ],
+            "platformOptions": {
+              "ignoreTimeRange": false
+            },
+            "yAxisLeft": {
+              "zero": true
+            }
+          }
+        },
+        {
+          "title": "Top Consumer Groups by Lag",
+          "layout": {
+            "column": 7,
+            "row": 4,
+            "width": 6,
+            "height": 3
+          },
+          "visualization": {
+            "id": "viz.table"
+          },
+          "rawConfiguration": {
+            "facet": {
+              "showOtherSeries": false
+            },
+            "nrqlQueries": [
+              {
+                "accountId": "{{accountId}}",
+                "query": "FROM MessageQueue SELECT latest(consumerGroup.totalLag) as 'Total Lag', latest(consumerGroup.state) as 'State', latest(consumerGroup.memberCount) as 'Members' WHERE entityType = 'MESSAGE_QUEUE_CONSUMER_GROUP' FACET consumerGroupId ORDER BY latest(consumerGroup.totalLag) DESC LIMIT 10 SINCE 30 minutes ago"
+              }
+            ],
+            "platformOptions": {
+              "ignoreTimeRange": false
+            }
+          }
+        }
+      ]
+    },
+    {
+      "name": "Performance & Errors",
+      "description": "Platform performance metrics and error tracking",
+      "widgets": [
+        {
+          "title": "NerdGraph Query Performance",
+          "layout": {
+            "column": 1,
+            "row": 1,
+            "width": 6,
+            "height": 3
+          },
+          "visualization": {
+            "id": "viz.line"
+          },
+          "rawConfiguration": {
+            "facet": {
+              "showOtherSeries": false
+            },
+            "legend": {
+              "enabled": true
+            },
+            "nrqlQueries": [
+              {
+                "accountId": "{{accountId}}",
+                "query": "FROM Log SELECT average(numeric(queryDuration)) as 'Avg Query Duration (ms)', max(numeric(queryDuration)) as 'Max Query Duration (ms)' WHERE message LIKE '%NerdGraph query%' TIMESERIES 5 minutes SINCE 1 hour ago"
+              }
+            ],
+            "platformOptions": {
+              "ignoreTimeRange": false
+            },
+            "yAxisLeft": {
+              "zero": true
+            }
+          }
+        },
+        {
+          "title": "Streaming Performance",
+          "layout": {
+            "column": 7,
+            "row": 1,
+            "width": 6,
+            "height": 3
+          },
+          "visualization": {
+            "id": "viz.line"
+          },
+          "rawConfiguration": {
+            "facet": {
+              "showOtherSeries": false
+            },
+            "legend": {
+              "enabled": true
+            },
+            "nrqlQueries": [
+              {
+                "accountId": "{{accountId}}",
+                "query": "FROM Log SELECT average(numeric(streamDuration)) as 'Avg Stream Duration (ms)', sum(numeric(eventsStreamed)) as 'Events Streamed' WHERE message LIKE '%Streamed%entities%' TIMESERIES 5 minutes SINCE 1 hour ago"
+              }
+            ],
+            "platformOptions": {
+              "ignoreTimeRange": false
+            },
+            "yAxisLeft": {
+              "zero": true
+            }
+          }
+        },
+        {
+          "title": "Error Rate by Component",
+          "layout": {
+            "column": 1,
+            "row": 4,
+            "width": 4,
+            "height": 3
+          },
+          "visualization": {
+            "id": "viz.bar"
+          },
+          "rawConfiguration": {
+            "facet": {
+              "showOtherSeries": false
+            },
+            "nrqlQueries": [
+              {
+                "accountId": "{{accountId}}",
+                "query": "FROM Log SELECT count(*) as 'Error Count' WHERE level = 'error' FACET component SINCE 1 hour ago"
+              }
+            ],
+            "platformOptions": {
+              "ignoreTimeRange": false
+            }
+          }
+        },
+        {
+          "title": "Recent Error Messages",
+          "layout": {
+            "column": 5,
+            "row": 4,
+            "width": 8,
+            "height": 3
+          },
+          "visualization": {
+            "id": "viz.table"
+          },
+          "rawConfiguration": {
+            "facet": {
+              "showOtherSeries": false
+            },
+            "nrqlQueries": [
+              {
+                "accountId": "{{accountId}}",
+                "query": "FROM Log SELECT timestamp, level, message, component WHERE level = 'error' ORDER BY timestamp DESC LIMIT 10 SINCE 1 hour ago"
+              }
+            ],
+            "platformOptions": {
+              "ignoreTimeRange": false
+            }
+          }
+        },
+        {
+          "title": "Memory Usage Trend",
+          "layout": {
+            "column": 1,
+            "row": 7,
+            "width": 6,
+            "height": 3
+          },
+          "visualization": {
+            "id": "viz.area"
+          },
+          "rawConfiguration": {
+            "facet": {
+              "showOtherSeries": false
+            },
+            "legend": {
+              "enabled": true
+            },
+            "nrqlQueries": [
+              {
+                "accountId": "{{accountId}}",
+                "query": "FROM Log SELECT average(numeric(memoryUsage)) as 'Memory Usage (MB)' WHERE message LIKE '%memory%' TIMESERIES 5 minutes SINCE 1 hour ago"
+              }
+            ],
+            "platformOptions": {
+              "ignoreTimeRange": false
+            },
+            "yAxisLeft": {
+              "zero": true
+            }
+          }
+        },
+        {
+          "title": "Success Rate by Mode",
+          "layout": {
+            "column": 7,
+            "row": 7,
+            "width": 6,
+            "height": 3
+          },
+          "visualization": {
+            "id": "viz.line"
+          },
+          "rawConfiguration": {
+            "facet": {
+              "showOtherSeries": false
+            },
+            "legend": {
+              "enabled": true
+            },
+            "nrqlQueries": [
+              {
+                "accountId": "{{accountId}}",
+                "query": "FROM Log SELECT percentage(count(*), WHERE level = 'info' AND message LIKE '%completed%') as 'Success Rate %' WHERE message LIKE '%cycle%' FACET mode TIMESERIES 5 minutes SINCE 1 hour ago"
+              }
+            ],
+            "platformOptions": {
+              "ignoreTimeRange": false
+            },
+            "yAxisLeft": {
+              "zero": true,
+              "max": 100
+            }
+          }
+        }
+      ]
+    }
+  ]
+}

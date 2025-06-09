@@ -1,0 +1,208 @@
+{
+  "summary": {
+    "totalTests": 28,
+    "passed": 28,
+    "failed": 0,
+    "passRate": 100,
+    "status": "EXCELLENT",
+    "timestamp": "2025-06-09T03:25:47.658Z"
+  },
+  "details": [
+    {
+      "category": "broker",
+      "testName": "Standard Kafka Broker Sample",
+      "passed": true,
+      "message": "All validations passed",
+      "timestamp": "2025-06-09T03:25:47.648Z"
+    },
+    {
+      "category": "broker",
+      "testName": "Minimal Broker Sample",
+      "passed": true,
+      "message": "All validations passed",
+      "timestamp": "2025-06-09T03:25:47.649Z"
+    },
+    {
+      "category": "broker",
+      "testName": "High Load Broker Sample",
+      "passed": true,
+      "message": "All validations passed",
+      "timestamp": "2025-06-09T03:25:47.649Z"
+    },
+    {
+      "category": "topic",
+      "testName": "Standard Kafka Topic Sample",
+      "passed": true,
+      "message": "All validations passed",
+      "timestamp": "2025-06-09T03:25:47.649Z"
+    },
+    {
+      "category": "topic",
+      "testName": "System Topic Sample",
+      "passed": true,
+      "message": "All validations passed",
+      "timestamp": "2025-06-09T03:25:47.649Z"
+    },
+    {
+      "category": "cluster-aggregation",
+      "testName": "Three Broker Cluster Aggregation",
+      "passed": true,
+      "message": "All validations passed",
+      "timestamp": "2025-06-09T03:25:47.650Z"
+    },
+    {
+      "category": "guid-generation",
+      "testName": "Broker GUID Format",
+      "passed": true,
+      "message": "GUID: MESSAGE_QUEUE_BROKER|123456789|kafka|production-cluster|broker-1",
+      "timestamp": "2025-06-09T03:25:47.650Z"
+    },
+    {
+      "category": "guid-generation",
+      "testName": "Topic GUID Format",
+      "passed": true,
+      "message": "GUID: MESSAGE_QUEUE_TOPIC|123456789|kafka|production-cluster|user-events",
+      "timestamp": "2025-06-09T03:25:47.650Z"
+    },
+    {
+      "category": "guid-generation",
+      "testName": "Cluster GUID Format",
+      "passed": true,
+      "message": "GUID: MESSAGE_QUEUE_CLUSTER|123456789|kafka|production-cluster",
+      "timestamp": "2025-06-09T03:25:47.650Z"
+    },
+    {
+      "category": "guid-generation",
+      "testName": "Special Characters in GUID",
+      "passed": true,
+      "message": "GUID: MESSAGE_QUEUE_TOPIC|123456789|kafka|test-cluster|topic.with.dots",
+      "timestamp": "2025-06-09T03:25:47.650Z"
+    },
+    {
+      "category": "metric-accuracy",
+      "testName": "Throughput Calculation - broker.messagesInPerSecond",
+      "passed": true,
+      "message": "Value: 1000.5 (expected: 1000.5)",
+      "timestamp": "2025-06-09T03:25:47.650Z"
+    },
+    {
+      "category": "metric-accuracy",
+      "testName": "Throughput Calculation - broker.bytesInPerSecond",
+      "passed": true,
+      "message": "Value: 1024000 (expected: 1024000)",
+      "timestamp": "2025-06-09T03:25:47.651Z"
+    },
+    {
+      "category": "metric-accuracy",
+      "testName": "Throughput Calculation - broker.bytesOutPerSecond",
+      "passed": true,
+      "message": "Value: 2048000 (expected: 2048000)",
+      "timestamp": "2025-06-09T03:25:47.651Z"
+    },
+    {
+      "category": "metric-accuracy",
+      "testName": "CPU Calculation - broker.cpu.usage",
+      "passed": true,
+      "message": "Value: 75.5 (expected: 75.5)",
+      "timestamp": "2025-06-09T03:25:47.651Z"
+    },
+    {
+      "category": "metric-accuracy",
+      "testName": "Health Score Calculation - health_score",
+      "passed": true,
+      "message": "Value: 96 (expected: 96)",
+      "timestamp": "2025-06-09T03:25:47.651Z"
+    },
+    {
+      "category": "edge-cases",
+      "testName": "Missing Required Fields",
+      "passed": true,
+      "message": "Transformation succeeded",
+      "timestamp": "2025-06-09T03:25:47.651Z"
+    },
+    {
+      "category": "edge-cases",
+      "testName": "Invalid Event Type",
+      "passed": true,
+      "message": "Expected error occurred: Invalid broker sample: missing or incorrect eventType",
+      "timestamp": "2025-06-09T03:25:47.651Z"
+    },
+    {
+      "category": "edge-cases",
+      "testName": "Null Values",
+      "passed": true,
+      "message": "Transformation succeeded",
+      "timestamp": "2025-06-09T03:25:47.651Z"
+    },
+    {
+      "category": "edge-cases",
+      "testName": "Extreme Values",
+      "passed": true,
+      "message": "Transformation succeeded",
+      "timestamp": "2025-06-09T03:25:47.651Z"
+    },
+    {
+      "category": "edge-cases",
+      "testName": "Empty Topic Name",
+      "passed": true,
+      "message": "Expected error occurred: Topic sample missing topic name",
+      "timestamp": "2025-06-09T03:25:47.652Z"
+    },
+    {
+      "category": "data-validation",
+      "testName": "Required Fields Present",
+      "passed": true,
+      "message": "All required fields present",
+      "timestamp": "2025-06-09T03:25:47.652Z"
+    },
+    {
+      "category": "data-validation",
+      "testName": "brokerId Type Check",
+      "passed": true,
+      "message": "Type: string (expected: string)",
+      "timestamp": "2025-06-09T03:25:47.652Z"
+    },
+    {
+      "category": "data-validation",
+      "testName": "broker.messagesInPerSecond Type Check",
+      "passed": true,
+      "message": "Type: number (expected: number)",
+      "timestamp": "2025-06-09T03:25:47.652Z"
+    },
+    {
+      "category": "data-validation",
+      "testName": "entityGuid Type Check",
+      "passed": true,
+      "message": "Type: string (expected: string)",
+      "timestamp": "2025-06-09T03:25:47.652Z"
+    },
+    {
+      "category": "data-validation",
+      "testName": "GUID Format Validation",
+      "passed": true,
+      "message": "GUID: MESSAGE_QUEUE_BROKER|123456789|kafka|test-cluster|broker-1",
+      "timestamp": "2025-06-09T03:25:47.652Z"
+    },
+    {
+      "category": "performance",
+      "testName": "10 Samples",
+      "passed": true,
+      "message": "Duration: 1ms (limit: 10ms), Throughput: 10000 samples/sec, Entities: 11",
+      "timestamp": "2025-06-09T03:25:47.653Z"
+    },
+    {
+      "category": "performance",
+      "testName": "100 Samples",
+      "passed": true,
+      "message": "Duration: 0ms (limit: 50ms), Throughput: Infinity samples/sec, Entities: 101",
+      "timestamp": "2025-06-09T03:25:47.653Z"
+    },
+    {
+      "category": "performance",
+      "testName": "1000 Samples",
+      "passed": true,
+      "message": "Duration: 5ms (limit: 500ms), Throughput: 200000 samples/sec, Entities: 1001",
+      "timestamp": "2025-06-09T03:25:47.658Z"
+    }
+  ]
+}

@@ -85,7 +85,7 @@ class MessageQueuesContentProvider extends BaseContentProvider {
               type: 'billboard',
               title: 'Cluster Health Score',
               query: this.buildQuery({
-                from: 'MESSAGE_QUEUE_CLUSTER_SAMPLE',
+                from: 'MESSAGE_QUEUE_CLUSTER',
                 select: 'latest(cluster.health.score)',
                 where: ['provider = {{provider}}', 'environment = {{environment}}'],
                 since: '{{timeRange}}'
@@ -100,8 +100,8 @@ class MessageQueuesContentProvider extends BaseContentProvider {
               type: 'billboard',
               title: 'Total Clusters',
               query: this.buildQuery({
-                from: 'MESSAGE_QUEUE_CLUSTER_SAMPLE',
-                select: 'uniqueCount(entity.guid)',
+                from: 'MESSAGE_QUEUE_CLUSTER',
+                select: 'uniqueCount(entityGuid)',
                 where: ['provider = {{provider}}', 'environment = {{environment}}'],
                 since: '{{timeRange}}'
               }),
@@ -111,8 +111,8 @@ class MessageQueuesContentProvider extends BaseContentProvider {
               type: 'billboard',
               title: 'Healthy Clusters',
               query: this.buildQuery({
-                from: 'MESSAGE_QUEUE_CLUSTER_SAMPLE',
-                select: 'percentage(uniqueCount(entity.guid), WHERE cluster.health.score >= 80)',
+                from: 'MESSAGE_QUEUE_CLUSTER',
+                select: 'percentage(uniqueCount(entityGuid), WHERE cluster.health.score >= 80)',
                 where: ['provider = {{provider}}', 'environment = {{environment}}'],
                 since: '{{timeRange}}'
               }),
@@ -122,8 +122,8 @@ class MessageQueuesContentProvider extends BaseContentProvider {
               type: 'billboard',
               title: 'Total Throughput',
               query: this.buildQuery({
-                from: 'MESSAGE_QUEUE_CLUSTER_SAMPLE',
-                select: 'sum(cluster.throughput.total)',
+                from: 'MESSAGE_QUEUE_CLUSTER',
+                select: 'sum(cluster.messagesPerSecond)',
                 where: ['provider = {{provider}}', 'environment = {{environment}}'],
                 since: '{{timeRange}}'
               }),
@@ -138,7 +138,7 @@ class MessageQueuesContentProvider extends BaseContentProvider {
               type: 'line',
               title: 'Cluster Health Trends',
               query: this.buildQuery({
-                from: 'MESSAGE_QUEUE_CLUSTER_SAMPLE',
+                from: 'MESSAGE_QUEUE_CLUSTER',
                 select: 'average(cluster.health.score)',
                 where: ['provider = {{provider}}', 'environment = {{environment}}'],
                 facet: 'clusterName',
@@ -151,8 +151,8 @@ class MessageQueuesContentProvider extends BaseContentProvider {
               type: 'area',
               title: 'Throughput by Cluster',
               query: this.buildQuery({
-                from: 'MESSAGE_QUEUE_CLUSTER_SAMPLE',
-                select: 'sum(cluster.throughput.total)',
+                from: 'MESSAGE_QUEUE_CLUSTER',
+                select: 'sum(cluster.messagesPerSecond)',
                 where: ['provider = {{provider}}', 'environment = {{environment}}'],
                 facet: 'clusterName',
                 timeseries: true,
@@ -164,8 +164,8 @@ class MessageQueuesContentProvider extends BaseContentProvider {
               type: 'table',
               title: 'Cluster Status Summary',
               query: this.buildQuery({
-                from: 'MESSAGE_QUEUE_CLUSTER_SAMPLE',
-                select: 'clusterName, latest(cluster.health.score) as "Health Score", latest(cluster.throughput.total) as "Throughput", latest(cluster.availability) as "Availability", latest(cluster.error.rate) as "Error Rate"',
+                from: 'MESSAGE_QUEUE_CLUSTER',
+                select: 'clusterName, latest(cluster.health.score) as "Health Score", latest(cluster.messagesPerSecond) as "Messages/sec", latest(cluster.brokerCount) as "Brokers", latest(cluster.underReplicatedPartitions) as "Under Replicated"',
                 where: ['provider = {{provider}}', 'environment = {{environment}}'],
                 facet: 'clusterName',
                 since: '{{timeRange}}'
@@ -196,8 +196,8 @@ class MessageQueuesContentProvider extends BaseContentProvider {
               type: 'area',
               title: 'Topic Throughput',
               query: this.buildQuery({
-                from: 'MESSAGE_QUEUE_TOPIC_SAMPLE',
-                select: 'sum(topic.throughput.in) as "Inbound", sum(topic.throughput.out) as "Outbound"',
+                from: 'MESSAGE_QUEUE_TOPIC',
+                select: 'sum(topic.bytesInPerSecond) as "Bytes In/sec", sum(topic.bytesOutPerSecond) as "Bytes Out/sec"',
                 where: ['provider = {{provider}}', 'clusterName = {{clusterName}}'],
                 timeseries: true,
                 since: '{{timeRange}}'
@@ -208,10 +208,10 @@ class MessageQueuesContentProvider extends BaseContentProvider {
               type: 'line',
               title: 'Consumer Lag',
               query: this.buildQuery({
-                from: 'MESSAGE_QUEUE_TOPIC_SAMPLE',
-                select: 'max(topic.consumer.lag)',
+                from: 'MESSAGE_QUEUE_TOPIC',
+                select: 'max(topic.consumerLag)',
                 where: ['provider = {{provider}}', 'clusterName = {{clusterName}}'],
-                facet: 'topic',
+                facet: 'topicName',
                 timeseries: true,
                 since: '{{timeRange}}',
                 limit: 10
@@ -222,10 +222,10 @@ class MessageQueuesContentProvider extends BaseContentProvider {
               type: 'table',
               title: 'Topic Performance Summary',
               query: this.buildQuery({
-                from: 'MESSAGE_QUEUE_TOPIC_SAMPLE',
-                select: 'topic, latest(topic.throughput.in) as "Inbound Rate", latest(topic.throughput.out) as "Outbound Rate", latest(topic.consumer.lag) as "Consumer Lag", latest(topic.error.rate) as "Error Rate"',
+                from: 'MESSAGE_QUEUE_TOPIC',
+                select: 'topicName, latest(topic.messagesInPerSecond) as "Messages In/sec", latest(topic.bytesInPerSecond) as "Bytes In/sec", latest(topic.consumerLag) as "Consumer Lag", latest(topic.partitionCount) as "Partitions"',
                 where: ['provider = {{provider}}', 'clusterName = {{clusterName}}'],
-                facet: 'topic',
+                facet: 'topicName',
                 since: '{{timeRange}}'
               }),
               position: { column: 1, row: 5, width: 12, height: 4 }
@@ -252,10 +252,10 @@ class MessageQueuesContentProvider extends BaseContentProvider {
               type: 'line',
               title: 'CPU Usage by Broker',
               query: this.buildQuery({
-                from: 'MESSAGE_QUEUE_BROKER_SAMPLE',
-                select: 'average(broker.cpu.usage)',
+                from: 'MESSAGE_QUEUE_BROKER',
+                select: 'average(broker.cpu.idle)',
                 where: ['clusterName = {{clusterName}}'],
-                facet: 'hostname',
+                facet: 'brokerId',
                 timeseries: true,
                 since: '{{timeRange}}'
               }),
@@ -265,10 +265,10 @@ class MessageQueuesContentProvider extends BaseContentProvider {
               type: 'line',
               title: 'Memory Usage by Broker',
               query: this.buildQuery({
-                from: 'MESSAGE_QUEUE_BROKER_SAMPLE',
+                from: 'MESSAGE_QUEUE_BROKER',
                 select: 'average(broker.memory.usage)',
                 where: ['clusterName = {{clusterName}}'],
-                facet: 'hostname',
+                facet: 'brokerId',
                 timeseries: true,
                 since: '{{timeRange}}'
               }),
@@ -278,10 +278,10 @@ class MessageQueuesContentProvider extends BaseContentProvider {
               type: 'table',
               title: 'Broker Status',
               query: this.buildQuery({
-                from: 'MESSAGE_QUEUE_BROKER_SAMPLE',
-                select: 'hostname, latest(broker.cpu.usage) as "CPU %", latest(broker.memory.usage) as "Memory %", latest(broker.request.latency) as "Latency", latest(status) as "Status"',
+                from: 'MESSAGE_QUEUE_BROKER',
+                select: 'brokerId, latest(broker.cpu.idle) as "CPU Idle %", latest(broker.memory.usage) as "Memory %", latest(broker.disk.used) as "Disk %", latest(broker.messagesInPerSecond) as "Messages/sec"',
                 where: ['clusterName = {{clusterName}}'],
-                facet: 'hostname',
+                facet: 'brokerId',
                 since: '{{timeRange}}'
               }),
               position: { column: 1, row: 5, width: 12, height: 4 }
@@ -359,9 +359,9 @@ class MessageQueuesContentProvider extends BaseContentProvider {
       guidPattern: '{accountId}|INFRA|MESSAGE_QUEUE_CLUSTER|{hash(clusterName)}',
       goldenMetrics: [
         { name: 'cluster.health.score', type: 'gauge', unit: 'percentage' },
-        { name: 'cluster.throughput.total', type: 'gauge', unit: 'messages/second' },
-        { name: 'cluster.error.rate', type: 'gauge', unit: 'percentage' },
-        { name: 'cluster.availability', type: 'gauge', unit: 'percentage' }
+        { name: 'cluster.messagesPerSecond', type: 'gauge', unit: 'messages/second' },
+        { name: 'cluster.bytesInPerSecond', type: 'gauge', unit: 'bytes/second' },
+        { name: 'cluster.brokerCount', type: 'gauge', unit: 'count' }
       ],
       relationships: ['CONTAINS → brokers', 'CONTAINS → topics']
     });
@@ -371,10 +371,10 @@ class MessageQueuesContentProvider extends BaseContentProvider {
       domain: 'INFRA',
       guidPattern: '{accountId}|INFRA|MESSAGE_QUEUE_BROKER|{hash(clusterId:brokerId)}',
       goldenMetrics: [
-        { name: 'broker.cpu.usage', type: 'gauge', unit: 'percentage' },
-        { name: 'broker.memory.usage', type: 'gauge', unit: 'percentage' },
-        { name: 'broker.network.throughput', type: 'gauge', unit: 'bytes/second' },
-        { name: 'broker.request.latency', type: 'gauge', unit: 'milliseconds' }
+        { name: 'broker.cpu.idle', type: 'gauge', unit: 'percentage' },
+        { name: 'broker.memory.usage', type: 'gauge', unit: 'bytes' },
+        { name: 'broker.bytesInPerSecond', type: 'gauge', unit: 'bytes/second' },
+        { name: 'broker.messagesInPerSecond', type: 'gauge', unit: 'messages/second' }
       ],
       relationships: ['HOSTS → partitions', 'SERVES → clients']
     });
@@ -384,10 +384,10 @@ class MessageQueuesContentProvider extends BaseContentProvider {
       domain: 'INFRA',
       guidPattern: '{accountId}|INFRA|MESSAGE_QUEUE_TOPIC|{hash(clusterId:topicName)}',
       goldenMetrics: [
-        { name: 'topic.throughput.in', type: 'gauge', unit: 'messages/second' },
-        { name: 'topic.throughput.out', type: 'gauge', unit: 'messages/second' },
-        { name: 'topic.consumer.lag', type: 'gauge', unit: 'messages' },
-        { name: 'topic.error.rate', type: 'gauge', unit: 'percentage' }
+        { name: 'topic.bytesInPerSecond', type: 'gauge', unit: 'bytes/second' },
+        { name: 'topic.bytesOutPerSecond', type: 'gauge', unit: 'bytes/second' },
+        { name: 'topic.messagesInPerSecond', type: 'gauge', unit: 'messages/second' },
+        { name: 'topic.consumerLag', type: 'gauge', unit: 'messages' }
       ],
       relationships: ['PARTITIONED_INTO → partitions']
     });

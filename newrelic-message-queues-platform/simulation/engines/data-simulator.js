@@ -5,26 +5,19 @@
  * seasonal trends, and controlled anomalies.
  */
 
+const EventEmitter = require('events');
 const { EntityFactory, PROVIDERS } = require('../../core/entities');
-const { getConfig } = require('../../config');
+const { getConfigManager } = require('../../core/config/config-manager');
 
-class DataSimulator {
+class DataSimulator extends EventEmitter {
   constructor(customConfig = {}) {
+    super();
     this.entityFactory = new EntityFactory();
     
-    // Get simulation config from centralized configuration
-    const appConfig = getConfig();
-    const simulationConfig = appConfig.getSimulationConfig();
-    
-    // Merge with custom config
+    // Use centralized config manager
+    this.configManager = getConfigManager(customConfig);
     this.config = {
-      businessHoursStart: customConfig.businessHoursStart || simulationConfig.businessHoursStart,
-      businessHoursEnd: customConfig.businessHoursEnd || simulationConfig.businessHoursEnd,
-      timeZone: customConfig.timeZone || simulationConfig.timeZone,
-      seasonalVariation: customConfig.seasonalVariation !== undefined ? customConfig.seasonalVariation : true,
-      weekendReduction: customConfig.weekendReduction || simulationConfig.weekendReduction,
-      anomalyRate: customConfig.anomalyRate || simulationConfig.anomalyRate,
-      dataPattern: customConfig.dataPattern || simulationConfig.dataPattern,
+      ...this.configManager.getSimulationConfig(),
       ...customConfig
     };
     
@@ -66,6 +59,7 @@ class DataSimulator {
       brokers: [],
       topics: [],
       queues: [],
+      consumerGroups: [],
       metadata: {
         provider: topologyConfig.provider || PROVIDERS.KAFKA,
         environment: topologyConfig.environment || 'production',
@@ -123,6 +117,38 @@ class DataSimulator {
             region: topology.metadata.region
           });
           topology.queues.push(queue);
+        }
+      }
+
+      // Create consumer groups for Kafka
+      if (topology.metadata.provider === PROVIDERS.KAFKA) {
+        const consumerGroupCount = topologyConfig.consumerGroupsPerCluster || 5;
+        const clusterTopics = topology.topics.filter(t => t.clusterName === cluster.clusterName);
+        
+        for (let m = 0; m < consumerGroupCount; m++) {
+          // Each consumer group consumes from 1-3 topics
+          const numTopics = Math.floor(Math.random() * 3) + 1;
+          const topicsToConsume = clusterTopics
+            .slice(m % clusterTopics.length, (m % clusterTopics.length) + numTopics)
+            .map(t => t.topicName || t.topic);
+          
+          if (topicsToConsume.length === 0 && clusterTopics.length > 0) {
+            topicsToConsume.push(clusterTopics[0].topicName || clusterTopics[0].topic);
+          }
+          
+          const brokerIndex = m % topology.brokers.length;
+          const consumerGroup = this.createConsumerGroup({
+            ...topologyConfig.consumerGroupConfig,
+            consumerGroupId: this.generateConsumerGroupName(m),
+            clusterName: cluster.clusterName,
+            provider: topology.metadata.provider,
+            topics: topicsToConsume,
+            coordinator: {
+              id: topology.brokers[brokerIndex].brokerId,
+              host: topology.brokers[brokerIndex].hostname
+            }
+          });
+          topology.consumerGroups.push(consumerGroup);
         }
       }
     }
@@ -235,6 +261,32 @@ class DataSimulator {
   }
 
   /**
+   * Create a consumer group with realistic configuration
+   */
+  createConsumerGroup(config) {
+    const consumerGroup = this.entityFactory.createConsumerGroup({
+      consumerGroupId: config.consumerGroupId,
+      clusterName: config.clusterName,
+      provider: config.provider,
+      accountId: config.accountId || process.env.NEW_RELIC_ACCOUNT_ID,
+      topics: config.topics || [],
+      state: config.state || 'STABLE',
+      memberCount: config.memberCount || Math.floor(Math.random() * 3) + 1, // 1-3 members
+      coordinator: config.coordinator || {},
+      lagThreshold: config.lagThreshold || 10000,
+      metadata: {
+        clientId: config.clientId || `${config.consumerGroupId}-client`,
+        protocol: config.protocol || 'consumer',
+        protocolType: config.protocolType || 'consumer'
+      }
+    });
+
+    // Initialize with realistic metrics
+    this.updateConsumerGroupMetrics(consumerGroup);
+    return consumerGroup;
+  }
+
+  /**
    * Update cluster metrics with realistic patterns
    */
   updateClusterMetrics(cluster) {
@@ -296,7 +348,8 @@ class DataSimulator {
    * Update topic metrics with realistic patterns
    */
   updateTopicMetrics(topic) {
-    const topicLoad = this.patterns.getTopicLoad(topic.topic);
+    const topicName = topic.topicName || topic.topic || topic.name || 'default';
+    const topicLoad = this.patterns.getTopicLoad(topicName);
     const now = new Date();
     const businessMultiplier = this.patterns.getBusinessHourMultiplier(now);
 
@@ -310,7 +363,8 @@ class DataSimulator {
 
     // Consumer lag based on throughput imbalance
     const lagAccumulation = Math.max(0, throughputIn - throughputOut);
-    const existingLag = topic.goldenMetrics.find(m => m.name === 'topic.consumer.lag')?.value || 0;
+    const existingLag = topic.goldenMetrics?.find(m => m.name === 'topic.consumer.lag')?.value || 
+                       topic['topic.consumer.lag'] || 0;
     const newLag = Math.max(0, existingLag + lagAccumulation - (throughputOut * 0.1));
 
     // Error rate with occasional spikes
@@ -356,6 +410,59 @@ class DataSimulator {
   }
 
   /**
+   * Update consumer group metrics with realistic patterns
+   */
+  updateConsumerGroupMetrics(consumerGroup) {
+    const now = new Date();
+    const businessMultiplier = this.patterns.getBusinessHourMultiplier(now);
+    
+    // Calculate lag based on topic consumption patterns
+    const topics = consumerGroup.topics || [];
+    let totalLag = 0;
+    let maxLag = 0;
+    
+    topics.forEach(topicName => {
+      // Base lag varies by topic importance and consumer group efficiency
+      const baseLag = topicName.includes('critical') ? 100 : 1000;
+      const lagVariation = Math.random() * baseLag * businessMultiplier;
+      
+      // Occasional lag spikes
+      const lagSpike = this.anomalyInjector.shouldInjectAnomaly() ? 
+        baseLag * 10 : 0;
+      
+      const topicLag = Math.max(0, baseLag + lagVariation + lagSpike);
+      totalLag += topicLag;
+      maxLag = Math.max(maxLag, topicLag);
+    });
+    
+    const avgLag = topics.length > 0 ? totalLag / topics.length : 0;
+    
+    // Update lag metrics
+    consumerGroup.updateLagMetrics({
+      totalLag: Math.round(totalLag),
+      maxLag: Math.round(maxLag),
+      avgLag: Math.round(avgLag)
+    });
+    
+    // Consumption rate based on member count and health
+    const baseConsumptionRate = 1000 * consumerGroup.memberCount;
+    const consumptionRate = Math.round(baseConsumptionRate * businessMultiplier);
+    
+    // Update consumption metrics
+    if (consumerGroup.metrics) {
+      consumerGroup.metrics['consumerGroup.messagesConsumedPerSecond'] = consumptionRate;
+      consumerGroup.metrics['consumerGroup.bytesConsumedPerSecond'] = consumptionRate * 1024; // 1KB per message avg
+      consumerGroup.metrics['consumerGroup.offsetCommitRate'] = consumptionRate / 100; // Commits every 100 messages
+    }
+    
+    // Occasionally change state
+    if (Math.random() < 0.01) { // 1% chance of rebalancing
+      consumerGroup.updateState('REBALANCING');
+      setTimeout(() => consumerGroup.updateState('STABLE'), 5000); // Rebalance for 5 seconds
+    }
+  }
+
+  /**
    * Simulate continuous data updates
    */
   startContinuousSimulation(intervalMs = 30000) {
@@ -385,11 +492,17 @@ class DataSimulator {
     const brokers = this.entityFactory.getEntitiesByType('MESSAGE_QUEUE_BROKER');
     const topics = this.entityFactory.getEntitiesByType('MESSAGE_QUEUE_TOPIC');
     const queues = this.entityFactory.getEntitiesByType('MESSAGE_QUEUE_QUEUE');
+    const consumerGroups = this.entityFactory.getEntitiesByType('MESSAGE_QUEUE_CONSUMER_GROUP');
 
     clusters.forEach(cluster => this.updateClusterMetrics(cluster));
     brokers.forEach(broker => this.updateBrokerMetrics(broker));
     topics.forEach(topic => this.updateTopicMetrics(topic));
     queues.forEach(queue => this.updateQueueMetrics(queue));
+    consumerGroups.forEach(consumerGroup => this.updateConsumerGroupMetrics(consumerGroup));
+    
+    // Emit metrics event with all updated entities
+    const allEntities = [...clusters, ...brokers, ...topics, ...queues, ...consumerGroups];
+    this.emit('metricsGenerated', allEntities);
   }
 
   /**
@@ -435,6 +548,26 @@ class DataSimulator {
 
     const names = patterns[provider] || patterns[PROVIDERS.SQS];
     return names[index % names.length];
+  }
+
+  /**
+   * Generate consumer group name
+   */
+  generateConsumerGroupName(index) {
+    const consumerGroups = [
+      'analytics-processor',
+      'order-processor',
+      'payment-processor',
+      'notification-sender',
+      'user-activity-tracker',
+      'inventory-updater',
+      'fraud-detector',
+      'recommendation-engine',
+      'report-generator',
+      'audit-logger'
+    ];
+    
+    return consumerGroups[index % consumerGroups.length];
   }
 
   /**
@@ -616,7 +749,7 @@ class DataPatterns {
    * Get topic load patterns
    */
   getTopicLoad(topicName) {
-    const lowerName = topicName.toLowerCase();
+    const lowerName = (topicName || 'default').toLowerCase();
     
     // High-volume topics
     if (lowerName.includes('events') || lowerName.includes('logs')) {

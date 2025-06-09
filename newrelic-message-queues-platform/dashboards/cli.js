@@ -9,6 +9,7 @@
 const { program } = require('commander');
 const DashboardFramework = require('./framework/core/dashboard-framework');
 const MessageQueuesContentProvider = require('./content/message-queues/message-queues-content-provider');
+const { getConfigManager } = require('../core/config/config-manager');
 
 // Configure CLI
 program
@@ -241,20 +242,10 @@ program
 
 // Helper functions
 function initializeFramework() {
-  const framework = new DashboardFramework({
-    apiKey: process.env.NEW_RELIC_USER_API_KEY,
-    accountId: process.env.NEW_RELIC_ACCOUNT_ID
-  });
+  const configManager = getConfigManager();
+  const dashboardConfig = configManager.getDashboardConfig();
   
-  if (!process.env.NEW_RELIC_USER_API_KEY) {
-    console.error('❌ NEW_RELIC_USER_API_KEY environment variable is required');
-    process.exit(1);
-  }
-  
-  if (!process.env.NEW_RELIC_ACCOUNT_ID) {
-    console.error('❌ NEW_RELIC_ACCOUNT_ID environment variable is required');
-    process.exit(1);
-  }
+  const framework = new DashboardFramework(dashboardConfig);
   
   return framework;
 }

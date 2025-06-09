@@ -1,0 +1,426 @@
+{
+  "name": "Kafka Performance Optimization - Infrastructure",
+  "description": "Identify performance bottlenecks and optimization opportunities in Kafka infrastructure",
+  "permissions": "PUBLIC_READ_WRITE",
+  "pages": [
+    {
+      "name": "Performance Overview",
+      "description": "Key performance indicators and bottleneck detection",
+      "widgets": [
+        {
+          "title": "Performance Score",
+          "layout": {
+            "column": 1,
+            "row": 1,
+            "width": 4,
+            "height": 2
+          },
+          "visualization": {
+            "id": "viz.billboard"
+          },
+          "configuration": {
+            "facet": {
+              "showOtherSeries": false
+            },
+            "nrqlQueries": [
+              {
+                "accountId": "{{accountId}}",
+                "query": "FROM MessageQueue SELECT 100 - ((average(broker.cpu.usage) + average(broker.memory.usage)) / 2) AS 'Resource Efficiency %', average(broker.requestHandlerIdlePercent) AS 'Request Handler Idle %', 100 - (sum(consumerGroup.totalLag) / sum(topic.messagesInPerSecond) / 60) AS 'Lag Efficiency %' WHERE entityType IN ('MESSAGE_QUEUE_BROKER', 'MESSAGE_QUEUE_CONSUMER_GROUP', 'MESSAGE_QUEUE_TOPIC') SINCE 5 minutes ago"
+              }
+            ],
+            "thresholds": [
+              {
+                "alertSeverity": "WARNING",
+                "value": 80
+              },
+              {
+                "alertSeverity": "CRITICAL",
+                "value": 60
+              }
+            ]
+          }
+        },
+        {
+          "title": "Bottleneck Indicators",
+          "layout": {
+            "column": 5,
+            "row": 1,
+            "width": 8,
+            "height": 2
+          },
+          "visualization": {
+            "id": "viz.table"
+          },
+          "configuration": {
+            "facet": {
+              "showOtherSeries": false
+            },
+            "nrqlQueries": [
+              {
+                "accountId": "{{accountId}}",
+                "query": "FROM MessageQueue SELECT filter(count(*), WHERE broker.cpu.usage > 80) AS 'High CPU Brokers', filter(count(*), WHERE broker.memory.usage > 80) AS 'High Memory Brokers', filter(count(*), WHERE broker.networkProcessorIdlePercent < 20) AS 'Network Bottlenecks', filter(count(*), WHERE broker.requestHandlerIdlePercent < 20) AS 'Request Handler Bottlenecks' WHERE entityType = 'MESSAGE_QUEUE_BROKER' SINCE 5 minutes ago"
+              }
+            ]
+          }
+        },
+        {
+          "title": "Resource Utilization Heatmap",
+          "layout": {
+            "column": 1,
+            "row": 3,
+            "width": 6,
+            "height": 3
+          },
+          "visualization": {
+            "id": "viz.heatmap"
+          },
+          "configuration": {
+            "nrqlQueries": [
+              {
+                "accountId": "{{accountId}}",
+                "query": "FROM MessageQueue SELECT average(broker.cpu.usage) WHERE entityType = 'MESSAGE_QUEUE_BROKER' FACET hostname, hourOf(timestamp) SINCE 24 hours ago"
+              }
+            ]
+          }
+        },
+        {
+          "title": "Partition Distribution Balance",
+          "layout": {
+            "column": 7,
+            "row": 3,
+            "width": 6,
+            "height": 3
+          },
+          "visualization": {
+            "id": "viz.bar"
+          },
+          "configuration": {
+            "facet": {
+              "showOtherSeries": false
+            },
+            "nrqlQueries": [
+              {
+                "accountId": "{{accountId}}",
+                "query": "FROM MessageQueue SELECT sum(topic.partitions.count) AS 'Partitions', sum(broker.underReplicatedPartitions) AS 'Under-replicated' WHERE entityType IN ('MESSAGE_QUEUE_BROKER', 'MESSAGE_QUEUE_TOPIC') FACET tags.brokerId OR brokerId AS 'Broker' SINCE 5 minutes ago"
+              }
+            ]
+          }
+        },
+        {
+          "title": "Request Latency Distribution",
+          "layout": {
+            "column": 1,
+            "row": 6,
+            "width": 8,
+            "height": 3
+          },
+          "visualization": {
+            "id": "viz.histogram"
+          },
+          "configuration": {
+            "nrqlQueries": [
+              {
+                "accountId": "{{accountId}}",
+                "query": "FROM MessageQueue SELECT histogram(broker.requestsPerSecond, 100, 20) WHERE entityType = 'MESSAGE_QUEUE_BROKER' SINCE 30 minutes ago"
+              }
+            ]
+          }
+        },
+        {
+          "title": "Optimization Recommendations",
+          "layout": {
+            "column": 9,
+            "row": 6,
+            "width": 4,
+            "height": 3
+          },
+          "visualization": {
+            "id": "viz.markdown"
+          },
+          "configuration": {
+            "text": "## Quick Optimizations\n\n**High Priority:**\n- Rebalance partitions if skewed\n- Scale brokers with >80% CPU\n- Investigate high lag consumer groups\n\n**Medium Priority:**\n- Optimize batch sizes\n- Tune JVM heap settings\n- Review replication factor\n\n**Monitor:**\n- Network processor utilization\n- Disk I/O patterns\n- Consumer group rebalances"
+          }
+        }
+      ]
+    },
+    {
+      "name": "Throughput Analysis",
+      "description": "Detailed throughput patterns and optimization opportunities",
+      "widgets": [
+        {
+          "title": "Throughput vs Capacity",
+          "layout": {
+            "column": 1,
+            "row": 1,
+            "width": 8,
+            "height": 3
+          },
+          "visualization": {
+            "id": "viz.line"
+          },
+          "configuration": {
+            "facet": {
+              "showOtherSeries": false
+            },
+            "nrqlQueries": [
+              {
+                "accountId": "{{accountId}}",
+                "query": "FROM MessageQueue SELECT sum(broker.bytesInPerSecond) / 1024 / 1024 AS 'Actual MB/s In', sum(broker.bytesOutPerSecond) / 1024 / 1024 AS 'Actual MB/s Out', 1000 * count(DISTINCT brokerId) AS 'Theoretical Capacity MB/s' WHERE entityType = 'MESSAGE_QUEUE_BROKER' TIMESERIES AUTO SINCE 1 hour ago"
+              }
+            ]
+          }
+        },
+        {
+          "title": "Peak vs Average Throughput",
+          "layout": {
+            "column": 9,
+            "row": 1,
+            "width": 4,
+            "height": 3
+          },
+          "visualization": {
+            "id": "viz.table"
+          },
+          "configuration": {
+            "facet": {
+              "showOtherSeries": false
+            },
+            "nrqlQueries": [
+              {
+                "accountId": "{{accountId}}",
+                "query": "FROM MessageQueue SELECT average(topic.messagesInPerSecond) AS 'Avg Msg/s', max(topic.messagesInPerSecond) AS 'Peak Msg/s', (max(topic.messagesInPerSecond) / average(topic.messagesInPerSecond)) AS 'Peak/Avg Ratio' WHERE entityType = 'MESSAGE_QUEUE_TOPIC' FACET topicName SINCE 1 hour ago LIMIT 10"
+              }
+            ]
+          }
+        },
+        {
+          "title": "Batch Size Efficiency",
+          "layout": {
+            "column": 1,
+            "row": 4,
+            "width": 6,
+            "height": 3
+          },
+          "visualization": {
+            "id": "viz.line"
+          },
+          "configuration": {
+            "facet": {
+              "showOtherSeries": false
+            },
+            "nrqlQueries": [
+              {
+                "accountId": "{{accountId}}",
+                "query": "FROM MessageQueue SELECT (sum(broker.bytesInPerSecond) / sum(broker.messagesInPerSecond)) AS 'Avg Message Size (bytes)' WHERE entityType = 'MESSAGE_QUEUE_BROKER' AND broker.messagesInPerSecond > 0 TIMESERIES AUTO SINCE 1 hour ago"
+              }
+            ]
+          }
+        },
+        {
+          "title": "Producer vs Consumer Balance",
+          "layout": {
+            "column": 7,
+            "row": 4,
+            "width": 6,
+            "height": 3
+          },
+          "visualization": {
+            "id": "viz.area"
+          },
+          "configuration": {
+            "facet": {
+              "showOtherSeries": false
+            },
+            "nrqlQueries": [
+              {
+                "accountId": "{{accountId}}",
+                "query": "FROM MessageQueue SELECT sum(topic.messagesInPerSecond) AS 'Production Rate', sum(consumerGroup.messagesConsumedPerSecond) AS 'Consumption Rate' WHERE entityType IN ('MESSAGE_QUEUE_TOPIC', 'MESSAGE_QUEUE_CONSUMER_GROUP') TIMESERIES AUTO SINCE 1 hour ago"
+              }
+            ]
+          }
+        }
+      ]
+    },
+    {
+      "name": "Resource Optimization",
+      "description": "Resource utilization patterns and optimization opportunities",
+      "widgets": [
+        {
+          "title": "CPU Utilization by Broker",
+          "layout": {
+            "column": 1,
+            "row": 1,
+            "width": 6,
+            "height": 3
+          },
+          "visualization": {
+            "id": "viz.line"
+          },
+          "configuration": {
+            "facet": {
+              "showOtherSeries": false
+            },
+            "nrqlQueries": [
+              {
+                "accountId": "{{accountId}}",
+                "query": "FROM MessageQueue SELECT average(broker.cpu.usage) AS 'CPU %', percentile(broker.cpu.usage, 95) AS 'P95 CPU %' WHERE entityType = 'MESSAGE_QUEUE_BROKER' FACET hostname TIMESERIES AUTO SINCE 1 hour ago"
+              }
+            ],
+            "yAxisLeft": {
+              "max": 100,
+              "min": 0
+            }
+          }
+        },
+        {
+          "title": "Memory Pressure Analysis",
+          "layout": {
+            "column": 7,
+            "row": 1,
+            "width": 6,
+            "height": 3
+          },
+          "visualization": {
+            "id": "viz.line"
+          },
+          "configuration": {
+            "facet": {
+              "showOtherSeries": false
+            },
+            "nrqlQueries": [
+              {
+                "accountId": "{{accountId}}",
+                "query": "FROM MessageQueue SELECT average(broker.memory.usage) AS 'Memory %', percentile(broker.memory.usage, 95) AS 'P95 Memory %' WHERE entityType = 'MESSAGE_QUEUE_BROKER' FACET hostname TIMESERIES AUTO SINCE 1 hour ago"
+              }
+            ],
+            "yAxisLeft": {
+              "max": 100,
+              "min": 0
+            }
+          }
+        },
+        {
+          "title": "Disk Usage Trends",
+          "layout": {
+            "column": 1,
+            "row": 4,
+            "width": 6,
+            "height": 3
+          },
+          "visualization": {
+            "id": "viz.area"
+          },
+          "configuration": {
+            "facet": {
+              "showOtherSeries": false
+            },
+            "nrqlQueries": [
+              {
+                "accountId": "{{accountId}}",
+                "query": "FROM MessageQueue SELECT average(broker.disk.usage) WHERE entityType = 'MESSAGE_QUEUE_BROKER' FACET hostname TIMESERIES AUTO SINCE 24 hours ago"
+              }
+            ]
+          }
+        },
+        {
+          "title": "Resource Efficiency Score",
+          "layout": {
+            "column": 7,
+            "row": 4,
+            "width": 6,
+            "height": 3
+          },
+          "visualization": {
+            "id": "viz.table"
+          },
+          "configuration": {
+            "facet": {
+              "showOtherSeries": false
+            },
+            "nrqlQueries": [
+              {
+                "accountId": "{{accountId}}",
+                "query": "FROM MessageQueue SELECT average(broker.cpu.usage) AS 'CPU %', average(broker.memory.usage) AS 'Memory %', average(broker.disk.usage) AS 'Disk %', (sum(broker.messagesInPerSecond) + sum(broker.messagesOutPerSecond)) / average(broker.cpu.usage) AS 'Messages per CPU %' WHERE entityType = 'MESSAGE_QUEUE_BROKER' FACET hostname AS 'Broker' SINCE 5 minutes ago"
+              }
+            ]
+          }
+        }
+      ]
+    },
+    {
+      "name": "Consumer Optimization",
+      "description": "Consumer group performance optimization",
+      "widgets": [
+        {
+          "title": "Consumer Lag Impact",
+          "layout": {
+            "column": 1,
+            "row": 1,
+            "width": 8,
+            "height": 3
+          },
+          "visualization": {
+            "id": "viz.scatter"
+          },
+          "configuration": {
+            "facet": {
+              "showOtherSeries": false
+            },
+            "nrqlQueries": [
+              {
+                "accountId": "{{accountId}}",
+                "query": "FROM MessageQueue SELECT latest(consumerGroup.totalLag) AS 'Total Lag', latest(consumerGroup.messagesConsumedPerSecond) AS 'Consumption Rate' WHERE entityType = 'MESSAGE_QUEUE_CONSUMER_GROUP' FACET consumerGroupId SINCE 30 minutes ago"
+              }
+            ]
+          }
+        },
+        {
+          "title": "Consumer Efficiency Ranking",
+          "layout": {
+            "column": 9,
+            "row": 1,
+            "width": 4,
+            "height": 3
+          },
+          "visualization": {
+            "id": "viz.table"
+          },
+          "configuration": {
+            "facet": {
+              "showOtherSeries": false
+            },
+            "nrqlQueries": [
+              {
+                "accountId": "{{accountId}}",
+                "query": "FROM MessageQueue SELECT latest(consumerGroup.messagesConsumedPerSecond) / latest(consumerGroup.memberCount) AS 'Msg/sec per Member', latest(consumerGroup.totalLag) / latest(consumerGroup.messagesConsumedPerSecond) AS 'Lag Recovery Time (sec)' WHERE entityType = 'MESSAGE_QUEUE_CONSUMER_GROUP' AND consumerGroup.messagesConsumedPerSecond > 0 FACET consumerGroupId AS 'Consumer Group' SINCE 5 minutes ago LIMIT 10"
+              }
+            ]
+          }
+        },
+        {
+          "title": "Rebalancing Impact",
+          "layout": {
+            "column": 1,
+            "row": 4,
+            "width": 12,
+            "height": 3
+          },
+          "visualization": {
+            "id": "viz.line"
+          },
+          "configuration": {
+            "facet": {
+              "showOtherSeries": false
+            },
+            "nrqlQueries": [
+              {
+                "accountId": "{{accountId}}",
+                "query": "FROM MessageQueue SELECT count(*) WHERE consumerGroup.state = 'REBALANCING' AS 'Rebalancing Events', average(consumerGroup.totalLag) AS 'Average Lag' WHERE entityType = 'MESSAGE_QUEUE_CONSUMER_GROUP' TIMESERIES 5 minutes SINCE 2 hours ago"
+              }
+            ]
+          }
+        }
+      ]
+    }
+  ]
+}
