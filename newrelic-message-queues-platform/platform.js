@@ -28,6 +28,15 @@ const ErrorRecoveryManager = require('./core/error-recovery-manager');
 const InfraAgentCollector = require('./infrastructure/collectors/infra-agent-collector');
 const NriKafkaTransformer = require('./infrastructure/transformers/nri-kafka-transformer');
 
+// Enhanced infrastructure components
+let EnhancedKafkaCollector, ConsumerOffsetCollector;
+try {
+  EnhancedKafkaCollector = require('./infrastructure/collectors/enhanced-kafka-collector');
+  ConsumerOffsetCollector = require('./infrastructure/collectors/consumer-offset-collector');
+} catch (e) {
+  // Enhanced features are optional
+}
+
 // Dashboard components (optional)
 let DashboardFramework, MessageQueuesContentProvider;
 try {
@@ -51,6 +60,13 @@ class MessageQueuesPlatform extends EventEmitter {
       mode: options.mode || 'simulation',
       interval: options.interval || 60,
       provider: options.provider || 'kafka',
+      // Enhanced collection options
+      useEnhancedCollector: options.useEnhancedCollector !== false,
+      enableConsumerLagCollection: options.enableConsumerLagCollection !== false,
+      enableDetailedTopicMetrics: options.enableDetailedTopicMetrics !== false,
+      brokerWorkerPoolSize: options.brokerWorkerPoolSize || 5,
+      topicWorkerPoolSize: options.topicWorkerPoolSize || 8,
+      consumerWorkerPoolSize: options.consumerWorkerPoolSize || 3,
       ...options
     };
     
@@ -150,10 +166,37 @@ class MessageQueuesPlatform extends EventEmitter {
   setupInfrastructureMode() {
     debug('Setting up infrastructure mode');
     
-    // Use config manager for infrastructure components
-    this.collector = new InfraAgentCollector(this.configManager.getNewRelicConfig());
-    
-    this.transformer = new NriKafkaTransformer(this.options.accountId);
+    // Use enhanced collector if available and enabled
+    if (this.options.useEnhancedCollector && EnhancedKafkaCollector) {
+      console.log(chalk.blue('🚀 Using Enhanced Kafka Collector'));
+      this.collector = new EnhancedKafkaCollector({
+        ...this.configManager.getNewRelicConfig(),
+        brokerWorkerPoolSize: this.options.brokerWorkerPoolSize,
+        topicWorkerPoolSize: this.options.topicWorkerPoolSize,
+        consumerWorkerPoolSize: this.options.consumerWorkerPoolSize,
+        enableDetailedTopicMetrics: this.options.enableDetailedTopicMetrics,
+        enableConsumerLagCollection: this.options.enableConsumerLagCollection
+      });
+      
+      // Use standard transformer with enhanced features enabled if supported
+      this.transformer = new NriKafkaTransformer(this.options.accountId, {
+        enableEnhancedMetrics: true,
+        enablePerformanceOptimizations: true,
+        enableValidation: true
+      });
+      
+      // Set up consumer offset collector if enabled
+      if (this.options.enableConsumerLagCollection && ConsumerOffsetCollector) {
+        this.consumerOffsetCollector = new ConsumerOffsetCollector({
+          ...this.configManager.getNewRelicConfig(),
+          workerPoolSize: this.options.consumerWorkerPoolSize
+        });
+      }
+    } else {
+      console.log(chalk.yellow('📊 Using Standard Infrastructure Collector'));
+      this.collector = new InfraAgentCollector(this.configManager.getNewRelicConfig());
+      this.transformer = new NriKafkaTransformer(this.options.accountId);
+    }
     
     this.streamer = new NewRelicStreamer(this.configManager.getStreamingConfig());
     
@@ -169,6 +212,21 @@ class MessageQueuesPlatform extends EventEmitter {
         retryDelay: 10000
       }
     });
+    
+    // Register consumer offset collector if available
+    if (this.consumerOffsetCollector) {
+      this.errorRecovery.registerComponent('consumer-offset-collector', this.consumerOffsetCollector, {
+        type: 'data-collector',
+        critical: false,
+        healthCheck: () => this.consumerOffsetCollector.testConnection(),
+        circuitBreakerConfig: {
+          failureThreshold: 5,
+          successThreshold: 3,
+          timeout: 20000,
+          retryDelay: 5000
+        }
+      });
+    }
     
     this.errorRecovery.registerComponent('streamer', this.streamer, {
       type: 'data-streamer',
@@ -352,58 +410,145 @@ class MessageQueuesPlatform extends EventEmitter {
   async runInfrastructureCycle() {
     debug('Running infrastructure cycle');
     
-    // 1. Collect nri-kafka data with error recovery
-    console.log(chalk.cyan('📊 Querying infrastructure data...'));
-    const samples = await this.errorRecovery.executeWithRecovery(
-      'infra-collector',
-      () => this.collector.collectKafkaMetrics(),
-      {
-        fallback: (error) => {
-          console.warn(chalk.yellow('Using cached data due to collection failure'));
-          return this.getCachedSamples() || [];
+    let allResults = {
+      samples: [],
+      entities: [],
+      consumerGroups: [],
+      errors: []
+    };
+    
+    try {
+      // 1. Collect nri-kafka data with error recovery
+      console.log(chalk.cyan('📊 Querying infrastructure data...'));
+      
+      if (this.options.useEnhancedCollector && this.collector.collectEnhancedKafkaMetrics) {
+        // Use enhanced collection method
+        const enhancedResults = await this.errorRecovery.executeWithRecovery(
+          'infra-collector',
+          () => this.collector.collectEnhancedKafkaMetrics(),
+          {
+            fallback: (error) => {
+              console.warn(chalk.yellow('Falling back to basic collection'));
+              return this.collector.collectKafkaMetrics();
+            }
+          }
+        );
+        
+        allResults.samples = [
+          ...enhancedResults.brokerMetrics,
+          ...enhancedResults.topicMetrics,
+          ...enhancedResults.clusterMetrics
+        ];
+        
+        // Log enhanced collection stats if available
+        if (enhancedResults.collectionStats) {
+          const stats = enhancedResults.collectionStats;
+          console.log(chalk.blue(`📊 Enhanced collection: ${stats.brokerCount} brokers, ${stats.topicCount} topics, ${stats.clusterCount} clusters in ${stats.totalDuration}ms`));
+        }
+        
+      } else {
+        // Use standard collection method
+        allResults.samples = await this.errorRecovery.executeWithRecovery(
+          'infra-collector',
+          () => this.collector.collectKafkaMetrics(),
+          {
+            fallback: (error) => {
+              console.warn(chalk.yellow('Using cached data due to collection failure'));
+              return this.getCachedSamples() || [];
+            }
+          }
+        );
+      }
+      
+      // 2. Collect consumer offset data if enabled
+      if (this.consumerOffsetCollector && this.options.enableConsumerLagCollection) {
+        try {
+          console.log(chalk.cyan('👥 Collecting consumer offset data...'));
+          const consumerResults = await this.errorRecovery.executeWithRecovery(
+            'consumer-offset-collector',
+            () => this.consumerOffsetCollector.collectConsumerOffsets(),
+            {
+              fallback: (error) => {
+                console.warn(chalk.yellow('Consumer offset collection failed, continuing without lag data'));
+                return [];
+              }
+            }
+          );
+          
+          allResults.consumerGroups = consumerResults;
+          if (consumerResults.length > 0) {
+            console.log(chalk.green(`✓ Found ${consumerResults.length} consumer group samples`));
+          }
+        } catch (error) {
+          console.warn(chalk.yellow('Consumer offset collection failed:', error.message));
         }
       }
-    );
-    
-    if (!samples || samples.length === 0) {
-      console.warn(chalk.yellow('⚠️  No infrastructure data found'));
-      return;
-    }
-    
-    console.log(chalk.green(`✓ Found ${samples.length} samples`));
-    
-    // 2. Transform to MESSAGE_QUEUE entities
-    const result = this.transformer.transformSamples(samples);
-    const entities = result.entities;
-    
-    if (result.errors && result.errors.length > 0) {
-      console.warn(chalk.yellow(`⚠️  ${result.errors.length} transformation errors occurred`));
-    }
-    
-    console.log(chalk.green(`✓ Transformed ${entities.length} entities`));
-    
-    // 3. Build relationships for infrastructure entities
-    this.buildInfrastructureRelationships(entities);
-    
-    // 4. Stream entities with error recovery
-    await this.errorRecovery.executeWithRecovery(
-      'streamer',
-      () => this.streamer.streamEvents(entities),
-      {
-        fallback: (error) => {
-          console.warn(chalk.yellow('Caching entities due to streaming failure'));
-          this.cacheEntities(entities);
-          return { cached: true, count: entities.length };
-        }
+      
+      if (!allResults.samples || allResults.samples.length === 0) {
+        console.warn(chalk.yellow('⚠️  No infrastructure data found'));
+        return;
       }
-    );
-    
-    console.log(chalk.green(`✓ Streamed to New Relic`));
-    
-    this.emit('infrastructure.processed', {
-      samples: samples.length,
-      entities: entities.length
-    });
+      
+      console.log(chalk.green(`✓ Found ${allResults.samples.length} samples`));
+      
+      // 3. Transform to MESSAGE_QUEUE entities
+      let transformResult;
+      if (this.transformer.transformSamplesEnhanced && allResults.consumerGroups.length > 0) {
+        // Use enhanced transformation with consumer data
+        transformResult = this.transformer.transformSamplesEnhanced({
+          brokerSamples: allResults.samples.filter(s => s.eventType === 'KafkaBrokerSample'),
+          topicSamples: allResults.samples.filter(s => s.eventType === 'KafkaTopicSample'),
+          clusterSamples: allResults.samples.filter(s => s.eventType === 'KafkaClusterSample'),
+          consumerSamples: allResults.consumerGroups
+        });
+      } else {
+        // Use standard transformation (includes consumer samples if available)
+        const allSamples = [...allResults.samples, ...allResults.consumerGroups];
+        transformResult = this.transformer.transformSamples(allSamples);
+      }
+      
+      allResults.entities = transformResult.entities;
+      
+      if (transformResult.errors && transformResult.errors.length > 0) {
+        console.warn(chalk.yellow(`⚠️  ${transformResult.errors.length} transformation errors occurred`));
+        allResults.errors.push(...transformResult.errors);
+      }
+      
+      console.log(chalk.green(`✓ Transformed ${allResults.entities.length} entities`));
+      
+      // 4. Build relationships for infrastructure entities
+      this.buildInfrastructureRelationships(allResults.entities);
+      
+      // 5. Stream entities with error recovery
+      await this.errorRecovery.executeWithRecovery(
+        'streamer',
+        () => this.streamer.streamEvents(allResults.entities),
+        {
+          fallback: (error) => {
+            console.warn(chalk.yellow('Caching entities due to streaming failure'));
+            this.cacheEntities(allResults.entities);
+            return { cached: true, count: allResults.entities.length };
+          }
+        }
+      );
+      
+      console.log(chalk.green(`✓ Streamed to New Relic`));
+      
+      // Cache successful results
+      this.cacheSamples(allResults.samples);
+      
+      this.emit('infrastructure.processed', {
+        samples: allResults.samples.length,
+        entities: allResults.entities.length,
+        consumerGroups: allResults.consumerGroups.length,
+        errors: allResults.errors.length
+      });
+      
+    } catch (error) {
+      console.error(chalk.red('Infrastructure cycle failed:'), error.message);
+      allResults.errors.push({ type: 'cycle_error', error: error.message });
+      throw error;
+    }
   }
   
   async runSimulationCycle() {
@@ -459,24 +604,56 @@ class MessageQueuesPlatform extends EventEmitter {
   async runHybridCycle() {
     debug('Running hybrid cycle');
     
-    // 1. Collect real data
+    // 1. Collect real data using enhanced collection if available
     const realEntities = [];
     try {
       console.log(chalk.cyan('📊 Querying infrastructure data...'));
-      const samples = await this.errorRecovery.executeWithRecovery(
-        'infra-collector',
-        () => this.collector.collectKafkaMetrics(),
-        {
-          fallback: (error) => {
-            console.warn(chalk.yellow('Using cached data for hybrid mode'));
-            return this.getCachedSamples() || [];
+      
+      let samples = [];
+      if (this.options.useEnhancedCollector && this.collector.collectEnhancedKafkaMetrics) {
+        // Use enhanced collection for hybrid mode
+        const enhancedResults = await this.errorRecovery.executeWithRecovery(
+          'infra-collector',
+          () => this.collector.collectEnhancedKafkaMetrics(),
+          {
+            fallback: (error) => {
+              console.warn(chalk.yellow('Enhanced collection failed, using basic collection'));
+              return this.collector.collectKafkaMetrics();
+            }
           }
-        }
-      );
+        );
+        
+        samples = [
+          ...enhancedResults.brokerMetrics,
+          ...enhancedResults.topicMetrics,
+          ...enhancedResults.clusterMetrics
+        ];
+      } else {
+        samples = await this.errorRecovery.executeWithRecovery(
+          'infra-collector',
+          () => this.collector.collectKafkaMetrics(),
+          {
+            fallback: (error) => {
+              console.warn(chalk.yellow('Using cached data for hybrid mode'));
+              return this.getCachedSamples() || [];
+            }
+          }
+        );
+      }
       
       if (samples && samples.length > 0) {
         // Transform real data
-        const result = this.transformer.transformSamples(samples);
+        let result;
+        if (this.transformer.transformSamplesEnhanced) {
+          result = this.transformer.transformSamplesEnhanced({
+            brokerSamples: samples.filter(s => s.eventType === 'KafkaBrokerSample'),
+            topicSamples: samples.filter(s => s.eventType === 'KafkaTopicSample'), 
+            clusterSamples: samples.filter(s => s.eventType === 'KafkaClusterSample')
+          });
+        } else {
+          result = this.transformer.transformSamples(samples);
+        }
+        
         realEntities.push(...result.entities);
         console.log(chalk.green(`✓ Found ${realEntities.length} real entities`));
         
@@ -617,6 +794,26 @@ class MessageQueuesPlatform extends EventEmitter {
       this.intervalId = null;
     }
     
+    // Cleanup enhanced collector if available
+    if (this.collector && this.collector.cleanup) {
+      try {
+        await this.collector.cleanup();
+        console.log(chalk.green('✓ Enhanced collector cleanup completed'));
+      } catch (error) {
+        console.warn(chalk.yellow('Enhanced collector cleanup warning:'), error.message);
+      }
+    }
+    
+    // Cleanup consumer offset collector if available
+    if (this.consumerOffsetCollector && this.consumerOffsetCollector.cleanup) {
+      try {
+        await this.consumerOffsetCollector.cleanup();
+        console.log(chalk.green('✓ Consumer offset collector cleanup completed'));
+      } catch (error) {
+        console.warn(chalk.yellow('Consumer offset collector cleanup warning:'), error.message);
+      }
+    }
+    
     // Flush any pending data
     if (this.streamer) {
       await this.streamer.flushAll();
@@ -664,6 +861,24 @@ class MessageQueuesPlatform extends EventEmitter {
       };
     }
     
+    // Add enhanced collector stats if available
+    if (this.collector && this.collector.getHealthStatus) {
+      try {
+        stats.enhancedCollector = await this.collector.getHealthStatus();
+      } catch (error) {
+        stats.enhancedCollector = { error: error.message };
+      }
+    }
+    
+    // Add consumer offset collector stats if available
+    if (this.consumerOffsetCollector && this.consumerOffsetCollector.getStats) {
+      try {
+        stats.consumerOffsetCollector = this.consumerOffsetCollector.getStats();
+      } catch (error) {
+        stats.consumerOffsetCollector = { error: error.message };
+      }
+    }
+    
     return stats;
   }
   
@@ -685,6 +900,16 @@ class MessageQueuesPlatform extends EventEmitter {
   cacheEntities(entities) {
     this.cachedEntities = {
       entities,
+      timestamp: Date.now()
+    };
+  }
+  
+  /**
+   * Cache samples for fallback scenarios
+   */
+  cacheSamples(samples) {
+    this.cachedSamples = {
+      samples,
       timestamp: Date.now()
     };
   }
@@ -722,7 +947,13 @@ if (require.main === module) {
     .option('--topics <count>', 'Topics per cluster (simulation)', '5')
     .option('--environment <env>', 'Environment name', 'production')
     .option('--no-continuous', 'Run once and exit')
-    .option('--debug', 'Enable debug logging');
+    .option('--debug', 'Enable debug logging')
+    .option('--no-enhanced-collector', 'Disable enhanced collector features')
+    .option('--no-consumer-lag', 'Disable consumer lag collection')
+    .option('--no-detailed-topics', 'Disable detailed topic metrics')
+    .option('--broker-workers <count>', 'Broker worker pool size', '5')
+    .option('--topic-workers <count>', 'Topic worker pool size', '8')
+    .option('--consumer-workers <count>', 'Consumer worker pool size', '3');
   
   program.parse();
   
@@ -738,7 +969,14 @@ if (require.main === module) {
     interval: parseInt(options.interval),
     clusters: parseInt(options.clusters),
     brokers: parseInt(options.brokers),
-    topics: parseInt(options.topics)
+    topics: parseInt(options.topics),
+    // Enhanced collector options
+    useEnhancedCollector: options.enhancedCollector !== false,
+    enableConsumerLagCollection: options.consumerLag !== false,
+    enableDetailedTopicMetrics: options.detailedTopics !== false,
+    brokerWorkerPoolSize: parseInt(options.brokerWorkers),
+    topicWorkerPoolSize: parseInt(options.topicWorkers),
+    consumerWorkerPoolSize: parseInt(options.consumerWorkers)
   });
   
   // Event handlers

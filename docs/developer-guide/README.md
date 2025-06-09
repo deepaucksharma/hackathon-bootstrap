@@ -29,30 +29,14 @@ The New Relic Message Queues Simulation Platform is a comprehensive framework fo
 
 ## Architecture Overview
 
-```
-┌─────────────────────────────────────────────────────────────────┐
-│               Message Queues Simulation Platform                 │
-├─────────────────────────────────────────────────────────────────┤
-│                                                                 │
-│  ┌─────────────┐  ┌─────────────┐  ┌─────────────┐            │
-│  │   Entity    │  │ Simulation  │  │  Dashboard  │            │
-│  │    Layer    │  │   Engine    │  │  Framework  │            │
-│  └──────┬──────┘  └──────┬──────┘  └──────┬──────┘            │
-│         │                │                 │                    │
-│  ┌──────▼───────────────▼─────────────────▼──────┐            │
-│  │           Simulation Core Services             │            │
-│  │  • Entity Factory    • Data Streaming         │            │
-│  │  • Pattern Engine    • Template Processing    │            │
-│  └────────────────────────┬───────────────────────┘            │
-│                          │                                     │
-│  ┌───────────────────────▼───────────────────────┐            │
-│  │           Verification Framework              │            │
-│  │  • Entity Verifier  • Dashboard Verifier     │            │
-│  │  • Browser Tests    • Simulation Tests       │            │
-│  └───────────────────────────────────────────────┘            │
-│                                                                 │
-└─────────────────────────────────────────────────────────────────┘
-```
+The platform consists of two main components working together:
+
+1. **Data Collection Layer** (Go-based nri-kafka integration)
+2. **Development & CI/CD Platform** (Node.js platform)
+
+For a detailed architecture diagram and component descriptions, see:
+- [Architecture Overview](architecture.md)
+- [Technical Specification](../TECHNICAL_SPECIFICATION.md)
 
 ## Getting Started
 
