@@ -4,30 +4,30 @@
  */
 
 import { injectable, inject } from 'inversify';
-import { TYPES } from '@infrastructure/config/types.js';
-import type { ConfigurationService } from '@infrastructure/config/configuration-service.js';
-import type { Logger } from '@shared/utils/logger.js';
-import type { EventBus } from '@shared/events/event-bus.js';
-import { ErrorFactory } from '@shared/errors/base.js';
+import { TYPES } from '@infrastructure/config/types';
+import type { ConfigurationService } from '@infrastructure/config/configuration-service';
+import type { Logger } from '@shared/utils/logger';
+import type { EventBus } from '@shared/events/event-bus';
+import { ErrorFactory } from '@shared/errors/base';
 
 // Collectors
-import type { BaseCollector, RawSample } from '../../collectors/base-collector.js';
-import { InfrastructureCollector } from '../../collectors/infrastructure-collector.js';
-import { SimulationCollector } from '../../collectors/simulation-collector.js';
+import type { BaseCollector, RawSample } from '../../collectors/base-collector';
+import type { InfrastructureCollector } from '../../collectors/infrastructure-collector';
+import { SimulationCollector } from '../../collectors/simulation-collector';
 
 // Transformers
-import type { BaseTransformer, TransformedMetrics } from '../../transformers/base-transformer.js';
-import { NriKafkaTransformer } from '../../transformers/nri-kafka-transformer.js';
+import type { BaseTransformer, TransformedMetrics } from '../../transformers/base-transformer';
+import type { NriKafkaTransformer } from '../../transformers/nri-kafka-transformer';
 
 // Synthesizer
-import { EntitySynthesizer, SynthesizedEntity } from '../../synthesizers/entity-synthesizer.js';
+import { EntitySynthesizer, SynthesizedEntity } from '../../synthesizers/entity-synthesizer';
 
 // Streamers
-import { EntityStreamer } from '../../streaming/entity-streamer.js';
-import { MetricStreamer } from '../../streaming/metric-streamer.js';
+import type { EntityStreamer } from '../../streaming/entity-streamer';
+import type { MetricStreamer } from '../../streaming/metric-streamer';
 
 // Documentation
-import { PipelineDocumenter, PipelineDocumenterFactory } from '@infrastructure/documentation/pipeline-documenter.js';
+import { PipelineDocumenter, PipelineDocumenterFactory } from '@infrastructure/documentation/pipeline-documenter';
 
 export interface OrchestratorStats {
   cyclesRun: number;
@@ -54,12 +54,16 @@ export class PlatformOrchestrator {
   constructor(
     @inject(TYPES.ConfigurationService) private config: ConfigurationService,
     @inject(TYPES.Logger) private logger: Logger,
-    @inject(TYPES.EventBus) private eventBus: EventBus
+    @inject(TYPES.EventBus) private eventBus: EventBus,
+    @inject(TYPES.InfrastructureCollector) private infrastructureCollector: InfrastructureCollector,
+    @inject(TYPES.NriKafkaTransformer) private nriKafkaTransformer: NriKafkaTransformer,
+    @inject(TYPES.EntityStreamer) private entityStreamer: EntityStreamer,
+    @inject(TYPES.MetricStreamer) private metricStreamer: MetricStreamer
   ) {
     // Initialize components based on mode
     this.initializeComponents();
     
-    // Initialize streamers
+    // Initialize synthesizer
     const platformConfig = {
       accountId: this.config.getNewRelicConfig().accountId,
       apiKey: this.config.getNewRelicConfig().ingestKey,
@@ -71,8 +75,6 @@ export class PlatformOrchestrator {
     };
     
     this.synthesizer = new EntitySynthesizer(platformConfig);
-    this.entityStreamer = new EntityStreamer(platformConfig);
-    this.metricStreamer = new MetricStreamer(platformConfig);
     
     this.stats = {
       cyclesRun: 0,
@@ -281,8 +283,8 @@ export class PlatformOrchestrator {
 
     switch (mode) {
       case 'infrastructure':
-        this.collector = new InfrastructureCollector(platformConfig);
-        this.transformer = new NriKafkaTransformer(platformConfig);
+        this.collector = this.infrastructureCollector;
+        this.transformer = this.nriKafkaTransformer;
         break;
         
       case 'simulation':

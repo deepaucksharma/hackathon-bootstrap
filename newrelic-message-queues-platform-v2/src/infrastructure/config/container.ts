@@ -6,18 +6,43 @@
 import { Container, interfaces } from 'inversify';
 import 'reflect-metadata';
 
-import type { BrokerRepository } from '@domain/repositories/broker-repository.js';
-import { EventBus } from '@shared/events/event-bus.js';
-import { Logger } from '@shared/utils/logger.js';
-import { MonitorBrokersUseCase } from '@application/use-cases/monitor-brokers.js';
-import { PlatformOrchestrator } from '@application/services/platform-orchestrator.js';
+import type { BrokerRepository } from '@domain/repositories/broker-repository';
+import { EventBus } from '@shared/events/event-bus';
+import { Logger } from '@shared/utils/logger';
+import { MonitorBrokersUseCase } from '@application/use-cases/monitor-brokers';
+import { PlatformOrchestrator } from '@application/services/platform-orchestrator';
 
-// Infrastructure implementations (will be created next)
-import { InMemoryBrokerRepository } from '@infrastructure/repositories/in-memory-broker-repository.js';
-import { ConfigurationService } from '@infrastructure/config/configuration-service.js';
+// Infrastructure implementations
+import { InMemoryBrokerRepository } from '@infrastructure/repositories/in-memory-broker-repository';
+import { ConfigurationService } from '@infrastructure/config/configuration-service';
+import { CircuitBreakerFactory } from '@infrastructure/resilience/circuit-breaker-factory';
+import { CircuitBreakerMonitor } from '@infrastructure/resilience/circuit-breaker-monitor';
+import { WorkerPool } from '@infrastructure/concurrency/worker-pool';
+import { NerdGraphClient } from '@shared/utils/nerdgraph-client';
+import { InfrastructureCollector } from '@/collectors/infrastructure-collector';
+import { NriKafkaTransformer } from '@/transformers/nri-kafka-transformer';
+import { EntityStreamer } from '@/streaming/entity-streamer';
+import { MetricStreamer } from '@/streaming/metric-streamer';
+
+// New production-critical components
+import { CircuitBreaker } from '@infrastructure/resilience/circuit-breaker';
+import { ErrorRecoveryManager } from '@infrastructure/resilience/error-recovery-manager';
+import { HealthMonitor } from '@infrastructure/monitoring/health-monitor';
+import { EnhancedNriKafkaTransformer } from '@/transformers/enhanced-nri-kafka-transformer';
+
+// Hybrid mode components
+import { HybridModeManager } from '@infrastructure/hybrid/hybrid-mode-manager';
+import { GapDetector } from '@infrastructure/hybrid/gap-detector';
+import { EntitySimulator } from '@infrastructure/hybrid/entity-simulator';
+
+// Relationship management
+import { RelationshipManager } from '@infrastructure/relationships/relationship-manager';
+
+// Aggregators
+import { ClusterAggregator } from '@/aggregators/cluster-aggregator';
 
 // Import types from separate file to avoid circular dependencies
-import { TYPES } from './types.js';
+import { TYPES } from './types';
 export { TYPES };
 
 /**
@@ -41,6 +66,21 @@ export function createContainer(): Container {
   // Bind application use cases
   bindUseCases(container);
   
+  // Bind collectors
+  bindCollectors(container);
+  
+  // Bind transformers
+  bindTransformers(container);
+  
+  // Bind streaming services
+  bindStreamingServices(container);
+  
+  // Bind hybrid mode components
+  bindHybridModeComponents(container);
+  
+  // Bind aggregators
+  bindAggregators(container);
+  
   return container;
 }
 
@@ -51,6 +91,63 @@ function bindInfrastructure(container: Container): void {
   // Configuration service
   container.bind<ConfigurationService>(TYPES.ConfigurationService)
     .to(ConfigurationService)
+    .inSingletonScope();
+    
+  // Circuit breaker factory
+  container.bind<CircuitBreakerFactory>(TYPES.CircuitBreakerFactory)
+    .to(CircuitBreakerFactory)
+    .inSingletonScope();
+    
+  // Circuit breaker monitor
+  container.bind<CircuitBreakerMonitor>(TYPES.CircuitBreakerMonitor)
+    .to(CircuitBreakerMonitor)
+    .inSingletonScope();
+    
+  // Worker pool
+  container.bind<WorkerPool>(TYPES.WorkerPool)
+    .toDynamicValue((context: interfaces.Context) => {
+      const logger = context.container.get<Logger>(TYPES.Logger);
+      return new WorkerPool({
+        logger,
+        minWorkers: 2,
+        maxWorkers: 8,
+        idleTimeout: 30000,
+        taskTimeout: 60000
+      });
+    })
+    .inSingletonScope();
+    
+  // Health Monitor
+  container.bind<HealthMonitor>(TYPES.HealthMonitor)
+    .to(HealthMonitor)
+    .inSingletonScope()
+    .onActivation((context: interfaces.Context, healthMonitor: HealthMonitor) => {
+      // Register default health checks
+      healthMonitor.registerDefaultChecks();
+      return healthMonitor;
+    });
+    
+  // Error Recovery Manager
+  container.bind<ErrorRecoveryManager>(TYPES.ErrorRecoveryManager)
+    .toDynamicValue((context: interfaces.Context) => {
+      const eventBus = context.container.get<EventBus>(TYPES.EventBus);
+      const healthMonitor = context.container.get<HealthMonitor>(TYPES.HealthMonitor);
+      return new ErrorRecoveryManager(eventBus, healthMonitor);
+    })
+    .inSingletonScope();
+    
+  // Circuit Breaker for NerdGraph
+  container.bind<CircuitBreaker>(TYPES.NerdGraphCircuitBreaker)
+    .toDynamicValue((context: interfaces.Context) => {
+      const logger = context.container.get<Logger>(TYPES.Logger);
+      return new CircuitBreaker({
+        name: 'NerdGraph-API',
+        failureThreshold: 5,
+        timeout: 30000,
+        retryDelay: 30000,
+        logger
+      });
+    })
     .inSingletonScope();
 }
 
@@ -71,6 +168,11 @@ function bindSharedServices(container: Container): void {
       const logger = context.container.get<Logger>(TYPES.Logger);
       return new EventBus(logger);
     })
+    .inSingletonScope();
+    
+  // NerdGraph Client
+  container.bind<NerdGraphClient>(TYPES.NerdGraphClient)
+    .to(NerdGraphClient)
     .inSingletonScope();
 }
 
@@ -96,6 +198,81 @@ function bindUseCases(container: Container): void {
     
   container.bind<PlatformOrchestrator>(TYPES.PlatformOrchestrator)
     .to(PlatformOrchestrator)
+    .inSingletonScope();
+}
+
+/**
+ * Bind collectors
+ */
+function bindCollectors(container: Container): void {
+  // Infrastructure Collector with enhanced features
+  container.bind<InfrastructureCollector>(TYPES.InfrastructureCollector)
+    .to(InfrastructureCollector)
+    .inSingletonScope();
+}
+
+/**
+ * Bind transformers
+ */
+function bindTransformers(container: Container): void {
+  // Standard transformer
+  container.bind<NriKafkaTransformer>(TYPES.NriKafkaTransformer)
+    .to(NriKafkaTransformer)
+    .inSingletonScope();
+    
+  // Enhanced transformer with comprehensive field mappings
+  container.bind<EnhancedNriKafkaTransformer>(TYPES.EnhancedNriKafkaTransformer)
+    .to(EnhancedNriKafkaTransformer)
+    .inSingletonScope();
+}
+
+/**
+ * Bind streaming services
+ */
+function bindStreamingServices(container: Container): void {
+  // Entity Streamer
+  container.bind<EntityStreamer>(TYPES.EntityStreamer)
+    .to(EntityStreamer)
+    .inSingletonScope();
+    
+  // Metric Streamer
+  container.bind<MetricStreamer>(TYPES.MetricStreamer)
+    .to(MetricStreamer)
+    .inSingletonScope();
+}
+
+/**
+ * Bind hybrid mode components
+ */
+function bindHybridModeComponents(container: Container): void {
+  // Gap Detector
+  container.bind<GapDetector>(TYPES.GapDetector)
+    .to(GapDetector)
+    .inSingletonScope();
+    
+  // Entity Simulator
+  container.bind<EntitySimulator>(TYPES.EntitySimulator)
+    .to(EntitySimulator)
+    .inSingletonScope();
+    
+  // Hybrid Mode Manager
+  container.bind<HybridModeManager>(TYPES.HybridModeManager)
+    .to(HybridModeManager)
+    .inSingletonScope();
+    
+  // Relationship Manager
+  container.bind<RelationshipManager>(TYPES.RelationshipManager)
+    .to(RelationshipManager)
+    .inSingletonScope();
+}
+
+/**
+ * Bind aggregators
+ */
+function bindAggregators(container: Container): void {
+  // Cluster Aggregator
+  container.bind<ClusterAggregator>(TYPES.ClusterAggregator)
+    .to(ClusterAggregator)
     .inSingletonScope();
 }
 

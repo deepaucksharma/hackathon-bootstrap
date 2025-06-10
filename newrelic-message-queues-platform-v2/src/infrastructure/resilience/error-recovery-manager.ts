@@ -77,10 +77,14 @@ export class ErrorRecoveryManager {
           
           if (result.success) {
             this.resetErrorCount(errorKey);
-            this.eventBus.emit('error:recovered', {
+            await this.eventBus.publish({
+              type: 'error:recovered',
+              id: crypto.randomUUID(),
+              aggregateId: context.component,
+              timestamp: new Date(),
               component: context.component,
               strategy: strategy.name
-            });
+            } as any);
           }
           
           return result;
@@ -175,10 +179,14 @@ export class ErrorRecoveryManager {
       recover: async (context) => {
         const delay = 60000; // 1 minute
         
-        this.eventBus.emit('api:rateLimited', {
+        await this.eventBus.publish({
+          type: 'api:rateLimited',
+          id: crypto.randomUUID(),
+          aggregateId: context.component,
+          timestamp: new Date(),
           component: context.component,
           delay
-        });
+        } as any);
         
         return {
           success: true,
@@ -239,9 +247,13 @@ export class ErrorRecoveryManager {
           global.gc();
         }
         
-        this.eventBus.emit('system:memoryPressure', {
+        await this.eventBus.publish({
+          type: 'system:memoryPressure',
+          id: crypto.randomUUID(),
+          aggregateId: context.component,
+          timestamp: new Date(),
           component: context.component
-        });
+        } as any);
         
         return {
           success: true,

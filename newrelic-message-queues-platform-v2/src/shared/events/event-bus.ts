@@ -4,8 +4,8 @@
 
 import { EventEmitter } from 'eventemitter3';
 import { injectable } from 'inversify';
-import type { DomainEvent, UUID } from '@shared/types/common.js';
-import { Logger } from '@shared/utils/logger.js';
+import type { DomainEvent, UUID } from '@shared/types/common';
+import { Logger } from '@shared/utils/logger';
 
 export interface EventHandler<T extends DomainEvent = DomainEvent> {
   handle(event: T): Promise<void> | void;

@@ -75,9 +75,10 @@ export interface DomainEvent {
   readonly id: UUID;
   readonly type: string;
   readonly aggregateId: string;
-  readonly timestamp: Timestamp;
-  readonly version: number;
-  readonly data: Record<string, unknown>;
+  readonly timestamp: Date;
+  readonly version?: number;
+  readonly data?: Record<string, unknown>;
+  [key: string]: unknown; // Allow additional properties
 }
 
 /**
