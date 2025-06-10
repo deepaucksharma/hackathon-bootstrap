@@ -53,6 +53,8 @@ export class EntitySimulator {
    */
   async simulateBroker(spec: BrokerSpec): Promise<SynthesizedEntity> {
     const entity: SynthesizedEntity = {
+      eventType: 'MessageQueue',
+      timestamp: Date.now(),
       entityGuid: `MESSAGE_QUEUE_BROKER|${this.accountId}|kafka|${spec.clusterName}|${spec.id}`,
       entityType: 'MESSAGE_QUEUE_BROKER',
       entityName: `${spec.clusterName}-broker-${spec.id}`,
@@ -94,6 +96,8 @@ export class EntitySimulator {
    */
   async simulateTopic(spec: TopicSpec): Promise<SynthesizedEntity> {
     const entity: SynthesizedEntity = {
+      eventType: 'MessageQueue',
+      timestamp: Date.now(),
       entityGuid: `MESSAGE_QUEUE_TOPIC|${this.accountId}|kafka|${spec.clusterName}|${spec.name}`,
       entityType: 'MESSAGE_QUEUE_TOPIC',
       entityName: `${spec.clusterName}-topic-${spec.name}`,
@@ -138,6 +142,8 @@ export class EntitySimulator {
    */
   async simulateConsumerGroup(spec: ConsumerGroupSpec): Promise<SynthesizedEntity> {
     const entity: SynthesizedEntity = {
+      eventType: 'MessageQueue',
+      timestamp: Date.now(),
       entityGuid: `MESSAGE_QUEUE_CONSUMER_GROUP|${this.accountId}|kafka|${spec.clusterName}|${spec.id}`,
       entityType: 'MESSAGE_QUEUE_CONSUMER_GROUP',
       entityName: `${spec.clusterName}-consumer-${spec.id}`,
@@ -191,6 +197,8 @@ export class EntitySimulator {
    */
   private createClusterEntity(spec: ClusterSpec): SynthesizedEntity {
     return {
+      eventType: 'MessageQueue',
+      timestamp: Date.now(),
       entityGuid: `MESSAGE_QUEUE_CLUSTER|${this.accountId}|kafka|${spec.name}`,
       entityType: 'MESSAGE_QUEUE_CLUSTER',
       entityName: `kafka-cluster-${spec.name}`,

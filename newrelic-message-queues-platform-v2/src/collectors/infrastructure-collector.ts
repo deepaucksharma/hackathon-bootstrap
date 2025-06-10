@@ -6,12 +6,12 @@
  */
 
 import { injectable, inject } from 'inversify';
-import { BaseCollector, RawSample } from './base-collector.js';
-import { NerdGraphClient } from '../shared/utils/nerdgraph-client.js';
-import { PlatformConfig } from '../shared/types/config.js';
-import { TYPES } from '@infrastructure/config/types.js';
-import { Logger } from '@shared/utils/logger.js';
-import { WorkerPool } from '@infrastructure/concurrency/worker-pool.js';
+import { BaseCollector, RawSample } from './base-collector';
+import { NerdGraphClient } from '../shared/utils/nerdgraph-client';
+import { PlatformConfig } from '../shared/types/config';
+import { TYPES } from '@infrastructure/config/types';
+import { Logger } from '@shared/utils/logger';
+import { WorkerPool } from '@infrastructure/concurrency/worker-pool';
 
 export interface ClusterAggregation {
   clusterName: string;
@@ -61,19 +61,21 @@ export class InfrastructureCollector extends BaseCollector {
       
       if (this.enableParallelCollection) {
         // Use worker pool for parallel collection
-        const tasks = [
+        const sampleTasks = [
           () => this.collectBrokerSamples(),
           () => this.collectTopicSamples(),
           () => this.collectConsumerSamples(),
-          () => this.collectConsumerOffsetSamples(),
-          () => this.collectClusterAggregations()
+          () => this.collectConsumerOffsetSamples()
         ];
         
-        const results = await this.workerPool.executeAll(tasks);
+        const [sampleResults, clusterAggregation] = await Promise.all([
+          this.workerPool.executeAll(sampleTasks),
+          this.collectClusterAggregations()
+        ]);
         
-        // Flatten results (excluding cluster aggregations which are stored separately)
-        allSamples = results.slice(0, 4).flat();
-        this.lastClusterAggregation = results[4] as ClusterAggregation[];
+        // Flatten results
+        allSamples = sampleResults.flat();
+        this.lastClusterAggregation = clusterAggregation;
       } else {
         // Sequential collection
         const [brokerSamples, topicSamples, consumerSamples, offsetSamples] = await Promise.all([

@@ -39,6 +39,14 @@ export interface PlatformConfig {
   batchSize?: number;
   enableDebug?: boolean;
   enableMetrics?: boolean;
+  maxSamplesPerQuery?: number;
+  enableParallelCollection?: boolean;
+  
+  // Kafka specific options
+  kafka?: {
+    clusters?: string[];
+    consumerGroups?: string[];
+  };
 }
 
 export interface CollectorConfig extends PlatformConfig {

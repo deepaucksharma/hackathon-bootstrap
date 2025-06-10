@@ -14,31 +14,42 @@ Transform message queue infrastructure metrics into New Relic's MESSAGE_QUEUE en
 ## 🚀 Quick Start
 
 ```bash
-# Clone and setup
+# Interactive setup (recommended)
+./setup-credentials.sh
+./setup-and-run.sh
+
+# Or manual setup
 git clone <repository>
 cd newrelic-message-queues-platform-v2
 npm install
+cp .env.example .env  # Edit with your credentials
 
-# Configure (copy and edit .env)
-cp .env.example .env
-
-# Run simulation mode (no infrastructure needed)
-npm run dev:simulation
-
-# Run with real Kafka data
-npm run dev:infrastructure
-
-# Create dashboards
-npm run dashboard:create
+# Run the platform
+node run-platform-unified.js  # Recommended
+# OR
+npm run dev                   # Development mode
 ```
+
+📌 **See [Operations Guide](docs/guides/OPERATIONS_GUIDE.md) for complete setup, running, and testing procedures.**
 
 ## 📋 Documentation
 
-- **[Technical Guide](TECHNICAL_GUIDE.md)** - Architecture and implementation details
-- **[Entity Definitions](newrelic-entity-definitions/)** - MESSAGE_QUEUE entity specifications
-- **[Data Model](DATA_MODEL_SPECIFICATION.md)** - Complete v3.0 data model reference
-- **[Project Status](PROJECT_STATUS.md)** - Current state and roadmap
+### [📚 Documentation Index](docs/INDEX.md) - Complete documentation guide
+
+#### Key Documents
+- **[Technical Guide](docs/guides/TECHNICAL_GUIDE.md)** - Architecture and implementation details
+- **[Platform Architecture](docs/architecture/ARCHITECTURE.md)** - Core system design
+- **[Data Model](docs/reference/DATA_MODEL_SPECIFICATION.md)** - Complete v3.0 data model reference
+- **[Quick Start](QUICK_START.md)** - Get started quickly
 - **[Dashboard System](DASHBOARD_SYSTEM.md)** - Dashboard generation framework
+
+#### Implementation Guides
+- **[Circuit Breaker](IMPLEMENTATION_GUIDES/01-CIRCUIT-BREAKER.md)** - Fault tolerance patterns
+- **[Error Recovery](IMPLEMENTATION_GUIDES/02-ERROR-RECOVERY-MANAGER.md)** - Error handling system
+
+#### Entity Definitions
+- **[Entity Types](newrelic-entity-definitions/)** - MESSAGE_QUEUE entity specifications
+- **[GUID Specification](newrelic-entity-definitions/docs/entities/guid_spec.md)** - Entity identification
 
 ## 🏗️ Core Functionality
 

@@ -5,15 +5,18 @@
  * for all versions of nri-kafka and proper cluster aggregation
  */
 
+import { injectable, inject } from 'inversify';
 import { BaseTransformer, TransformedMetrics } from './base-transformer';
 import { RawSample } from '../collectors/base-collector';
 import { PlatformConfig } from '../shared/types/config';
 import { Logger } from '../shared/utils/logger';
+import { TYPES } from '@infrastructure/config/types';
 
+@injectable()
 export class EnhancedNriKafkaTransformer extends BaseTransformer {
-  private readonly logger: Logger;
-
-  constructor(config: PlatformConfig) {
+  constructor(
+    @inject(TYPES.ConfigurationService) config: PlatformConfig
+  ) {
     super(config);
     this.logger = new Logger('EnhancedNriKafkaTransformer');
   }
@@ -697,7 +700,7 @@ export class EnhancedNriKafkaTransformer extends BaseTransformer {
     return {
       timestamp: sample.timestamp || Date.now(),
       provider: 'kafka',
-      entityType: 'offset',
+      entityType: 'consumer' as const,
       clusterName,
       identifiers: {
         consumerGroup,

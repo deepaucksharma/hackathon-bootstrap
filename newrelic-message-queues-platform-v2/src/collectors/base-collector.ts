@@ -5,11 +5,11 @@
  * They do NOT transform or create entities - only collect raw samples.
  */
 
-import { Logger } from '../shared/utils/logger.js';
-import { PlatformConfig } from '../shared/types/config.js';
+import { Logger } from '../shared/utils/logger';
+import { PlatformConfig } from '../shared/types/config';
 
 export interface RawSample {
-  eventType: 'KafkaBrokerSample' | 'KafkaTopicSample' | 'KafkaConsumerSample' | 'SimulatedSample';
+  eventType: 'KafkaBrokerSample' | 'KafkaTopicSample' | 'KafkaConsumerSample' | 'KafkaOffsetSample' | 'SimulatedSample';
   timestamp: number;
   [key: string]: any; // Raw fields from nri-kafka or simulation
 }
@@ -57,7 +57,7 @@ export abstract class BaseCollector {
       return false;
     }
     
-    if (!['KafkaBrokerSample', 'KafkaTopicSample', 'KafkaConsumerSample', 'SimulatedSample'].includes(sample.eventType)) {
+    if (!['KafkaBrokerSample', 'KafkaTopicSample', 'KafkaConsumerSample', 'KafkaOffsetSample', 'SimulatedSample'].includes(sample.eventType)) {
       this.logger.warn(`Unknown event type: ${sample.eventType}`);
       return false;
     }

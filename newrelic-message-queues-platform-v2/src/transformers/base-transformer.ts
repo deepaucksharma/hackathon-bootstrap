@@ -5,9 +5,9 @@
  * They do NOT create entities - only normalize and calculate metrics.
  */
 
-import { Logger } from '../shared/utils/logger.js';
-import { PlatformConfig } from '../shared/types/config.js';
-import { RawSample } from '../collectors/base-collector.js';
+import { Logger } from '../shared/utils/logger';
+import { PlatformConfig } from '../shared/types/config';
+import { RawSample } from '../collectors/base-collector';
 
 export interface TransformedMetrics {
   // Metadata
@@ -29,13 +29,25 @@ export interface TransformedMetrics {
   originalEventType: string;
 }
 
+export interface TransformerStats {
+  totalTransformations: number;
+  transformationErrors: number;
+  transformationsByType: Record<string, number>;
+}
+
 export abstract class BaseTransformer {
   protected logger: Logger;
   protected config: PlatformConfig;
+  protected stats: TransformerStats;
 
   constructor(config: PlatformConfig) {
     this.config = config;
     this.logger = new Logger(this.constructor.name);
+    this.stats = {
+      totalTransformations: 0,
+      transformationErrors: 0,
+      transformationsByType: {}
+    };
   }
 
   /**
@@ -75,6 +87,13 @@ export abstract class BaseTransformer {
   protected calculateRate(current: number, previous: number, intervalSeconds: number): number {
     if (!previous || !intervalSeconds) return current;
     return Math.max(0, (current - previous) / intervalSeconds);
+  }
+
+  /**
+   * Get transformer statistics
+   */
+  getStats(): TransformerStats {
+    return { ...this.stats };
   }
 
   /**

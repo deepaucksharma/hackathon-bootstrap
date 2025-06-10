@@ -98,9 +98,9 @@ export class WorkerPool extends EventEmitter {
       };
 
       // Add to queue based on priority
-      if (task.priority > 0) {
+      if (task.priority && task.priority > 0) {
         // Find insertion point for priority queue
-        const insertIndex = this.taskQueue.findIndex(qt => (qt.task.priority || 0) < task.priority);
+        const insertIndex = this.taskQueue.findIndex(qt => (qt.task.priority || 0) < task.priority!);
         if (insertIndex === -1) {
           this.taskQueue.push(queuedTask);
         } else {

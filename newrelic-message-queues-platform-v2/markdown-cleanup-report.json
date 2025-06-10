@@ -1,0 +1,1884 @@
+{
+  "timestamp": "2025-06-10T01:56:31.510Z",
+  "summary": {
+    "total": 129,
+    "toDelete": 36,
+    "toKeep": 37,
+    "toOrganize": 16,
+    "toReview": 40
+  },
+  "categories": {
+    "critical": {
+      "name": "🔴 Critical (Must Keep)",
+      "files": [
+        {
+          "path": "/Users/deepaksharma/syc/hackathon-bootstrap/docs/developer-guide/README.md",
+          "relativePath": "docs/developer-guide/README.md",
+          "size": 12344,
+          "modified": "2025-06-09T06:09:35.935Z",
+          "lines": 532,
+          "hasContent": true
+        },
+        {
+          "path": "/Users/deepaksharma/syc/hackathon-bootstrap/docs/getting-started/README.md",
+          "relativePath": "docs/getting-started/README.md",
+          "size": 7047,
+          "modified": "2025-06-09T06:09:35.936Z",
+          "lines": 212,
+          "hasContent": true
+        },
+        {
+          "path": "/Users/deepaksharma/syc/hackathon-bootstrap/docs/MESSAGE_QUEUES_PRD.md",
+          "relativePath": "docs/MESSAGE_QUEUES_PRD.md",
+          "size": 25132,
+          "modified": "2025-06-09T06:09:35.933Z",
+          "lines": 838,
+          "hasContent": true
+        },
+        {
+          "path": "/Users/deepaksharma/syc/hackathon-bootstrap/docs/README.md",
+          "relativePath": "docs/README.md",
+          "size": 7914,
+          "modified": "2025-06-09T13:47:44.348Z",
+          "lines": 233,
+          "hasContent": true
+        },
+        {
+          "path": "/Users/deepaksharma/syc/hackathon-bootstrap/docs/reference/metrics-reference.md",
+          "relativePath": "docs/reference/metrics-reference.md",
+          "size": 21093,
+          "modified": "2025-06-09T06:09:35.938Z",
+          "lines": 267,
+          "hasContent": true
+        },
+        {
+          "path": "/Users/deepaksharma/syc/hackathon-bootstrap/docs/ULTRA_DETAILED_PRODUCT_SPECIFICATION.md",
+          "relativePath": "docs/ULTRA_DETAILED_PRODUCT_SPECIFICATION.md",
+          "size": 77010,
+          "modified": "2025-06-07T17:23:43.509Z",
+          "lines": 2697,
+          "hasContent": true
+        },
+        {
+          "path": "/Users/deepaksharma/syc/hackathon-bootstrap/newrelic-message-queues-platform-v2/ARCHITECTURE.md",
+          "relativePath": "newrelic-message-queues-platform-v2/ARCHITECTURE.md",
+          "size": 10488,
+          "modified": "2025-06-10T00:59:58.443Z",
+          "lines": 295,
+          "hasContent": true
+        },
+        {
+          "path": "/Users/deepaksharma/syc/hackathon-bootstrap/newrelic-message-queues-platform-v2/DATA_MODEL_SPECIFICATION.md",
+          "relativePath": "newrelic-message-queues-platform-v2/DATA_MODEL_SPECIFICATION.md",
+          "size": 11480,
+          "modified": "2025-06-09T19:00:52.731Z",
+          "lines": 396,
+          "hasContent": true
+        },
+        {
+          "path": "/Users/deepaksharma/syc/hackathon-bootstrap/newrelic-message-queues-platform-v2/newrelic-entity-definitions/docs/entities/README.md",
+          "relativePath": "newrelic-message-queues-platform-v2/newrelic-entity-definitions/docs/entities/README.md",
+          "size": 3727,
+          "modified": "2025-06-09T23:24:33.080Z",
+          "lines": 153,
+          "hasContent": true
+        },
+        {
+          "path": "/Users/deepaksharma/syc/hackathon-bootstrap/newrelic-message-queues-platform-v2/newrelic-entity-definitions/docs/README.md",
+          "relativePath": "newrelic-message-queues-platform-v2/newrelic-entity-definitions/docs/README.md",
+          "size": 2402,
+          "modified": "2025-06-10T00:49:09.577Z",
+          "lines": 53,
+          "hasContent": true
+        },
+        {
+          "path": "/Users/deepaksharma/syc/hackathon-bootstrap/newrelic-message-queues-platform-v2/newrelic-entity-definitions/docs/relationships/README.md",
+          "relativePath": "newrelic-message-queues-platform-v2/newrelic-entity-definitions/docs/relationships/README.md",
+          "size": 8133,
+          "modified": "2025-06-09T23:31:17.285Z",
+          "lines": 267,
+          "hasContent": true
+        },
+        {
+          "path": "/Users/deepaksharma/syc/hackathon-bootstrap/newrelic-message-queues-platform-v2/newrelic-entity-definitions/README.md",
+          "relativePath": "newrelic-message-queues-platform-v2/newrelic-entity-definitions/README.md",
+          "size": 3125,
+          "modified": "2025-06-09T23:24:02.544Z",
+          "lines": 86,
+          "hasContent": true
+        },
+        {
+          "path": "/Users/deepaksharma/syc/hackathon-bootstrap/newrelic-message-queues-platform-v2/README.md",
+          "relativePath": "newrelic-message-queues-platform-v2/README.md",
+          "size": 9382,
+          "modified": "2025-06-10T00:54:50.688Z",
+          "lines": 292,
+          "hasContent": true
+        },
+        {
+          "path": "/Users/deepaksharma/syc/hackathon-bootstrap/newrelic-message-queues-platform-v2/TECHNICAL_GUIDE.md",
+          "relativePath": "newrelic-message-queues-platform-v2/TECHNICAL_GUIDE.md",
+          "size": 19359,
+          "modified": "2025-06-09T21:46:49.449Z",
+          "lines": 480,
+          "hasContent": true
+        },
+        {
+          "path": "/Users/deepaksharma/syc/hackathon-bootstrap/newrelic-message-queues-platform/core/workers/README.md",
+          "relativePath": "newrelic-message-queues-platform/core/workers/README.md",
+          "size": 8119,
+          "modified": "2025-06-09T06:09:35.947Z",
+          "lines": 293,
+          "hasContent": true
+        },
+        {
+          "path": "/Users/deepaksharma/syc/hackathon-bootstrap/newrelic-message-queues-platform/CURRENT_DATA_MODEL.md",
+          "relativePath": "newrelic-message-queues-platform/CURRENT_DATA_MODEL.md",
+          "size": 7445,
+          "modified": "2025-06-10T01:13:55.645Z",
+          "lines": 266,
+          "hasContent": true
+        },
+        {
+          "path": "/Users/deepaksharma/syc/hackathon-bootstrap/newrelic-message-queues-platform/dashboards/api/README.md",
+          "relativePath": "newrelic-message-queues-platform/dashboards/api/README.md",
+          "size": 4421,
+          "modified": "2025-06-07T17:23:43.523Z",
+          "lines": 264,
+          "hasContent": true
+        },
+        {
+          "path": "/Users/deepaksharma/syc/hackathon-bootstrap/newrelic-message-queues-platform/dashboards/cli/README.md",
+          "relativePath": "newrelic-message-queues-platform/dashboards/cli/README.md",
+          "size": 5001,
+          "modified": "2025-06-07T17:23:43.525Z",
+          "lines": 251,
+          "hasContent": true
+        },
+        {
+          "path": "/Users/deepaksharma/syc/hackathon-bootstrap/newrelic-message-queues-platform/dashboards/framework/README.md",
+          "relativePath": "newrelic-message-queues-platform/dashboards/framework/README.md",
+          "size": 8413,
+          "modified": "2025-06-09T06:09:35.950Z",
+          "lines": 224,
+          "hasContent": true
+        },
+        {
+          "path": "/Users/deepaksharma/syc/hackathon-bootstrap/newrelic-message-queues-platform/dashboards/README.md",
+          "relativePath": "newrelic-message-queues-platform/dashboards/README.md",
+          "size": 7896,
+          "modified": "2025-06-09T06:09:35.949Z",
+          "lines": 351,
+          "hasContent": true
+        },
+        {
+          "path": "/Users/deepaksharma/syc/hackathon-bootstrap/newrelic-message-queues-platform/dashboards/templates/README.md",
+          "relativePath": "newrelic-message-queues-platform/dashboards/templates/README.md",
+          "size": 4724,
+          "modified": "2025-06-09T13:38:14.834Z",
+          "lines": 155,
+          "hasContent": true
+        },
+        {
+          "path": "/Users/deepaksharma/syc/hackathon-bootstrap/newrelic-message-queues-platform/docs/ARCHITECTURE.md",
+          "relativePath": "newrelic-message-queues-platform/docs/ARCHITECTURE.md",
+          "size": 18319,
+          "modified": "2025-06-09T09:25:04.833Z",
+          "lines": 487,
+          "hasContent": true
+        },
+        {
+          "path": "/Users/deepaksharma/syc/hackathon-bootstrap/newrelic-message-queues-platform/docs/DATA_MODEL.md",
+          "relativePath": "newrelic-message-queues-platform/docs/DATA_MODEL.md",
+          "size": 9918,
+          "modified": "2025-06-09T13:17:28.764Z",
+          "lines": 342,
+          "hasContent": true
+        },
+        {
+          "path": "/Users/deepaksharma/syc/hackathon-bootstrap/newrelic-message-queues-platform/docs/README.md",
+          "relativePath": "newrelic-message-queues-platform/docs/README.md",
+          "size": 3489,
+          "modified": "2025-06-09T20:40:04.611Z",
+          "lines": 107,
+          "hasContent": true
+        },
+        {
+          "path": "/Users/deepaksharma/syc/hackathon-bootstrap/newrelic-message-queues-platform/entity-types/README.md",
+          "relativePath": "newrelic-message-queues-platform/entity-types/README.md",
+          "size": 4984,
+          "modified": "2025-06-10T01:07:09.979Z",
+          "lines": 133,
+          "hasContent": true
+        },
+        {
+          "path": "/Users/deepaksharma/syc/hackathon-bootstrap/newrelic-message-queues-platform/helm/message-queues-platform/README.md",
+          "relativePath": "newrelic-message-queues-platform/helm/message-queues-platform/README.md",
+          "size": 5096,
+          "modified": "2025-06-09T08:27:45.616Z",
+          "lines": 247,
+          "hasContent": true
+        },
+        {
+          "path": "/Users/deepaksharma/syc/hackathon-bootstrap/newrelic-message-queues-platform/infrastructure/README.md",
+          "relativePath": "newrelic-message-queues-platform/infrastructure/README.md",
+          "size": 12720,
+          "modified": "2025-06-09T06:09:35.958Z",
+          "lines": 447,
+          "hasContent": true
+        },
+        {
+          "path": "/Users/deepaksharma/syc/hackathon-bootstrap/newrelic-message-queues-platform/PLATFORM_ARCHITECTURE.md",
+          "relativePath": "newrelic-message-queues-platform/PLATFORM_ARCHITECTURE.md",
+          "size": 8350,
+          "modified": "2025-06-09T14:23:45.269Z",
+          "lines": 205,
+          "hasContent": true
+        },
+        {
+          "path": "/Users/deepaksharma/syc/hackathon-bootstrap/newrelic-message-queues-platform/README.md",
+          "relativePath": "newrelic-message-queues-platform/README.md",
+          "size": 9547,
+          "modified": "2025-06-09T13:46:40.191Z",
+          "lines": 309,
+          "hasContent": true
+        },
+        {
+          "path": "/Users/deepaksharma/syc/hackathon-bootstrap/newrelic-message-queues-platform/verification/README.md",
+          "relativePath": "newrelic-message-queues-platform/verification/README.md",
+          "size": 10318,
+          "modified": "2025-06-07T17:23:43.534Z",
+          "lines": 344,
+          "hasContent": true
+        }
+      ],
+      "patterns": [
+        "README.md",
+        "ARCHITECTURE.md",
+        "TECHNICAL_GUIDE.md",
+        "DATA_MODEL_SPECIFICATION.md",
+        "DATA_MODEL.md",
+        "MESSAGE_QUEUES_PRD.md",
+        "ULTRA_DETAILED_PRODUCT_SPECIFICATION.md",
+        "metrics-reference.md"
+      ]
+    },
+    "entityDefs": {
+      "name": "📋 Entity Definitions",
+      "files": [
+        {
+          "path": "/Users/deepaksharma/syc/hackathon-bootstrap/newrelic-message-queues-platform-v2/newrelic-entity-definitions/docs/entities/entity_summary.md",
+          "relativePath": "newrelic-message-queues-platform-v2/newrelic-entity-definitions/docs/entities/entity_summary.md",
+          "size": 6641,
+          "modified": "2025-06-09T23:27:43.960Z",
+          "lines": 285,
+          "hasContent": true
+        },
+        {
+          "path": "/Users/deepaksharma/syc/hackathon-bootstrap/newrelic-message-queues-platform-v2/newrelic-entity-definitions/docs/entities/golden_metrics.md",
+          "relativePath": "newrelic-message-queues-platform-v2/newrelic-entity-definitions/docs/entities/golden_metrics.md",
+          "size": 7614,
+          "modified": "2025-06-09T23:26:46.234Z",
+          "lines": 338,
+          "hasContent": true
+        },
+        {
+          "path": "/Users/deepaksharma/syc/hackathon-bootstrap/newrelic-message-queues-platform-v2/newrelic-entity-definitions/docs/entities/golden_tags.md",
+          "relativePath": "newrelic-message-queues-platform-v2/newrelic-entity-definitions/docs/entities/golden_tags.md",
+          "size": 5984,
+          "modified": "2025-06-09T23:28:30.301Z",
+          "lines": 266,
+          "hasContent": true
+        },
+        {
+          "path": "/Users/deepaksharma/syc/hackathon-bootstrap/newrelic-message-queues-platform-v2/newrelic-entity-definitions/docs/entities/guid_spec.md",
+          "relativePath": "newrelic-message-queues-platform-v2/newrelic-entity-definitions/docs/entities/guid_spec.md",
+          "size": 4096,
+          "modified": "2025-06-09T23:25:08.640Z",
+          "lines": 144,
+          "hasContent": true
+        },
+        {
+          "path": "/Users/deepaksharma/syc/hackathon-bootstrap/newrelic-message-queues-platform-v2/newrelic-entity-definitions/docs/entities/lifecycle.md",
+          "relativePath": "newrelic-message-queues-platform-v2/newrelic-entity-definitions/docs/entities/lifecycle.md",
+          "size": 7106,
+          "modified": "2025-06-09T23:30:25.019Z",
+          "lines": 297,
+          "hasContent": true
+        },
+        {
+          "path": "/Users/deepaksharma/syc/hackathon-bootstrap/newrelic-message-queues-platform-v2/newrelic-entity-definitions/docs/entities/summary_metrics.md",
+          "relativePath": "newrelic-message-queues-platform-v2/newrelic-entity-definitions/docs/entities/summary_metrics.md",
+          "size": 6461,
+          "modified": "2025-06-09T23:29:23.310Z",
+          "lines": 303,
+          "hasContent": true
+        },
+        {
+          "path": "/Users/deepaksharma/syc/hackathon-bootstrap/newrelic-message-queues-platform-v2/newrelic-entity-definitions/docs/entities/synthesis.md",
+          "relativePath": "newrelic-message-queues-platform-v2/newrelic-entity-definitions/docs/entities/synthesis.md",
+          "size": 6995,
+          "modified": "2025-06-09T23:25:57.764Z",
+          "lines": 340,
+          "hasContent": true
+        }
+      ],
+      "patterns": [
+        "entity-types/",
+        "entity-definitions/",
+        "definition.yml"
+      ]
+    },
+    "guides": {
+      "name": "📚 Implementation Guides",
+      "files": [
+        {
+          "path": "/Users/deepaksharma/syc/hackathon-bootstrap/docs/DASHBOARD_IMPLEMENTATION_GUIDE.md",
+          "relativePath": "docs/DASHBOARD_IMPLEMENTATION_GUIDE.md",
+          "size": 19860,
+          "modified": "2025-06-07T17:23:43.507Z",
+          "lines": 912,
+          "hasContent": true
+        },
+        {
+          "path": "/Users/deepaksharma/syc/hackathon-bootstrap/docs/EVENT_TYPE_MIGRATION_GUIDE.md",
+          "relativePath": "docs/EVENT_TYPE_MIGRATION_GUIDE.md",
+          "size": 3273,
+          "modified": "2025-06-09T07:04:11.467Z",
+          "lines": 111,
+          "hasContent": true
+        },
+        {
+          "path": "/Users/deepaksharma/syc/hackathon-bootstrap/docs/MIGRATION_GUIDE.md",
+          "relativePath": "docs/MIGRATION_GUIDE.md",
+          "size": 12549,
+          "modified": "2025-06-09T06:09:35.933Z",
+          "lines": 438,
+          "hasContent": true
+        },
+        {
+          "path": "/Users/deepaksharma/syc/hackathon-bootstrap/docs/user-guide/cli-reference.md",
+          "relativePath": "docs/user-guide/cli-reference.md",
+          "size": 1078,
+          "modified": "2025-06-09T06:09:35.938Z",
+          "lines": 45,
+          "hasContent": true
+        },
+        {
+          "path": "/Users/deepaksharma/syc/hackathon-bootstrap/docs/user-guide/platform-modes.md",
+          "relativePath": "docs/user-guide/platform-modes.md",
+          "size": 15645,
+          "modified": "2025-06-09T06:09:35.938Z",
+          "lines": 502,
+          "hasContent": true
+        },
+        {
+          "path": "/Users/deepaksharma/syc/hackathon-bootstrap/docs/user-guide/quickstart-legacy.md",
+          "relativePath": "docs/user-guide/quickstart-legacy.md",
+          "size": 6480,
+          "modified": "2025-06-09T06:09:35.938Z",
+          "lines": 260,
+          "hasContent": true
+        },
+        {
+          "path": "/Users/deepaksharma/syc/hackathon-bootstrap/docs/user-guide/troubleshooting.md",
+          "relativePath": "docs/user-guide/troubleshooting.md",
+          "size": 1524,
+          "modified": "2025-06-09T06:09:35.938Z",
+          "lines": 50,
+          "hasContent": true
+        },
+        {
+          "path": "/Users/deepaksharma/syc/hackathon-bootstrap/docs/user-guide/working-with-dashboards.md",
+          "relativePath": "docs/user-guide/working-with-dashboards.md",
+          "size": 16059,
+          "modified": "2025-06-09T06:09:35.939Z",
+          "lines": 633,
+          "hasContent": true
+        },
+        {
+          "path": "/Users/deepaksharma/syc/hackathon-bootstrap/newrelic-message-queues-platform-v2/IMPLEMENTATION_GUIDES/01-CIRCUIT-BREAKER.md",
+          "relativePath": "newrelic-message-queues-platform-v2/IMPLEMENTATION_GUIDES/01-CIRCUIT-BREAKER.md",
+          "size": 15451,
+          "modified": "2025-06-10T01:45:37.190Z",
+          "lines": 550,
+          "hasContent": true
+        },
+        {
+          "path": "/Users/deepaksharma/syc/hackathon-bootstrap/newrelic-message-queues-platform-v2/IMPLEMENTATION_GUIDES/02-ERROR-RECOVERY-MANAGER.md",
+          "relativePath": "newrelic-message-queues-platform-v2/IMPLEMENTATION_GUIDES/02-ERROR-RECOVERY-MANAGER.md",
+          "size": 26747,
+          "modified": "2025-06-10T01:47:47.029Z",
+          "lines": 948,
+          "hasContent": true
+        },
+        {
+          "path": "/Users/deepaksharma/syc/hackathon-bootstrap/newrelic-message-queues-platform-v2/NRI_KAFKA_SETUP_GUIDE.md",
+          "relativePath": "newrelic-message-queues-platform-v2/NRI_KAFKA_SETUP_GUIDE.md",
+          "size": 3956,
+          "modified": "2025-06-10T01:27:17.677Z",
+          "lines": 143,
+          "hasContent": true
+        },
+        {
+          "path": "/Users/deepaksharma/syc/hackathon-bootstrap/newrelic-message-queues-platform/docs/CUSTOM_METRICS_GUIDE.md",
+          "relativePath": "newrelic-message-queues-platform/docs/CUSTOM_METRICS_GUIDE.md",
+          "size": 12998,
+          "modified": "2025-06-09T10:19:27.879Z",
+          "lines": 534,
+          "hasContent": true
+        },
+        {
+          "path": "/Users/deepaksharma/syc/hackathon-bootstrap/newrelic-message-queues-platform/docs/ENTITY_SYNTHESIS_ALIGNMENT_GUIDE.md",
+          "relativePath": "newrelic-message-queues-platform/docs/ENTITY_SYNTHESIS_ALIGNMENT_GUIDE.md",
+          "size": 12496,
+          "modified": "2025-06-09T23:23:03.978Z",
+          "lines": 454,
+          "hasContent": true
+        },
+        {
+          "path": "/Users/deepaksharma/syc/hackathon-bootstrap/newrelic-message-queues-platform/docs/MULTI_CLUSTER_GUIDE.md",
+          "relativePath": "newrelic-message-queues-platform/docs/MULTI_CLUSTER_GUIDE.md",
+          "size": 9973,
+          "modified": "2025-06-09T10:15:28.536Z",
+          "lines": 425,
+          "hasContent": true
+        },
+        {
+          "path": "/Users/deepaksharma/syc/hackathon-bootstrap/newrelic-message-queues-platform/docs/TESTING_GUIDE.md",
+          "relativePath": "newrelic-message-queues-platform/docs/TESTING_GUIDE.md",
+          "size": 11595,
+          "modified": "2025-06-09T10:21:10.002Z",
+          "lines": 601,
+          "hasContent": true
+        },
+        {
+          "path": "/Users/deepaksharma/syc/hackathon-bootstrap/newrelic-message-queues-platform/PLATFORM_GUIDE.md",
+          "relativePath": "newrelic-message-queues-platform/PLATFORM_GUIDE.md",
+          "size": 11815,
+          "modified": "2025-06-09T20:37:43.454Z",
+          "lines": 391,
+          "hasContent": true
+        }
+      ],
+      "patterns": [
+        "IMPLEMENTATION_GUIDE",
+        "GUIDE.md",
+        "user-guide/"
+      ]
+    },
+    "pipeline": {
+      "name": "🔄 Pipeline Reports",
+      "files": [
+        {
+          "path": "/Users/deepaksharma/syc/hackathon-bootstrap/newrelic-message-queues-platform-v2/pipeline-documentation-demo/LATEST_PIPELINE_REPORT.md",
+          "relativePath": "newrelic-message-queues-platform-v2/pipeline-documentation-demo/LATEST_PIPELINE_REPORT.md",
+          "size": 3832,
+          "modified": "2025-06-10T01:48:15.233Z",
+          "lines": 152,
+          "hasContent": true
+        },
+        {
+          "path": "/Users/deepaksharma/syc/hackathon-bootstrap/newrelic-message-queues-platform/docs/DATA_TRANSFORMATION_PIPELINE.md",
+          "relativePath": "newrelic-message-queues-platform/docs/DATA_TRANSFORMATION_PIPELINE.md",
+          "size": 24096,
+          "modified": "2025-06-09T13:38:48.979Z",
+          "lines": 816,
+          "hasContent": true
+        },
+        {
+          "path": "/Users/deepaksharma/syc/hackathon-bootstrap/newrelic-message-queues-platform/LATEST_PIPELINE_REPORT.md",
+          "relativePath": "newrelic-message-queues-platform/LATEST_PIPELINE_REPORT.md",
+          "size": 11530,
+          "modified": "2025-06-10T01:32:54.674Z",
+          "lines": 460,
+          "hasContent": true
+        }
+      ],
+      "patterns": [
+        "PIPELINE_REPORT",
+        "DATA_TRANSFORMATION",
+        "pipeline-report"
+      ]
+    },
+    "archive": {
+      "name": "📦 Archived",
+      "files": [
+        {
+          "path": "/Users/deepaksharma/syc/hackathon-bootstrap/docs/operations/infrastructure-integration-legacy.md",
+          "relativePath": "docs/operations/infrastructure-integration-legacy.md",
+          "size": 8460,
+          "modified": "2025-06-09T06:09:35.936Z",
+          "lines": 216,
+          "hasContent": true
+        },
+        {
+          "path": "/Users/deepaksharma/syc/hackathon-bootstrap/docs/operations/infrastructure-setup-legacy.md",
+          "relativePath": "docs/operations/infrastructure-setup-legacy.md",
+          "size": 6595,
+          "modified": "2025-06-09T06:09:35.936Z",
+          "lines": 265,
+          "hasContent": true
+        },
+        {
+          "path": "/Users/deepaksharma/syc/hackathon-bootstrap/newrelic-message-queues-platform-v2/archive/COMPREHENSIVE_V2_REVIEW.md",
+          "relativePath": "newrelic-message-queues-platform-v2/archive/COMPREHENSIVE_V2_REVIEW.md",
+          "size": 8007,
+          "modified": "2025-06-09T18:17:05.373Z",
+          "lines": 262,
+          "hasContent": true
+        },
+        {
+          "path": "/Users/deepaksharma/syc/hackathon-bootstrap/newrelic-message-queues-platform-v2/archive/CONSOLIDATED_SUMMARY.md",
+          "relativePath": "newrelic-message-queues-platform-v2/archive/CONSOLIDATED_SUMMARY.md",
+          "size": 2435,
+          "modified": "2025-06-09T18:44:02.103Z",
+          "lines": 82,
+          "hasContent": true
+        },
+        {
+          "path": "/Users/deepaksharma/syc/hackathon-bootstrap/newrelic-message-queues-platform-v2/archive/IMPLEMENTATION_SUMMARY.md",
+          "relativePath": "newrelic-message-queues-platform-v2/archive/IMPLEMENTATION_SUMMARY.md",
+          "size": 5656,
+          "modified": "2025-06-09T14:59:29.925Z",
+          "lines": 157,
+          "hasContent": true
+        },
+        {
+          "path": "/Users/deepaksharma/syc/hackathon-bootstrap/newrelic-message-queues-platform-v2/archive/outdated-docs/DATA_MODEL_FLOW_2025-06-09T21-30-30-582Z.md",
+          "relativePath": "newrelic-message-queues-platform-v2/archive/outdated-docs/DATA_MODEL_FLOW_2025-06-09T21-30-30-582Z.md",
+          "size": 10488,
+          "modified": "2025-06-09T21:30:30.586Z",
+          "lines": 380,
+          "hasContent": true
+        },
+        {
+          "path": "/Users/deepaksharma/syc/hackathon-bootstrap/newrelic-message-queues-platform-v2/archive/outdated-docs/DOCUMENTATION_STREAMLINING_PLAN.md",
+          "relativePath": "newrelic-message-queues-platform-v2/archive/outdated-docs/DOCUMENTATION_STREAMLINING_PLAN.md",
+          "size": 7903,
+          "modified": "2025-06-09T21:43:30.702Z",
+          "lines": 216,
+          "hasContent": true
+        },
+        {
+          "path": "/Users/deepaksharma/syc/hackathon-bootstrap/newrelic-message-queues-platform-v2/archive/outdated-docs/MASTER_DOCUMENTATION.md",
+          "relativePath": "newrelic-message-queues-platform-v2/archive/outdated-docs/MASTER_DOCUMENTATION.md",
+          "size": 9356,
+          "modified": "2025-06-09T21:50:34.998Z",
+          "lines": 254,
+          "hasContent": true
+        },
+        {
+          "path": "/Users/deepaksharma/syc/hackathon-bootstrap/newrelic-message-queues-platform-v2/archive/outdated-docs/V1_VS_V2_COMPREHENSIVE_COMPARISON.md",
+          "relativePath": "newrelic-message-queues-platform-v2/archive/outdated-docs/V1_VS_V2_COMPREHENSIVE_COMPARISON.md",
+          "size": 19678,
+          "modified": "2025-06-09T21:37:45.622Z",
+          "lines": 554,
+          "hasContent": true
+        },
+        {
+          "path": "/Users/deepaksharma/syc/hackathon-bootstrap/newrelic-message-queues-platform-v2/archive/README-v2.md",
+          "relativePath": "newrelic-message-queues-platform-v2/archive/README-v2.md",
+          "size": 5460,
+          "modified": "2025-06-09T14:38:42.311Z",
+          "lines": 212,
+          "hasContent": true
+        }
+      ],
+      "patterns": [
+        "archive/",
+        "outdated-docs/",
+        "legacy",
+        "old"
+      ]
+    },
+    "status": {
+      "name": "📊 Status/Summary Reports",
+      "files": [
+        {
+          "path": "/Users/deepaksharma/syc/hackathon-bootstrap/docs/CONSOLIDATION_SUMMARY.md",
+          "relativePath": "docs/CONSOLIDATION_SUMMARY.md",
+          "size": 12175,
+          "modified": "2025-06-09T06:09:35.932Z",
+          "lines": 287,
+          "hasContent": true
+        },
+        {
+          "path": "/Users/deepaksharma/syc/hackathon-bootstrap/docs/DOCUMENTATION_REVIEW.md",
+          "relativePath": "docs/DOCUMENTATION_REVIEW.md",
+          "size": 4838,
+          "modified": "2025-06-09T06:44:57.558Z",
+          "lines": 106,
+          "hasContent": true
+        },
+        {
+          "path": "/Users/deepaksharma/syc/hackathon-bootstrap/docs/IMPLEMENTATION_SUMMARY.md",
+          "relativePath": "docs/IMPLEMENTATION_SUMMARY.md",
+          "size": 5315,
+          "modified": "2025-06-09T10:19:49.249Z",
+          "lines": 171,
+          "hasContent": true
+        },
+        {
+          "path": "/Users/deepaksharma/syc/hackathon-bootstrap/newrelic-message-queues-platform-v2/DASHBOARD_INTEGRATION_SUMMARY.md",
+          "relativePath": "newrelic-message-queues-platform-v2/DASHBOARD_INTEGRATION_SUMMARY.md",
+          "size": 3322,
+          "modified": "2025-06-09T23:21:13.167Z",
+          "lines": 107,
+          "hasContent": true
+        },
+        {
+          "path": "/Users/deepaksharma/syc/hackathon-bootstrap/newrelic-message-queues-platform-v2/PROJECT_STATUS.md",
+          "relativePath": "newrelic-message-queues-platform-v2/PROJECT_STATUS.md",
+          "size": 5972,
+          "modified": "2025-06-10T00:57:33.850Z",
+          "lines": 160,
+          "hasContent": true
+        },
+        {
+          "path": "/Users/deepaksharma/syc/hackathon-bootstrap/newrelic-message-queues-platform-v2/V2_PRODUCTION_READINESS_SUMMARY.md",
+          "relativePath": "newrelic-message-queues-platform-v2/V2_PRODUCTION_READINESS_SUMMARY.md",
+          "size": 6726,
+          "modified": "2025-06-10T01:48:39.907Z",
+          "lines": 206,
+          "hasContent": true
+        },
+        {
+          "path": "/Users/deepaksharma/syc/hackathon-bootstrap/newrelic-message-queues-platform/core/workers/IMPLEMENTATION_SUMMARY.md",
+          "relativePath": "newrelic-message-queues-platform/core/workers/IMPLEMENTATION_SUMMARY.md",
+          "size": 5933,
+          "modified": "2025-06-09T06:09:35.947Z",
+          "lines": 160,
+          "hasContent": true
+        },
+        {
+          "path": "/Users/deepaksharma/syc/hackathon-bootstrap/newrelic-message-queues-platform/DASHBOARD_ENHANCEMENT_SUMMARY.md",
+          "relativePath": "newrelic-message-queues-platform/DASHBOARD_ENHANCEMENT_SUMMARY.md",
+          "size": 4876,
+          "modified": "2025-06-09T13:23:14.117Z",
+          "lines": 140,
+          "hasContent": true
+        },
+        {
+          "path": "/Users/deepaksharma/syc/hackathon-bootstrap/newrelic-message-queues-platform/docs/ENTITY_COMPLIANCE_SUMMARY.md",
+          "relativePath": "newrelic-message-queues-platform/docs/ENTITY_COMPLIANCE_SUMMARY.md",
+          "size": 4701,
+          "modified": "2025-06-10T01:19:09.132Z",
+          "lines": 144,
+          "hasContent": true
+        },
+        {
+          "path": "/Users/deepaksharma/syc/hackathon-bootstrap/newrelic-message-queues-platform/docs/IMPLEMENTATION_VALIDATION_REPORT.md",
+          "relativePath": "newrelic-message-queues-platform/docs/IMPLEMENTATION_VALIDATION_REPORT.md",
+          "size": 8655,
+          "modified": "2025-06-09T20:35:41.701Z",
+          "lines": 310,
+          "hasContent": true
+        },
+        {
+          "path": "/Users/deepaksharma/syc/hackathon-bootstrap/newrelic-message-queues-platform/docs/PLATFORM_IMPLEMENTATION_SUMMARY.md",
+          "relativePath": "newrelic-message-queues-platform/docs/PLATFORM_IMPLEMENTATION_SUMMARY.md",
+          "size": 6861,
+          "modified": "2025-06-09T20:39:09.087Z",
+          "lines": 252,
+          "hasContent": true
+        },
+        {
+          "path": "/Users/deepaksharma/syc/hackathon-bootstrap/newrelic-message-queues-platform/infrastructure/IMPLEMENTATION_SUMMARY.md",
+          "relativePath": "newrelic-message-queues-platform/infrastructure/IMPLEMENTATION_SUMMARY.md",
+          "size": 12280,
+          "modified": "2025-06-09T06:09:35.957Z",
+          "lines": 297,
+          "hasContent": true
+        },
+        {
+          "path": "/Users/deepaksharma/syc/hackathon-bootstrap/newrelic-message-queues-platform/infrastructure/transformers/ENHANCEMENT_SUMMARY.md",
+          "relativePath": "newrelic-message-queues-platform/infrastructure/transformers/ENHANCEMENT_SUMMARY.md",
+          "size": 9403,
+          "modified": "2025-06-09T06:09:35.962Z",
+          "lines": 280,
+          "hasContent": true
+        },
+        {
+          "path": "/Users/deepaksharma/syc/hackathon-bootstrap/newrelic-message-queues-platform/PLATFORM_VALIDATION_REPORT.md",
+          "relativePath": "newrelic-message-queues-platform/PLATFORM_VALIDATION_REPORT.md",
+          "size": 7963,
+          "modified": "2025-06-09T20:30:02.034Z",
+          "lines": 214,
+          "hasContent": true
+        },
+        {
+          "path": "/Users/deepaksharma/syc/hackathon-bootstrap/newrelic-message-queues-platform/V2_CRITICAL_REVIEW.md",
+          "relativePath": "newrelic-message-queues-platform/V2_CRITICAL_REVIEW.md",
+          "size": 8481,
+          "modified": "2025-06-09T14:58:58.876Z",
+          "lines": 222,
+          "hasContent": true
+        },
+        {
+          "path": "/Users/deepaksharma/syc/hackathon-bootstrap/newrelic-message-queues-platform/VERIFICATION_SUMMARY.md",
+          "relativePath": "newrelic-message-queues-platform/VERIFICATION_SUMMARY.md",
+          "size": 3232,
+          "modified": "2025-06-09T06:09:35.939Z",
+          "lines": 85,
+          "hasContent": true
+        }
+      ],
+      "patterns": [
+        "STATUS",
+        "SUMMARY",
+        "REVIEW",
+        "VALIDATION_REPORT"
+      ]
+    },
+    "duplicate": {
+      "name": "🔁 Potential Duplicates",
+      "files": [
+        {
+          "path": "/Users/deepaksharma/syc/hackathon-bootstrap/docs/getting-started/README_CONSOLIDATED.md",
+          "relativePath": "docs/getting-started/README_CONSOLIDATED.md",
+          "size": 6479,
+          "modified": "2025-06-09T06:09:35.936Z",
+          "lines": 203,
+          "hasContent": true
+        },
+        {
+          "path": "/Users/deepaksharma/syc/hackathon-bootstrap/docs/operations/infrastructure-setup_CONSOLIDATED.md",
+          "relativePath": "docs/operations/infrastructure-setup_CONSOLIDATED.md",
+          "size": 11947,
+          "modified": "2025-06-09T06:09:35.937Z",
+          "lines": 444,
+          "hasContent": true
+        },
+        {
+          "path": "/Users/deepaksharma/syc/hackathon-bootstrap/newrelic-message-queues-platform-v2/pipeline-documentation-demo/pipeline-report-2025-06-10.md",
+          "relativePath": "newrelic-message-queues-platform-v2/pipeline-documentation-demo/pipeline-report-2025-06-10.md",
+          "size": 3832,
+          "modified": "2025-06-10T01:48:15.232Z",
+          "lines": 152,
+          "hasContent": true
+        },
+        {
+          "path": "/Users/deepaksharma/syc/hackathon-bootstrap/newrelic-message-queues-platform/data-pipeline-docs/2025-06-09_DATA_TRANSFORMATION_PIPELINE.md",
+          "relativePath": "newrelic-message-queues-platform/data-pipeline-docs/2025-06-09_DATA_TRANSFORMATION_PIPELINE.md",
+          "size": 20410,
+          "modified": "2025-06-09T23:05:17.271Z",
+          "lines": 804,
+          "hasContent": true
+        },
+        {
+          "path": "/Users/deepaksharma/syc/hackathon-bootstrap/newrelic-message-queues-platform/data-pipeline-docs/2025-06-10_COMPREHENSIVE_PIPELINE_REPORT.md",
+          "relativePath": "newrelic-message-queues-platform/data-pipeline-docs/2025-06-10_COMPREHENSIVE_PIPELINE_REPORT.md",
+          "size": 11530,
+          "modified": "2025-06-10T01:32:54.674Z",
+          "lines": 460,
+          "hasContent": true
+        },
+        {
+          "path": "/Users/deepaksharma/syc/hackathon-bootstrap/newrelic-message-queues-platform/data-pipeline-docs/2025-06-10_DATA_TRANSFORMATION_PIPELINE.md",
+          "relativePath": "newrelic-message-queues-platform/data-pipeline-docs/2025-06-10_DATA_TRANSFORMATION_PIPELINE.md",
+          "size": 17902,
+          "modified": "2025-06-10T01:14:25.363Z",
+          "lines": 704,
+          "hasContent": true
+        },
+        {
+          "path": "/Users/deepaksharma/syc/hackathon-bootstrap/newrelic-message-queues-platform/docs/LIVE_DATA_TRANSFORMATION_PIPELINE.md",
+          "relativePath": "newrelic-message-queues-platform/docs/LIVE_DATA_TRANSFORMATION_PIPELINE.md",
+          "size": 7445,
+          "modified": "2025-06-10T01:13:55.644Z",
+          "lines": 266,
+          "hasContent": true
+        }
+      ]
+    },
+    "other": {
+      "name": "❓ Other",
+      "files": [
+        {
+          "path": "/Users/deepaksharma/syc/hackathon-bootstrap/CLAUDE.md",
+          "relativePath": "CLAUDE.md",
+          "size": 6246,
+          "modified": "2025-06-09T13:49:40.766Z",
+          "lines": 149,
+          "hasContent": true
+        },
+        {
+          "path": "/Users/deepaksharma/syc/hackathon-bootstrap/docs/ADVANCED_FEATURES.md",
+          "relativePath": "docs/ADVANCED_FEATURES.md",
+          "size": 10797,
+          "modified": "2025-06-09T08:28:16.150Z",
+          "lines": 452,
+          "hasContent": true
+        },
+        {
+          "path": "/Users/deepaksharma/syc/hackathon-bootstrap/docs/CONSOLIDATION_COMPLETE.md",
+          "relativePath": "docs/CONSOLIDATION_COMPLETE.md",
+          "size": 12831,
+          "modified": "2025-06-09T06:09:35.931Z",
+          "lines": 320,
+          "hasContent": true
+        },
+        {
+          "path": "/Users/deepaksharma/syc/hackathon-bootstrap/docs/CONSOLIDATION_PLAN.md",
+          "relativePath": "docs/CONSOLIDATION_PLAN.md",
+          "size": 10427,
+          "modified": "2025-06-09T06:09:35.931Z",
+          "lines": 297,
+          "hasContent": true
+        },
+        {
+          "path": "/Users/deepaksharma/syc/hackathon-bootstrap/docs/developer-guide/api-reference.md",
+          "relativePath": "docs/developer-guide/api-reference.md",
+          "size": 16978,
+          "modified": "2025-06-09T06:09:35.935Z",
+          "lines": 769,
+          "hasContent": true
+        },
+        {
+          "path": "/Users/deepaksharma/syc/hackathon-bootstrap/docs/developer-guide/architecture.md",
+          "relativePath": "docs/developer-guide/architecture.md",
+          "size": 12903,
+          "modified": "2025-06-09T06:09:35.935Z",
+          "lines": 294,
+          "hasContent": true
+        },
+        {
+          "path": "/Users/deepaksharma/syc/hackathon-bootstrap/docs/developer-guide/entity-framework.md",
+          "relativePath": "docs/developer-guide/entity-framework.md",
+          "size": 10436,
+          "modified": "2025-06-09T06:09:35.935Z",
+          "lines": 351,
+          "hasContent": true
+        },
+        {
+          "path": "/Users/deepaksharma/syc/hackathon-bootstrap/docs/IMPLEMENTATION_GAPS_ANALYSIS.md",
+          "relativePath": "docs/IMPLEMENTATION_GAPS_ANALYSIS.md",
+          "size": 6795,
+          "modified": "2025-06-09T06:36:13.485Z",
+          "lines": 156,
+          "hasContent": true
+        },
+        {
+          "path": "/Users/deepaksharma/syc/hackathon-bootstrap/docs/INDEX.md",
+          "relativePath": "docs/INDEX.md",
+          "size": 3454,
+          "modified": "2025-06-09T06:09:35.932Z",
+          "lines": 67,
+          "hasContent": true
+        },
+        {
+          "path": "/Users/deepaksharma/syc/hackathon-bootstrap/docs/operations/infrastructure-setup.md",
+          "relativePath": "docs/operations/infrastructure-setup.md",
+          "size": 11947,
+          "modified": "2025-06-09T06:09:35.937Z",
+          "lines": 444,
+          "hasContent": true
+        },
+        {
+          "path": "/Users/deepaksharma/syc/hackathon-bootstrap/docs/project/implementation-results.md",
+          "relativePath": "docs/project/implementation-results.md",
+          "size": 7337,
+          "modified": "2025-06-09T06:09:35.937Z",
+          "lines": 204,
+          "hasContent": true
+        },
+        {
+          "path": "/Users/deepaksharma/syc/hackathon-bootstrap/docs/project/vision-index.md",
+          "relativePath": "docs/project/vision-index.md",
+          "size": 5244,
+          "modified": "2025-06-09T06:09:35.937Z",
+          "lines": 123,
+          "hasContent": true
+        },
+        {
+          "path": "/Users/deepaksharma/syc/hackathon-bootstrap/docs/project/vision-summary.md",
+          "relativePath": "docs/project/vision-summary.md",
+          "size": 6422,
+          "modified": "2025-06-09T06:09:35.937Z",
+          "lines": 182,
+          "hasContent": true
+        },
+        {
+          "path": "/Users/deepaksharma/syc/hackathon-bootstrap/docs/project/vision.md",
+          "relativePath": "docs/project/vision.md",
+          "size": 19483,
+          "modified": "2025-06-09T06:09:35.937Z",
+          "lines": 564,
+          "hasContent": true
+        },
+        {
+          "path": "/Users/deepaksharma/syc/hackathon-bootstrap/docs/README_NEW.md",
+          "relativePath": "docs/README_NEW.md",
+          "size": 7347,
+          "modified": "2025-06-09T06:09:35.934Z",
+          "lines": 223,
+          "hasContent": true
+        },
+        {
+          "path": "/Users/deepaksharma/syc/hackathon-bootstrap/docs/reference/configuration-reference.md",
+          "relativePath": "docs/reference/configuration-reference.md",
+          "size": 1624,
+          "modified": "2025-06-09T06:09:35.938Z",
+          "lines": 55,
+          "hasContent": true
+        },
+        {
+          "path": "/Users/deepaksharma/syc/hackathon-bootstrap/docs/TECHNICAL_SPECIFICATION.md",
+          "relativePath": "docs/TECHNICAL_SPECIFICATION.md",
+          "size": 16425,
+          "modified": "2025-06-09T06:09:35.934Z",
+          "lines": 319,
+          "hasContent": true
+        },
+        {
+          "path": "/Users/deepaksharma/syc/hackathon-bootstrap/docs/ULTRA_DETAILED_PRODUCT_SPECIFICATION_V2.md",
+          "relativePath": "docs/ULTRA_DETAILED_PRODUCT_SPECIFICATION_V2.md",
+          "size": 17088,
+          "modified": "2025-06-09T13:22:19.981Z",
+          "lines": 496,
+          "hasContent": true
+        },
+        {
+          "path": "/Users/deepaksharma/syc/hackathon-bootstrap/FINAL_SOLUTION.md",
+          "relativePath": "FINAL_SOLUTION.md",
+          "size": 4214,
+          "modified": "2025-06-09T11:01:00.812Z",
+          "lines": 110,
+          "hasContent": true
+        },
+        {
+          "path": "/Users/deepaksharma/syc/hackathon-bootstrap/newrelic-message-queues-platform-v2/DASHBOARD_SYSTEM.md",
+          "relativePath": "newrelic-message-queues-platform-v2/DASHBOARD_SYSTEM.md",
+          "size": 7957,
+          "modified": "2025-06-09T18:45:10.511Z",
+          "lines": 269,
+          "hasContent": true
+        },
+        {
+          "path": "/Users/deepaksharma/syc/hackathon-bootstrap/newrelic-message-queues-platform-v2/DEVELOPMENT.md",
+          "relativePath": "newrelic-message-queues-platform-v2/DEVELOPMENT.md",
+          "size": 8861,
+          "modified": "2025-06-10T01:01:01.728Z",
+          "lines": 431,
+          "hasContent": true
+        },
+        {
+          "path": "/Users/deepaksharma/syc/hackathon-bootstrap/newrelic-message-queues-platform-v2/docs/PIPELINE_DOCUMENTATION.md",
+          "relativePath": "newrelic-message-queues-platform-v2/docs/PIPELINE_DOCUMENTATION.md",
+          "size": 3527,
+          "modified": "2025-06-10T01:49:24.172Z",
+          "lines": 125,
+          "hasContent": true
+        },
+        {
+          "path": "/Users/deepaksharma/syc/hackathon-bootstrap/newrelic-message-queues-platform-v2/DOCUMENTATION_INDEX.md",
+          "relativePath": "newrelic-message-queues-platform-v2/DOCUMENTATION_INDEX.md",
+          "size": 3539,
+          "modified": "2025-06-10T01:01:44.193Z",
+          "lines": 102,
+          "hasContent": true
+        },
+        {
+          "path": "/Users/deepaksharma/syc/hackathon-bootstrap/newrelic-message-queues-platform-v2/PLATFORM_TEST_RESULTS.md",
+          "relativePath": "newrelic-message-queues-platform-v2/PLATFORM_TEST_RESULTS.md",
+          "size": 3727,
+          "modified": "2025-06-10T00:21:14.211Z",
+          "lines": 121,
+          "hasContent": true
+        },
+        {
+          "path": "/Users/deepaksharma/syc/hackathon-bootstrap/newrelic-message-queues-platform-v2/QUICK_START.md",
+          "relativePath": "newrelic-message-queues-platform-v2/QUICK_START.md",
+          "size": 2233,
+          "modified": "2025-06-10T00:58:55.783Z",
+          "lines": 108,
+          "hasContent": true
+        },
+        {
+          "path": "/Users/deepaksharma/syc/hackathon-bootstrap/newrelic-message-queues-platform-v2/V2_PRODUCTION_IMPLEMENTATION_PLAN.md",
+          "relativePath": "newrelic-message-queues-platform-v2/V2_PRODUCTION_IMPLEMENTATION_PLAN.md",
+          "size": 12368,
+          "modified": "2025-06-10T01:44:12.707Z",
+          "lines": 452,
+          "hasContent": true
+        },
+        {
+          "path": "/Users/deepaksharma/syc/hackathon-bootstrap/newrelic-message-queues-platform/ARCHITECTURAL_COMPONENT_MAPPING.md",
+          "relativePath": "newrelic-message-queues-platform/ARCHITECTURAL_COMPONENT_MAPPING.md",
+          "size": 9313,
+          "modified": "2025-06-09T14:29:41.075Z",
+          "lines": 305,
+          "hasContent": true
+        },
+        {
+          "path": "/Users/deepaksharma/syc/hackathon-bootstrap/newrelic-message-queues-platform/CURRENT_DATA_PIPELINE.md",
+          "relativePath": "newrelic-message-queues-platform/CURRENT_DATA_PIPELINE.md",
+          "size": 17902,
+          "modified": "2025-06-10T01:14:25.364Z",
+          "lines": 704,
+          "hasContent": true
+        },
+        {
+          "path": "/Users/deepaksharma/syc/hackathon-bootstrap/newrelic-message-queues-platform/dashboards/DASHBOARD_GENERATION_COMPLETE.md",
+          "relativePath": "newrelic-message-queues-platform/dashboards/DASHBOARD_GENERATION_COMPLETE.md",
+          "size": 4650,
+          "modified": "2025-06-09T19:04:34.553Z",
+          "lines": 159,
+          "hasContent": true
+        },
+        {
+          "path": "/Users/deepaksharma/syc/hackathon-bootstrap/newrelic-message-queues-platform/docs/API_REFERENCE.md",
+          "relativePath": "newrelic-message-queues-platform/docs/API_REFERENCE.md",
+          "size": 10095,
+          "modified": "2025-06-09T09:23:15.641Z",
+          "lines": 492,
+          "hasContent": true
+        },
+        {
+          "path": "/Users/deepaksharma/syc/hackathon-bootstrap/newrelic-message-queues-platform/docs/CICD_SETUP.md",
+          "relativePath": "newrelic-message-queues-platform/docs/CICD_SETUP.md",
+          "size": 10060,
+          "modified": "2025-06-09T08:57:36.347Z",
+          "lines": 478,
+          "hasContent": true
+        },
+        {
+          "path": "/Users/deepaksharma/syc/hackathon-bootstrap/newrelic-message-queues-platform/docs/DATA_MODEL_V3_ALIGNMENT.md",
+          "relativePath": "newrelic-message-queues-platform/docs/DATA_MODEL_V3_ALIGNMENT.md",
+          "size": 8937,
+          "modified": "2025-06-09T12:53:44.660Z",
+          "lines": 291,
+          "hasContent": true
+        },
+        {
+          "path": "/Users/deepaksharma/syc/hackathon-bootstrap/newrelic-message-queues-platform/docs/ENTITY_SYNTHESIS_IMPLEMENTATION_PLAN.md",
+          "relativePath": "newrelic-message-queues-platform/docs/ENTITY_SYNTHESIS_IMPLEMENTATION_PLAN.md",
+          "size": 11523,
+          "modified": "2025-06-09T23:25:02.209Z",
+          "lines": 436,
+          "hasContent": true
+        },
+        {
+          "path": "/Users/deepaksharma/syc/hackathon-bootstrap/newrelic-message-queues-platform/docs/NEWRELIC_ENTITY_DEFINITIONS_REFERENCE.md",
+          "relativePath": "newrelic-message-queues-platform/docs/NEWRELIC_ENTITY_DEFINITIONS_REFERENCE.md",
+          "size": 14511,
+          "modified": "2025-06-09T23:20:49.113Z",
+          "lines": 474,
+          "hasContent": true
+        },
+        {
+          "path": "/Users/deepaksharma/syc/hackathon-bootstrap/newrelic-message-queues-platform/docs/NEWRELIC_ENTITY_DEFINITIONS_STRUCTURE.md",
+          "relativePath": "newrelic-message-queues-platform/docs/NEWRELIC_ENTITY_DEFINITIONS_STRUCTURE.md",
+          "size": 3241,
+          "modified": "2025-06-10T00:53:29.953Z",
+          "lines": 95,
+          "hasContent": true
+        },
+        {
+          "path": "/Users/deepaksharma/syc/hackathon-bootstrap/newrelic-message-queues-platform/docs/PRODUCTION_DEPLOYMENT.md",
+          "relativePath": "newrelic-message-queues-platform/docs/PRODUCTION_DEPLOYMENT.md",
+          "size": 16319,
+          "modified": "2025-06-09T09:22:03.559Z",
+          "lines": 688,
+          "hasContent": true
+        },
+        {
+          "path": "/Users/deepaksharma/syc/hackathon-bootstrap/newrelic-message-queues-platform/docs/QUICK_START.md",
+          "relativePath": "newrelic-message-queues-platform/docs/QUICK_START.md",
+          "size": 5497,
+          "modified": "2025-06-09T09:19:13.164Z",
+          "lines": 249,
+          "hasContent": true
+        },
+        {
+          "path": "/Users/deepaksharma/syc/hackathon-bootstrap/newrelic-message-queues-platform/infrastructure/README-ENHANCED-COLLECTION.md",
+          "relativePath": "newrelic-message-queues-platform/infrastructure/README-ENHANCED-COLLECTION.md",
+          "size": 13175,
+          "modified": "2025-06-09T06:09:35.958Z",
+          "lines": 414,
+          "hasContent": true
+        },
+        {
+          "path": "/Users/deepaksharma/syc/hackathon-bootstrap/newrelic-message-queues-platform/QUICK_START.md",
+          "relativePath": "newrelic-message-queues-platform/QUICK_START.md",
+          "size": 1154,
+          "modified": "2025-06-09T13:45:03.428Z",
+          "lines": 50,
+          "hasContent": true
+        },
+        {
+          "path": "/Users/deepaksharma/syc/hackathon-bootstrap/SECURITY_SCAN_RESULTS.md",
+          "relativePath": "SECURITY_SCAN_RESULTS.md",
+          "size": 2794,
+          "modified": "2025-06-10T01:53:33.993Z",
+          "lines": 79,
+          "hasContent": true
+        }
+      ]
+    }
+  },
+  "recommendations": [
+    {
+      "action": "DELETE",
+      "reason": "Archived/outdated files",
+      "count": 10,
+      "files": [
+        {
+          "path": "/Users/deepaksharma/syc/hackathon-bootstrap/docs/operations/infrastructure-integration-legacy.md",
+          "relativePath": "docs/operations/infrastructure-integration-legacy.md",
+          "size": 8460,
+          "modified": "2025-06-09T06:09:35.936Z",
+          "lines": 216,
+          "hasContent": true
+        },
+        {
+          "path": "/Users/deepaksharma/syc/hackathon-bootstrap/docs/operations/infrastructure-setup-legacy.md",
+          "relativePath": "docs/operations/infrastructure-setup-legacy.md",
+          "size": 6595,
+          "modified": "2025-06-09T06:09:35.936Z",
+          "lines": 265,
+          "hasContent": true
+        },
+        {
+          "path": "/Users/deepaksharma/syc/hackathon-bootstrap/newrelic-message-queues-platform-v2/archive/COMPREHENSIVE_V2_REVIEW.md",
+          "relativePath": "newrelic-message-queues-platform-v2/archive/COMPREHENSIVE_V2_REVIEW.md",
+          "size": 8007,
+          "modified": "2025-06-09T18:17:05.373Z",
+          "lines": 262,
+          "hasContent": true
+        },
+        {
+          "path": "/Users/deepaksharma/syc/hackathon-bootstrap/newrelic-message-queues-platform-v2/archive/CONSOLIDATED_SUMMARY.md",
+          "relativePath": "newrelic-message-queues-platform-v2/archive/CONSOLIDATED_SUMMARY.md",
+          "size": 2435,
+          "modified": "2025-06-09T18:44:02.103Z",
+          "lines": 82,
+          "hasContent": true
+        },
+        {
+          "path": "/Users/deepaksharma/syc/hackathon-bootstrap/newrelic-message-queues-platform-v2/archive/IMPLEMENTATION_SUMMARY.md",
+          "relativePath": "newrelic-message-queues-platform-v2/archive/IMPLEMENTATION_SUMMARY.md",
+          "size": 5656,
+          "modified": "2025-06-09T14:59:29.925Z",
+          "lines": 157,
+          "hasContent": true
+        },
+        {
+          "path": "/Users/deepaksharma/syc/hackathon-bootstrap/newrelic-message-queues-platform-v2/archive/outdated-docs/DATA_MODEL_FLOW_2025-06-09T21-30-30-582Z.md",
+          "relativePath": "newrelic-message-queues-platform-v2/archive/outdated-docs/DATA_MODEL_FLOW_2025-06-09T21-30-30-582Z.md",
+          "size": 10488,
+          "modified": "2025-06-09T21:30:30.586Z",
+          "lines": 380,
+          "hasContent": true
+        },
+        {
+          "path": "/Users/deepaksharma/syc/hackathon-bootstrap/newrelic-message-queues-platform-v2/archive/outdated-docs/DOCUMENTATION_STREAMLINING_PLAN.md",
+          "relativePath": "newrelic-message-queues-platform-v2/archive/outdated-docs/DOCUMENTATION_STREAMLINING_PLAN.md",
+          "size": 7903,
+          "modified": "2025-06-09T21:43:30.702Z",
+          "lines": 216,
+          "hasContent": true
+        },
+        {
+          "path": "/Users/deepaksharma/syc/hackathon-bootstrap/newrelic-message-queues-platform-v2/archive/outdated-docs/MASTER_DOCUMENTATION.md",
+          "relativePath": "newrelic-message-queues-platform-v2/archive/outdated-docs/MASTER_DOCUMENTATION.md",
+          "size": 9356,
+          "modified": "2025-06-09T21:50:34.998Z",
+          "lines": 254,
+          "hasContent": true
+        },
+        {
+          "path": "/Users/deepaksharma/syc/hackathon-bootstrap/newrelic-message-queues-platform-v2/archive/outdated-docs/V1_VS_V2_COMPREHENSIVE_COMPARISON.md",
+          "relativePath": "newrelic-message-queues-platform-v2/archive/outdated-docs/V1_VS_V2_COMPREHENSIVE_COMPARISON.md",
+          "size": 19678,
+          "modified": "2025-06-09T21:37:45.622Z",
+          "lines": 554,
+          "hasContent": true
+        },
+        {
+          "path": "/Users/deepaksharma/syc/hackathon-bootstrap/newrelic-message-queues-platform-v2/archive/README-v2.md",
+          "relativePath": "newrelic-message-queues-platform-v2/archive/README-v2.md",
+          "size": 5460,
+          "modified": "2025-06-09T14:38:42.311Z",
+          "lines": 212,
+          "hasContent": true
+        }
+      ]
+    },
+    {
+      "action": "DELETE",
+      "reason": "Status/summary reports (regeneratable)",
+      "count": 16,
+      "files": [
+        {
+          "path": "/Users/deepaksharma/syc/hackathon-bootstrap/docs/CONSOLIDATION_SUMMARY.md",
+          "relativePath": "docs/CONSOLIDATION_SUMMARY.md",
+          "size": 12175,
+          "modified": "2025-06-09T06:09:35.932Z",
+          "lines": 287,
+          "hasContent": true
+        },
+        {
+          "path": "/Users/deepaksharma/syc/hackathon-bootstrap/docs/DOCUMENTATION_REVIEW.md",
+          "relativePath": "docs/DOCUMENTATION_REVIEW.md",
+          "size": 4838,
+          "modified": "2025-06-09T06:44:57.558Z",
+          "lines": 106,
+          "hasContent": true
+        },
+        {
+          "path": "/Users/deepaksharma/syc/hackathon-bootstrap/docs/IMPLEMENTATION_SUMMARY.md",
+          "relativePath": "docs/IMPLEMENTATION_SUMMARY.md",
+          "size": 5315,
+          "modified": "2025-06-09T10:19:49.249Z",
+          "lines": 171,
+          "hasContent": true
+        },
+        {
+          "path": "/Users/deepaksharma/syc/hackathon-bootstrap/newrelic-message-queues-platform-v2/DASHBOARD_INTEGRATION_SUMMARY.md",
+          "relativePath": "newrelic-message-queues-platform-v2/DASHBOARD_INTEGRATION_SUMMARY.md",
+          "size": 3322,
+          "modified": "2025-06-09T23:21:13.167Z",
+          "lines": 107,
+          "hasContent": true
+        },
+        {
+          "path": "/Users/deepaksharma/syc/hackathon-bootstrap/newrelic-message-queues-platform-v2/PROJECT_STATUS.md",
+          "relativePath": "newrelic-message-queues-platform-v2/PROJECT_STATUS.md",
+          "size": 5972,
+          "modified": "2025-06-10T00:57:33.850Z",
+          "lines": 160,
+          "hasContent": true
+        },
+        {
+          "path": "/Users/deepaksharma/syc/hackathon-bootstrap/newrelic-message-queues-platform-v2/V2_PRODUCTION_READINESS_SUMMARY.md",
+          "relativePath": "newrelic-message-queues-platform-v2/V2_PRODUCTION_READINESS_SUMMARY.md",
+          "size": 6726,
+          "modified": "2025-06-10T01:48:39.907Z",
+          "lines": 206,
+          "hasContent": true
+        },
+        {
+          "path": "/Users/deepaksharma/syc/hackathon-bootstrap/newrelic-message-queues-platform/core/workers/IMPLEMENTATION_SUMMARY.md",
+          "relativePath": "newrelic-message-queues-platform/core/workers/IMPLEMENTATION_SUMMARY.md",
+          "size": 5933,
+          "modified": "2025-06-09T06:09:35.947Z",
+          "lines": 160,
+          "hasContent": true
+        },
+        {
+          "path": "/Users/deepaksharma/syc/hackathon-bootstrap/newrelic-message-queues-platform/DASHBOARD_ENHANCEMENT_SUMMARY.md",
+          "relativePath": "newrelic-message-queues-platform/DASHBOARD_ENHANCEMENT_SUMMARY.md",
+          "size": 4876,
+          "modified": "2025-06-09T13:23:14.117Z",
+          "lines": 140,
+          "hasContent": true
+        },
+        {
+          "path": "/Users/deepaksharma/syc/hackathon-bootstrap/newrelic-message-queues-platform/docs/ENTITY_COMPLIANCE_SUMMARY.md",
+          "relativePath": "newrelic-message-queues-platform/docs/ENTITY_COMPLIANCE_SUMMARY.md",
+          "size": 4701,
+          "modified": "2025-06-10T01:19:09.132Z",
+          "lines": 144,
+          "hasContent": true
+        },
+        {
+          "path": "/Users/deepaksharma/syc/hackathon-bootstrap/newrelic-message-queues-platform/docs/IMPLEMENTATION_VALIDATION_REPORT.md",
+          "relativePath": "newrelic-message-queues-platform/docs/IMPLEMENTATION_VALIDATION_REPORT.md",
+          "size": 8655,
+          "modified": "2025-06-09T20:35:41.701Z",
+          "lines": 310,
+          "hasContent": true
+        },
+        {
+          "path": "/Users/deepaksharma/syc/hackathon-bootstrap/newrelic-message-queues-platform/docs/PLATFORM_IMPLEMENTATION_SUMMARY.md",
+          "relativePath": "newrelic-message-queues-platform/docs/PLATFORM_IMPLEMENTATION_SUMMARY.md",
+          "size": 6861,
+          "modified": "2025-06-09T20:39:09.087Z",
+          "lines": 252,
+          "hasContent": true
+        },
+        {
+          "path": "/Users/deepaksharma/syc/hackathon-bootstrap/newrelic-message-queues-platform/infrastructure/IMPLEMENTATION_SUMMARY.md",
+          "relativePath": "newrelic-message-queues-platform/infrastructure/IMPLEMENTATION_SUMMARY.md",
+          "size": 12280,
+          "modified": "2025-06-09T06:09:35.957Z",
+          "lines": 297,
+          "hasContent": true
+        },
+        {
+          "path": "/Users/deepaksharma/syc/hackathon-bootstrap/newrelic-message-queues-platform/infrastructure/transformers/ENHANCEMENT_SUMMARY.md",
+          "relativePath": "newrelic-message-queues-platform/infrastructure/transformers/ENHANCEMENT_SUMMARY.md",
+          "size": 9403,
+          "modified": "2025-06-09T06:09:35.962Z",
+          "lines": 280,
+          "hasContent": true
+        },
+        {
+          "path": "/Users/deepaksharma/syc/hackathon-bootstrap/newrelic-message-queues-platform/PLATFORM_VALIDATION_REPORT.md",
+          "relativePath": "newrelic-message-queues-platform/PLATFORM_VALIDATION_REPORT.md",
+          "size": 7963,
+          "modified": "2025-06-09T20:30:02.034Z",
+          "lines": 214,
+          "hasContent": true
+        },
+        {
+          "path": "/Users/deepaksharma/syc/hackathon-bootstrap/newrelic-message-queues-platform/V2_CRITICAL_REVIEW.md",
+          "relativePath": "newrelic-message-queues-platform/V2_CRITICAL_REVIEW.md",
+          "size": 8481,
+          "modified": "2025-06-09T14:58:58.876Z",
+          "lines": 222,
+          "hasContent": true
+        },
+        {
+          "path": "/Users/deepaksharma/syc/hackathon-bootstrap/newrelic-message-queues-platform/VERIFICATION_SUMMARY.md",
+          "relativePath": "newrelic-message-queues-platform/VERIFICATION_SUMMARY.md",
+          "size": 3232,
+          "modified": "2025-06-09T06:09:35.939Z",
+          "lines": 85,
+          "hasContent": true
+        }
+      ]
+    },
+    {
+      "action": "DELETE",
+      "reason": "Pipeline reports (regeneratable)",
+      "count": 3,
+      "files": [
+        {
+          "path": "/Users/deepaksharma/syc/hackathon-bootstrap/newrelic-message-queues-platform-v2/pipeline-documentation-demo/LATEST_PIPELINE_REPORT.md",
+          "relativePath": "newrelic-message-queues-platform-v2/pipeline-documentation-demo/LATEST_PIPELINE_REPORT.md",
+          "size": 3832,
+          "modified": "2025-06-10T01:48:15.233Z",
+          "lines": 152,
+          "hasContent": true
+        },
+        {
+          "path": "/Users/deepaksharma/syc/hackathon-bootstrap/newrelic-message-queues-platform/docs/DATA_TRANSFORMATION_PIPELINE.md",
+          "relativePath": "newrelic-message-queues-platform/docs/DATA_TRANSFORMATION_PIPELINE.md",
+          "size": 24096,
+          "modified": "2025-06-09T13:38:48.979Z",
+          "lines": 816,
+          "hasContent": true
+        },
+        {
+          "path": "/Users/deepaksharma/syc/hackathon-bootstrap/newrelic-message-queues-platform/LATEST_PIPELINE_REPORT.md",
+          "relativePath": "newrelic-message-queues-platform/LATEST_PIPELINE_REPORT.md",
+          "size": 11530,
+          "modified": "2025-06-10T01:32:54.674Z",
+          "lines": 460,
+          "hasContent": true
+        }
+      ]
+    },
+    {
+      "action": "DELETE",
+      "reason": "Duplicate files",
+      "count": 7,
+      "files": [
+        {
+          "path": "/Users/deepaksharma/syc/hackathon-bootstrap/docs/getting-started/README_CONSOLIDATED.md",
+          "relativePath": "docs/getting-started/README_CONSOLIDATED.md",
+          "size": 6479,
+          "modified": "2025-06-09T06:09:35.936Z",
+          "lines": 203,
+          "hasContent": true
+        },
+        {
+          "path": "/Users/deepaksharma/syc/hackathon-bootstrap/docs/operations/infrastructure-setup_CONSOLIDATED.md",
+          "relativePath": "docs/operations/infrastructure-setup_CONSOLIDATED.md",
+          "size": 11947,
+          "modified": "2025-06-09T06:09:35.937Z",
+          "lines": 444,
+          "hasContent": true
+        },
+        {
+          "path": "/Users/deepaksharma/syc/hackathon-bootstrap/newrelic-message-queues-platform-v2/pipeline-documentation-demo/pipeline-report-2025-06-10.md",
+          "relativePath": "newrelic-message-queues-platform-v2/pipeline-documentation-demo/pipeline-report-2025-06-10.md",
+          "size": 3832,
+          "modified": "2025-06-10T01:48:15.232Z",
+          "lines": 152,
+          "hasContent": true
+        },
+        {
+          "path": "/Users/deepaksharma/syc/hackathon-bootstrap/newrelic-message-queues-platform/data-pipeline-docs/2025-06-09_DATA_TRANSFORMATION_PIPELINE.md",
+          "relativePath": "newrelic-message-queues-platform/data-pipeline-docs/2025-06-09_DATA_TRANSFORMATION_PIPELINE.md",
+          "size": 20410,
+          "modified": "2025-06-09T23:05:17.271Z",
+          "lines": 804,
+          "hasContent": true
+        },
+        {
+          "path": "/Users/deepaksharma/syc/hackathon-bootstrap/newrelic-message-queues-platform/data-pipeline-docs/2025-06-10_COMPREHENSIVE_PIPELINE_REPORT.md",
+          "relativePath": "newrelic-message-queues-platform/data-pipeline-docs/2025-06-10_COMPREHENSIVE_PIPELINE_REPORT.md",
+          "size": 11530,
+          "modified": "2025-06-10T01:32:54.674Z",
+          "lines": 460,
+          "hasContent": true
+        },
+        {
+          "path": "/Users/deepaksharma/syc/hackathon-bootstrap/newrelic-message-queues-platform/data-pipeline-docs/2025-06-10_DATA_TRANSFORMATION_PIPELINE.md",
+          "relativePath": "newrelic-message-queues-platform/data-pipeline-docs/2025-06-10_DATA_TRANSFORMATION_PIPELINE.md",
+          "size": 17902,
+          "modified": "2025-06-10T01:14:25.363Z",
+          "lines": 704,
+          "hasContent": true
+        },
+        {
+          "path": "/Users/deepaksharma/syc/hackathon-bootstrap/newrelic-message-queues-platform/docs/LIVE_DATA_TRANSFORMATION_PIPELINE.md",
+          "relativePath": "newrelic-message-queues-platform/docs/LIVE_DATA_TRANSFORMATION_PIPELINE.md",
+          "size": 7445,
+          "modified": "2025-06-10T01:13:55.644Z",
+          "lines": 266,
+          "hasContent": true
+        }
+      ]
+    },
+    {
+      "action": "KEEP",
+      "reason": "Critical documentation",
+      "count": 30,
+      "files": [
+        {
+          "path": "/Users/deepaksharma/syc/hackathon-bootstrap/docs/developer-guide/README.md",
+          "relativePath": "docs/developer-guide/README.md",
+          "size": 12344,
+          "modified": "2025-06-09T06:09:35.935Z",
+          "lines": 532,
+          "hasContent": true
+        },
+        {
+          "path": "/Users/deepaksharma/syc/hackathon-bootstrap/docs/getting-started/README.md",
+          "relativePath": "docs/getting-started/README.md",
+          "size": 7047,
+          "modified": "2025-06-09T06:09:35.936Z",
+          "lines": 212,
+          "hasContent": true
+        },
+        {
+          "path": "/Users/deepaksharma/syc/hackathon-bootstrap/docs/MESSAGE_QUEUES_PRD.md",
+          "relativePath": "docs/MESSAGE_QUEUES_PRD.md",
+          "size": 25132,
+          "modified": "2025-06-09T06:09:35.933Z",
+          "lines": 838,
+          "hasContent": true
+        },
+        {
+          "path": "/Users/deepaksharma/syc/hackathon-bootstrap/docs/README.md",
+          "relativePath": "docs/README.md",
+          "size": 7914,
+          "modified": "2025-06-09T13:47:44.348Z",
+          "lines": 233,
+          "hasContent": true
+        },
+        {
+          "path": "/Users/deepaksharma/syc/hackathon-bootstrap/docs/reference/metrics-reference.md",
+          "relativePath": "docs/reference/metrics-reference.md",
+          "size": 21093,
+          "modified": "2025-06-09T06:09:35.938Z",
+          "lines": 267,
+          "hasContent": true
+        },
+        {
+          "path": "/Users/deepaksharma/syc/hackathon-bootstrap/docs/ULTRA_DETAILED_PRODUCT_SPECIFICATION.md",
+          "relativePath": "docs/ULTRA_DETAILED_PRODUCT_SPECIFICATION.md",
+          "size": 77010,
+          "modified": "2025-06-07T17:23:43.509Z",
+          "lines": 2697,
+          "hasContent": true
+        },
+        {
+          "path": "/Users/deepaksharma/syc/hackathon-bootstrap/newrelic-message-queues-platform-v2/ARCHITECTURE.md",
+          "relativePath": "newrelic-message-queues-platform-v2/ARCHITECTURE.md",
+          "size": 10488,
+          "modified": "2025-06-10T00:59:58.443Z",
+          "lines": 295,
+          "hasContent": true
+        },
+        {
+          "path": "/Users/deepaksharma/syc/hackathon-bootstrap/newrelic-message-queues-platform-v2/DATA_MODEL_SPECIFICATION.md",
+          "relativePath": "newrelic-message-queues-platform-v2/DATA_MODEL_SPECIFICATION.md",
+          "size": 11480,
+          "modified": "2025-06-09T19:00:52.731Z",
+          "lines": 396,
+          "hasContent": true
+        },
+        {
+          "path": "/Users/deepaksharma/syc/hackathon-bootstrap/newrelic-message-queues-platform-v2/newrelic-entity-definitions/docs/entities/README.md",
+          "relativePath": "newrelic-message-queues-platform-v2/newrelic-entity-definitions/docs/entities/README.md",
+          "size": 3727,
+          "modified": "2025-06-09T23:24:33.080Z",
+          "lines": 153,
+          "hasContent": true
+        },
+        {
+          "path": "/Users/deepaksharma/syc/hackathon-bootstrap/newrelic-message-queues-platform-v2/newrelic-entity-definitions/docs/README.md",
+          "relativePath": "newrelic-message-queues-platform-v2/newrelic-entity-definitions/docs/README.md",
+          "size": 2402,
+          "modified": "2025-06-10T00:49:09.577Z",
+          "lines": 53,
+          "hasContent": true
+        },
+        {
+          "path": "/Users/deepaksharma/syc/hackathon-bootstrap/newrelic-message-queues-platform-v2/newrelic-entity-definitions/docs/relationships/README.md",
+          "relativePath": "newrelic-message-queues-platform-v2/newrelic-entity-definitions/docs/relationships/README.md",
+          "size": 8133,
+          "modified": "2025-06-09T23:31:17.285Z",
+          "lines": 267,
+          "hasContent": true
+        },
+        {
+          "path": "/Users/deepaksharma/syc/hackathon-bootstrap/newrelic-message-queues-platform-v2/newrelic-entity-definitions/README.md",
+          "relativePath": "newrelic-message-queues-platform-v2/newrelic-entity-definitions/README.md",
+          "size": 3125,
+          "modified": "2025-06-09T23:24:02.544Z",
+          "lines": 86,
+          "hasContent": true
+        },
+        {
+          "path": "/Users/deepaksharma/syc/hackathon-bootstrap/newrelic-message-queues-platform-v2/README.md",
+          "relativePath": "newrelic-message-queues-platform-v2/README.md",
+          "size": 9382,
+          "modified": "2025-06-10T00:54:50.688Z",
+          "lines": 292,
+          "hasContent": true
+        },
+        {
+          "path": "/Users/deepaksharma/syc/hackathon-bootstrap/newrelic-message-queues-platform-v2/TECHNICAL_GUIDE.md",
+          "relativePath": "newrelic-message-queues-platform-v2/TECHNICAL_GUIDE.md",
+          "size": 19359,
+          "modified": "2025-06-09T21:46:49.449Z",
+          "lines": 480,
+          "hasContent": true
+        },
+        {
+          "path": "/Users/deepaksharma/syc/hackathon-bootstrap/newrelic-message-queues-platform/core/workers/README.md",
+          "relativePath": "newrelic-message-queues-platform/core/workers/README.md",
+          "size": 8119,
+          "modified": "2025-06-09T06:09:35.947Z",
+          "lines": 293,
+          "hasContent": true
+        },
+        {
+          "path": "/Users/deepaksharma/syc/hackathon-bootstrap/newrelic-message-queues-platform/CURRENT_DATA_MODEL.md",
+          "relativePath": "newrelic-message-queues-platform/CURRENT_DATA_MODEL.md",
+          "size": 7445,
+          "modified": "2025-06-10T01:13:55.645Z",
+          "lines": 266,
+          "hasContent": true
+        },
+        {
+          "path": "/Users/deepaksharma/syc/hackathon-bootstrap/newrelic-message-queues-platform/dashboards/api/README.md",
+          "relativePath": "newrelic-message-queues-platform/dashboards/api/README.md",
+          "size": 4421,
+          "modified": "2025-06-07T17:23:43.523Z",
+          "lines": 264,
+          "hasContent": true
+        },
+        {
+          "path": "/Users/deepaksharma/syc/hackathon-bootstrap/newrelic-message-queues-platform/dashboards/cli/README.md",
+          "relativePath": "newrelic-message-queues-platform/dashboards/cli/README.md",
+          "size": 5001,
+          "modified": "2025-06-07T17:23:43.525Z",
+          "lines": 251,
+          "hasContent": true
+        },
+        {
+          "path": "/Users/deepaksharma/syc/hackathon-bootstrap/newrelic-message-queues-platform/dashboards/framework/README.md",
+          "relativePath": "newrelic-message-queues-platform/dashboards/framework/README.md",
+          "size": 8413,
+          "modified": "2025-06-09T06:09:35.950Z",
+          "lines": 224,
+          "hasContent": true
+        },
+        {
+          "path": "/Users/deepaksharma/syc/hackathon-bootstrap/newrelic-message-queues-platform/dashboards/README.md",
+          "relativePath": "newrelic-message-queues-platform/dashboards/README.md",
+          "size": 7896,
+          "modified": "2025-06-09T06:09:35.949Z",
+          "lines": 351,
+          "hasContent": true
+        },
+        {
+          "path": "/Users/deepaksharma/syc/hackathon-bootstrap/newrelic-message-queues-platform/dashboards/templates/README.md",
+          "relativePath": "newrelic-message-queues-platform/dashboards/templates/README.md",
+          "size": 4724,
+          "modified": "2025-06-09T13:38:14.834Z",
+          "lines": 155,
+          "hasContent": true
+        },
+        {
+          "path": "/Users/deepaksharma/syc/hackathon-bootstrap/newrelic-message-queues-platform/docs/ARCHITECTURE.md",
+          "relativePath": "newrelic-message-queues-platform/docs/ARCHITECTURE.md",
+          "size": 18319,
+          "modified": "2025-06-09T09:25:04.833Z",
+          "lines": 487,
+          "hasContent": true
+        },
+        {
+          "path": "/Users/deepaksharma/syc/hackathon-bootstrap/newrelic-message-queues-platform/docs/DATA_MODEL.md",
+          "relativePath": "newrelic-message-queues-platform/docs/DATA_MODEL.md",
+          "size": 9918,
+          "modified": "2025-06-09T13:17:28.764Z",
+          "lines": 342,
+          "hasContent": true
+        },
+        {
+          "path": "/Users/deepaksharma/syc/hackathon-bootstrap/newrelic-message-queues-platform/docs/README.md",
+          "relativePath": "newrelic-message-queues-platform/docs/README.md",
+          "size": 3489,
+          "modified": "2025-06-09T20:40:04.611Z",
+          "lines": 107,
+          "hasContent": true
+        },
+        {
+          "path": "/Users/deepaksharma/syc/hackathon-bootstrap/newrelic-message-queues-platform/entity-types/README.md",
+          "relativePath": "newrelic-message-queues-platform/entity-types/README.md",
+          "size": 4984,
+          "modified": "2025-06-10T01:07:09.979Z",
+          "lines": 133,
+          "hasContent": true
+        },
+        {
+          "path": "/Users/deepaksharma/syc/hackathon-bootstrap/newrelic-message-queues-platform/helm/message-queues-platform/README.md",
+          "relativePath": "newrelic-message-queues-platform/helm/message-queues-platform/README.md",
+          "size": 5096,
+          "modified": "2025-06-09T08:27:45.616Z",
+          "lines": 247,
+          "hasContent": true
+        },
+        {
+          "path": "/Users/deepaksharma/syc/hackathon-bootstrap/newrelic-message-queues-platform/infrastructure/README.md",
+          "relativePath": "newrelic-message-queues-platform/infrastructure/README.md",
+          "size": 12720,
+          "modified": "2025-06-09T06:09:35.958Z",
+          "lines": 447,
+          "hasContent": true
+        },
+        {
+          "path": "/Users/deepaksharma/syc/hackathon-bootstrap/newrelic-message-queues-platform/PLATFORM_ARCHITECTURE.md",
+          "relativePath": "newrelic-message-queues-platform/PLATFORM_ARCHITECTURE.md",
+          "size": 8350,
+          "modified": "2025-06-09T14:23:45.269Z",
+          "lines": 205,
+          "hasContent": true
+        },
+        {
+          "path": "/Users/deepaksharma/syc/hackathon-bootstrap/newrelic-message-queues-platform/README.md",
+          "relativePath": "newrelic-message-queues-platform/README.md",
+          "size": 9547,
+          "modified": "2025-06-09T13:46:40.191Z",
+          "lines": 309,
+          "hasContent": true
+        },
+        {
+          "path": "/Users/deepaksharma/syc/hackathon-bootstrap/newrelic-message-queues-platform/verification/README.md",
+          "relativePath": "newrelic-message-queues-platform/verification/README.md",
+          "size": 10318,
+          "modified": "2025-06-07T17:23:43.534Z",
+          "lines": 344,
+          "hasContent": true
+        }
+      ]
+    },
+    {
+      "action": "KEEP",
+      "reason": "Entity definitions",
+      "count": 7,
+      "files": [
+        {
+          "path": "/Users/deepaksharma/syc/hackathon-bootstrap/newrelic-message-queues-platform-v2/newrelic-entity-definitions/docs/entities/entity_summary.md",
+          "relativePath": "newrelic-message-queues-platform-v2/newrelic-entity-definitions/docs/entities/entity_summary.md",
+          "size": 6641,
+          "modified": "2025-06-09T23:27:43.960Z",
+          "lines": 285,
+          "hasContent": true
+        },
+        {
+          "path": "/Users/deepaksharma/syc/hackathon-bootstrap/newrelic-message-queues-platform-v2/newrelic-entity-definitions/docs/entities/golden_metrics.md",
+          "relativePath": "newrelic-message-queues-platform-v2/newrelic-entity-definitions/docs/entities/golden_metrics.md",
+          "size": 7614,
+          "modified": "2025-06-09T23:26:46.234Z",
+          "lines": 338,
+          "hasContent": true
+        },
+        {
+          "path": "/Users/deepaksharma/syc/hackathon-bootstrap/newrelic-message-queues-platform-v2/newrelic-entity-definitions/docs/entities/golden_tags.md",
+          "relativePath": "newrelic-message-queues-platform-v2/newrelic-entity-definitions/docs/entities/golden_tags.md",
+          "size": 5984,
+          "modified": "2025-06-09T23:28:30.301Z",
+          "lines": 266,
+          "hasContent": true
+        },
+        {
+          "path": "/Users/deepaksharma/syc/hackathon-bootstrap/newrelic-message-queues-platform-v2/newrelic-entity-definitions/docs/entities/guid_spec.md",
+          "relativePath": "newrelic-message-queues-platform-v2/newrelic-entity-definitions/docs/entities/guid_spec.md",
+          "size": 4096,
+          "modified": "2025-06-09T23:25:08.640Z",
+          "lines": 144,
+          "hasContent": true
+        },
+        {
+          "path": "/Users/deepaksharma/syc/hackathon-bootstrap/newrelic-message-queues-platform-v2/newrelic-entity-definitions/docs/entities/lifecycle.md",
+          "relativePath": "newrelic-message-queues-platform-v2/newrelic-entity-definitions/docs/entities/lifecycle.md",
+          "size": 7106,
+          "modified": "2025-06-09T23:30:25.019Z",
+          "lines": 297,
+          "hasContent": true
+        },
+        {
+          "path": "/Users/deepaksharma/syc/hackathon-bootstrap/newrelic-message-queues-platform-v2/newrelic-entity-definitions/docs/entities/summary_metrics.md",
+          "relativePath": "newrelic-message-queues-platform-v2/newrelic-entity-definitions/docs/entities/summary_metrics.md",
+          "size": 6461,
+          "modified": "2025-06-09T23:29:23.310Z",
+          "lines": 303,
+          "hasContent": true
+        },
+        {
+          "path": "/Users/deepaksharma/syc/hackathon-bootstrap/newrelic-message-queues-platform-v2/newrelic-entity-definitions/docs/entities/synthesis.md",
+          "relativePath": "newrelic-message-queues-platform-v2/newrelic-entity-definitions/docs/entities/synthesis.md",
+          "size": 6995,
+          "modified": "2025-06-09T23:25:57.764Z",
+          "lines": 340,
+          "hasContent": true
+        }
+      ]
+    },
+    {
+      "action": "ORGANIZE",
+      "reason": "Implementation guides",
+      "count": 16,
+      "files": [
+        {
+          "path": "/Users/deepaksharma/syc/hackathon-bootstrap/docs/DASHBOARD_IMPLEMENTATION_GUIDE.md",
+          "relativePath": "docs/DASHBOARD_IMPLEMENTATION_GUIDE.md",
+          "size": 19860,
+          "modified": "2025-06-07T17:23:43.507Z",
+          "lines": 912,
+          "hasContent": true
+        },
+        {
+          "path": "/Users/deepaksharma/syc/hackathon-bootstrap/docs/EVENT_TYPE_MIGRATION_GUIDE.md",
+          "relativePath": "docs/EVENT_TYPE_MIGRATION_GUIDE.md",
+          "size": 3273,
+          "modified": "2025-06-09T07:04:11.467Z",
+          "lines": 111,
+          "hasContent": true
+        },
+        {
+          "path": "/Users/deepaksharma/syc/hackathon-bootstrap/docs/MIGRATION_GUIDE.md",
+          "relativePath": "docs/MIGRATION_GUIDE.md",
+          "size": 12549,
+          "modified": "2025-06-09T06:09:35.933Z",
+          "lines": 438,
+          "hasContent": true
+        },
+        {
+          "path": "/Users/deepaksharma/syc/hackathon-bootstrap/docs/user-guide/cli-reference.md",
+          "relativePath": "docs/user-guide/cli-reference.md",
+          "size": 1078,
+          "modified": "2025-06-09T06:09:35.938Z",
+          "lines": 45,
+          "hasContent": true
+        },
+        {
+          "path": "/Users/deepaksharma/syc/hackathon-bootstrap/docs/user-guide/platform-modes.md",
+          "relativePath": "docs/user-guide/platform-modes.md",
+          "size": 15645,
+          "modified": "2025-06-09T06:09:35.938Z",
+          "lines": 502,
+          "hasContent": true
+        },
+        {
+          "path": "/Users/deepaksharma/syc/hackathon-bootstrap/docs/user-guide/quickstart-legacy.md",
+          "relativePath": "docs/user-guide/quickstart-legacy.md",
+          "size": 6480,
+          "modified": "2025-06-09T06:09:35.938Z",
+          "lines": 260,
+          "hasContent": true
+        },
+        {
+          "path": "/Users/deepaksharma/syc/hackathon-bootstrap/docs/user-guide/troubleshooting.md",
+          "relativePath": "docs/user-guide/troubleshooting.md",
+          "size": 1524,
+          "modified": "2025-06-09T06:09:35.938Z",
+          "lines": 50,
+          "hasContent": true
+        },
+        {
+          "path": "/Users/deepaksharma/syc/hackathon-bootstrap/docs/user-guide/working-with-dashboards.md",
+          "relativePath": "docs/user-guide/working-with-dashboards.md",
+          "size": 16059,
+          "modified": "2025-06-09T06:09:35.939Z",
+          "lines": 633,
+          "hasContent": true
+        },
+        {
+          "path": "/Users/deepaksharma/syc/hackathon-bootstrap/newrelic-message-queues-platform-v2/IMPLEMENTATION_GUIDES/01-CIRCUIT-BREAKER.md",
+          "relativePath": "newrelic-message-queues-platform-v2/IMPLEMENTATION_GUIDES/01-CIRCUIT-BREAKER.md",
+          "size": 15451,
+          "modified": "2025-06-10T01:45:37.190Z",
+          "lines": 550,
+          "hasContent": true
+        },
+        {
+          "path": "/Users/deepaksharma/syc/hackathon-bootstrap/newrelic-message-queues-platform-v2/IMPLEMENTATION_GUIDES/02-ERROR-RECOVERY-MANAGER.md",
+          "relativePath": "newrelic-message-queues-platform-v2/IMPLEMENTATION_GUIDES/02-ERROR-RECOVERY-MANAGER.md",
+          "size": 26747,
+          "modified": "2025-06-10T01:47:47.029Z",
+          "lines": 948,
+          "hasContent": true
+        },
+        {
+          "path": "/Users/deepaksharma/syc/hackathon-bootstrap/newrelic-message-queues-platform-v2/NRI_KAFKA_SETUP_GUIDE.md",
+          "relativePath": "newrelic-message-queues-platform-v2/NRI_KAFKA_SETUP_GUIDE.md",
+          "size": 3956,
+          "modified": "2025-06-10T01:27:17.677Z",
+          "lines": 143,
+          "hasContent": true
+        },
+        {
+          "path": "/Users/deepaksharma/syc/hackathon-bootstrap/newrelic-message-queues-platform/docs/CUSTOM_METRICS_GUIDE.md",
+          "relativePath": "newrelic-message-queues-platform/docs/CUSTOM_METRICS_GUIDE.md",
+          "size": 12998,
+          "modified": "2025-06-09T10:19:27.879Z",
+          "lines": 534,
+          "hasContent": true
+        },
+        {
+          "path": "/Users/deepaksharma/syc/hackathon-bootstrap/newrelic-message-queues-platform/docs/ENTITY_SYNTHESIS_ALIGNMENT_GUIDE.md",
+          "relativePath": "newrelic-message-queues-platform/docs/ENTITY_SYNTHESIS_ALIGNMENT_GUIDE.md",
+          "size": 12496,
+          "modified": "2025-06-09T23:23:03.978Z",
+          "lines": 454,
+          "hasContent": true
+        },
+        {
+          "path": "/Users/deepaksharma/syc/hackathon-bootstrap/newrelic-message-queues-platform/docs/MULTI_CLUSTER_GUIDE.md",
+          "relativePath": "newrelic-message-queues-platform/docs/MULTI_CLUSTER_GUIDE.md",
+          "size": 9973,
+          "modified": "2025-06-09T10:15:28.536Z",
+          "lines": 425,
+          "hasContent": true
+        },
+        {
+          "path": "/Users/deepaksharma/syc/hackathon-bootstrap/newrelic-message-queues-platform/docs/TESTING_GUIDE.md",
+          "relativePath": "newrelic-message-queues-platform/docs/TESTING_GUIDE.md",
+          "size": 11595,
+          "modified": "2025-06-09T10:21:10.002Z",
+          "lines": 601,
+          "hasContent": true
+        },
+        {
+          "path": "/Users/deepaksharma/syc/hackathon-bootstrap/newrelic-message-queues-platform/PLATFORM_GUIDE.md",
+          "relativePath": "newrelic-message-queues-platform/PLATFORM_GUIDE.md",
+          "size": 11815,
+          "modified": "2025-06-09T20:37:43.454Z",
+          "lines": 391,
+          "hasContent": true
+        }
+      ]
+    }
+  ]
+}
