@@ -1,0 +1,45 @@
+healthScore:
+  title: Cluster Health Score
+  unit: PERCENTAGE
+  queries:
+    newRelic:
+      select: latest(cluster.health.score)
+      from: MessageQueue
+      where: entityType = 'MESSAGE_QUEUE_CLUSTER'
+      eventId: entity.guid
+      eventName: entity.name
+  displayAsValue: true
+
+totalThroughput:
+  title: Total Throughput
+  unit: BYTES_PER_SECOND
+  queries:
+    newRelic:
+      select: sum(cluster.throughput.in.bytesPerSec + cluster.throughput.out.bytesPerSec) AS 'Total Throughput'
+      from: MessageQueue
+      where: entityType = 'MESSAGE_QUEUE_CLUSTER'
+      eventId: entity.guid
+      eventName: entity.name
+
+errorRate:
+  title: Error Rate
+  unit: PERCENTAGE
+  queries:
+    newRelic:
+      select: average(cluster.error.rate)
+      from: MessageQueue
+      where: entityType = 'MESSAGE_QUEUE_CLUSTER'
+      eventId: entity.guid
+      eventName: entity.name
+
+availability:
+  title: Cluster Availability
+  unit: PERCENTAGE
+  queries:
+    newRelic:
+      select: average(cluster.availability.percentage)
+      from: MessageQueue
+      where: entityType = 'MESSAGE_QUEUE_CLUSTER'
+      eventId: entity.guid
+      eventName: entity.name
+  displayAsValue: true

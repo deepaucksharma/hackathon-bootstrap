@@ -41,15 +41,20 @@ class BaseEntity {
 
   /**
    * Generate Entity GUID
-   * Format: {entityType}|{accountId}|{provider}|{hierarchical_identifiers}
+   * Format: {accountId}|INFRA|{entityType}|{hash}
+   * v3.0 compliant format as per New Relic specification
    */
   generateGUID() {
     const compositeKey = this.generateCompositeKey();
-    const identifiers = compositeKey.split(':').filter(Boolean);
     
-    // Use consistent format with transformer
-    const parts = [this.entityType, this.accountId, this.provider, ...identifiers];
-    return parts.filter(Boolean).join('|');
+    // Generate SHA256 hash of the composite key
+    const hash = crypto.createHash('sha256')
+      .update(compositeKey)
+      .digest('hex')
+      .substring(0, 32); // Use first 32 characters of hash
+    
+    // v3.0 compliant format: accountId|INFRA|entityType|hash
+    return `${this.accountId}|INFRA|${this.entityType}|${hash}`;
   }
 
   /**

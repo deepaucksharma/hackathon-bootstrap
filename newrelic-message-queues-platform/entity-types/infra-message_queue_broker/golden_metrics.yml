@@ -1,0 +1,79 @@
+cpuUsage:
+  title: CPU Usage
+  unit: PERCENTAGE
+  queries:
+    - select: average(broker.cpu.usage)
+      from: MessageQueue
+      where: "entity.type = 'MESSAGE_QUEUE_BROKER'"
+      facet: entity.name
+      eventId: entity.guid
+
+memoryUsage:
+  title: Memory Usage
+  unit: PERCENTAGE
+  queries:
+    - select: average(broker.memory.usage)
+      from: MessageQueue
+      where: "entity.type = 'MESSAGE_QUEUE_BROKER'"
+      facet: entity.name
+      eventId: entity.guid
+
+networkThroughput:
+  title: Network Throughput
+  unit: BYTES_PER_SECOND
+  queries:
+    - select: sum(broker.network.throughput)
+      from: MessageQueue
+      where: "entity.type = 'MESSAGE_QUEUE_BROKER'"
+      facet: entity.name
+      eventId: entity.guid
+
+requestLatency:
+  title: Request Latency
+  unit: MS
+  queries:
+    - select: average(broker.request.latency)
+      from: MessageQueue
+      where: "entity.type = 'MESSAGE_QUEUE_BROKER'"
+      facet: entity.name
+      eventId: entity.guid
+
+messagesInPerSecond:
+  title: Messages In Rate
+  unit: COUNT_PER_SECOND
+  queries:
+    - select: rate(sum(broker.messages.in), 1 second)
+      from: MessageQueue
+      where: "entity.type = 'MESSAGE_QUEUE_BROKER'"
+      facet: entity.name
+      eventId: entity.guid
+
+messagesOutPerSecond:
+  title: Messages Out Rate
+  unit: COUNT_PER_SECOND
+  queries:
+    - select: rate(sum(broker.messages.out), 1 second)
+      from: MessageQueue
+      where: "entity.type = 'MESSAGE_QUEUE_BROKER'"
+      facet: entity.name
+      eventId: entity.guid
+
+partitionCount:
+  title: Partitions Managed
+  unit: COUNT
+  queries:
+    - select: latest(broker.partitionCount)
+      from: MessageQueue
+      where: "entity.type = 'MESSAGE_QUEUE_BROKER'"
+      facet: entity.name
+      eventId: entity.guid
+
+leaderPartitionCount:
+  title: Leader Partitions
+  unit: COUNT
+  queries:
+    - select: latest(broker.leaderPartitionCount)
+      from: MessageQueue
+      where: "entity.type = 'MESSAGE_QUEUE_BROKER'"
+      facet: entity.name
+      eventId: entity.guid

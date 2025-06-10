@@ -1,0 +1,69 @@
+totalLag:
+  title: Total Lag
+  unit: COUNT
+  queries:
+    - select: sum(consumerGroup.lag)
+      from: MessageQueue
+      where: "entity.type = 'MESSAGE_QUEUE_CONSUMER_GROUP'"
+      facet: entity.name
+      eventId: entity.guid
+
+messageRate:
+  title: Message Consumption Rate
+  unit: COUNT_PER_MINUTE
+  queries:
+    - select: rate(sum(consumerGroup.messages.consumed), 1 minute)
+      from: MessageQueue
+      where: "entity.type = 'MESSAGE_QUEUE_CONSUMER_GROUP'"
+      facet: entity.name
+      eventId: entity.guid
+
+bytesConsumedRate:
+  title: Bytes Consumed Rate
+  unit: BYTES_PER_SECOND
+  queries:
+    - select: rate(sum(consumerGroup.bytes.consumed), 1 second)
+      from: MessageQueue
+      where: "entity.type = 'MESSAGE_QUEUE_CONSUMER_GROUP'"
+      facet: entity.name
+      eventId: entity.guid
+
+memberCount:
+  title: Active Members
+  unit: COUNT
+  queries:
+    - select: latest(consumerGroup.members)
+      from: MessageQueue
+      where: "entity.type = 'MESSAGE_QUEUE_CONSUMER_GROUP'"
+      facet: entity.name
+      eventId: entity.guid
+
+lagPerMember:
+  title: Average Lag Per Member
+  unit: COUNT
+  queries:
+    - select: sum(consumerGroup.lag) / latest(consumerGroup.members)
+      from: MessageQueue
+      where: "entity.type = 'MESSAGE_QUEUE_CONSUMER_GROUP' AND consumerGroup.members > 0"
+      facet: entity.name
+      eventId: entity.guid
+
+topicCount:
+  title: Topics Subscribed
+  unit: COUNT
+  queries:
+    - select: uniqueCount(consumerGroup.topics)
+      from: MessageQueue
+      where: "entity.type = 'MESSAGE_QUEUE_CONSUMER_GROUP'"
+      facet: entity.name
+      eventId: entity.guid
+
+rebalanceRate:
+  title: Rebalance Rate
+  unit: COUNT_PER_HOUR
+  queries:
+    - select: rate(sum(consumerGroup.rebalances), 1 hour)
+      from: MessageQueue
+      where: "entity.type = 'MESSAGE_QUEUE_CONSUMER_GROUP'"
+      facet: entity.name
+      eventId: entity.guid

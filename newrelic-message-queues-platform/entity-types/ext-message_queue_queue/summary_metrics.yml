@@ -1,0 +1,19 @@
+# Summary metrics are displayed in the entity list view
+# Maximum 3 metrics recommended
+queueDepth:
+  title: Queue Depth
+  unit: COUNT
+  tag:
+    key: queue.messages.ready
+    
+messagesPublishedRate:
+  title: Publish Rate
+  unit: COUNT_PER_MINUTE
+  tag:
+    key: queue.publishRate
+    
+consumerCount:
+  title: Active Consumers
+  unit: COUNT
+  tag:
+    key: queue.consumers

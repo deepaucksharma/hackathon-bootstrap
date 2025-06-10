@@ -107,11 +107,21 @@ DEBUG=platform:*,transform:* npm test
 
 ### Creating Dashboards
 ```bash
-# Generate full suite
-node dashboards/cli.js generate-suite --provider kafka --environment production
+# Standard dashboard creation (RECOMMENDED APPROACH)
+export NEW_RELIC_ACCOUNT_ID=your_account_id
+export NEW_RELIC_USER_API_KEY=your_api_key
 
-# Create specific dashboard
-node dashboards/cli.js create --template cluster-overview --provider kafka
+# Create standard 4-page dashboard
+node newrelic-message-queues-platform/dashboards/templates/standard-message-queue-dashboard.js
+
+# Create with custom name
+node newrelic-message-queues-platform/dashboards/templates/standard-message-queue-dashboard.js "Production Kafka" "Production monitoring"
+
+# Dashboard includes:
+# - Executive Overview: Business KPIs, health scores, cost metrics
+# - Consumer Groups: Lag analysis, consumer health, performance
+# - Infrastructure & Cost: Resource utilization, cost optimization  
+# - Topics & Partitions: Topic performance, partition distribution
 ```
 
 ## Key Files to Know
@@ -119,6 +129,7 @@ node dashboards/cli.js create --template cluster-overview --provider kafka
 - `platform.js` - Main entry point with all three modes
 - `infrastructure/transformers/nri-kafka-transformer.js` - Critical transformation logic
 - `core/entities/base-entity.js` - Base entity class with GUID generation
+- `dashboards/templates/standard-message-queue-dashboard.js` - Standard dashboard template
 - `test-infrastructure-e2e.js` - Comprehensive infrastructure mode test
 - `docs/ADVANCED_FEATURES.md` - Documentation for hidden features
 - `docs/EVENT_TYPE_MIGRATION_GUIDE.md` - Event type pattern explanation

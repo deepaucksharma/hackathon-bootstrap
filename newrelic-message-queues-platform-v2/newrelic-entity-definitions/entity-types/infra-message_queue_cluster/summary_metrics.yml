@@ -1,0 +1,14 @@
+healthScore:
+  title: Health Score
+  unit: PERCENTAGE
+  goldenMetric: healthScore
+
+totalThroughput:
+  title: Total Throughput
+  unit: BYTES_PER_SECOND
+  goldenMetric: totalThroughput
+
+errorRate:
+  title: Error Rate
+  unit: PERCENTAGE
+  goldenMetric: errorRate

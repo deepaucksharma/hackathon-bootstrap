@@ -48,13 +48,17 @@ class NriKafkaTransformer {
   }
 
   /**
-   * Generate a proper New Relic entity GUID
-   * Format: {entityType}|{accountId}|{provider}|{hierarchical_identifiers}
+   * Generate New Relic entity GUID following Queues & Streaming v3.0 specification
+   * Format: {accountId}|{domain}|{entityType}|{uniqueHash}
    */
   generateGuid(entityType, ...identifiers) {
-    // Filter out empty identifiers and join with pipe
-    const parts = [entityType, this.accountId, ...identifiers].filter(Boolean);
-    return parts.join('|');
+    // Calculate unique hash from hierarchical identifiers
+    const crypto = require('crypto');
+    const compositeKey = identifiers.filter(Boolean).join(':');
+    const uniqueHash = crypto.createHash('sha256').update(compositeKey).digest('hex').substring(0, 32);
+    
+    // Follow v3.0 specification format: {accountId}|{domain}|{entityType}|{uniqueHash}
+    return `${this.accountId}|INFRA|${entityType}|${uniqueHash}`;
   }
 
   /**
@@ -155,98 +159,184 @@ class NriKafkaTransformer {
     const startTime = performance.now();
     
     try {
-      if (!sample || !sample.eventType || sample.eventType !== 'KafkaBrokerSample') {
-        throw new Error('Invalid broker sample: missing or incorrect eventType');
+      // Handle both eventType and event_type field names from nri-kafka
+      const eventType = sample.eventType || sample.event_type;
+      if (!sample || !eventType || eventType !== 'KafkaBrokerSample') {
+        throw new Error(`Invalid broker sample: missing or incorrect eventType. Got: ${eventType}`);
       }
 
-      // Validate required fields
-      const requiredFields = ['broker.id'];
-      if (!this.validateRequiredFields(sample, requiredFields, 'MESSAGE_QUEUE_BROKER')) {
-        this.stats.skippedSamples++;
-        return null;
-      }
-
-      const brokerId = sample['broker.id'] || sample.broker_id || '0';
+      // Extract broker ID from various possible fields in nri-kafka data
+      const brokerId = sample['broker.id'] || sample.broker_id || sample.entityId || 
+                       (sample.entityKey && sample.entityKey.includes('brokerid=') ? 
+                        sample.entityKey.split('brokerid=')[1].split(':')[0] : '0');
       const clusterName = sample.clusterName || sample.cluster_name || 'default';
       const hostname = sample.hostname || sample['broker.hostname'] || `broker-${brokerId}`;
       
       // Generate GUID following MESSAGE_QUEUE pattern
       const entityGuid = this.generateGuid('MESSAGE_QUEUE_BROKER', 'kafka', clusterName, `broker-${brokerId}`);
       
-      // Create entity matching our MESSAGE_QUEUE format
+      // Create entity following Queues & Streaming v3.0 specification
       const entity = {
-        // Required entity fields
-        eventType: 'MessageQueue',
+        // Core entity fields per v3.0 spec
+        eventType: 'KafkaBrokerSample',
         entityType: 'MESSAGE_QUEUE_BROKER',
         entityGuid: entityGuid,
-        displayName: `Kafka Broker ${brokerId}`,
         entityName: `kafka-broker-${brokerId}`,
+        displayName: `Kafka Broker ${brokerId}`,
+        domain: 'INFRA',
+        reporting: true,
         
-        // Provider info
+        // Provider identification per v3.0
         provider: 'kafka',
+        providerAccountId: this.accountId,
+        
+        // v3.0 Required metadata
+        metadata: {
+          provider: 'kafka',
+          clusterName: clusterName,
+          brokerId: String(brokerId),
+          hostname: hostname,
+          version: sample.kafkaVersion || sample['kafka.version'] || 'unknown',
+          region: sample.region || 'unknown',
+          environment: this.inferEnvironment(clusterName),
+          createdAt: new Date().toISOString(),
+          lastSeenAt: new Date().toISOString()
+        },
         
         // Broker-specific attributes
         brokerId: String(brokerId),
         hostname: hostname,
         clusterName: clusterName,
         
-        // Enhanced metrics with multiple source mappings and fallbacks
-        'broker.messagesInPerSecond': this.extractMetricWithFallbacks(sample, [
-          'broker.messagesInPerSecond', 'messagesInPerSecond', 'net.messagesInPerSec'
-        ]),
-        'broker.messagesOutPerSecond': this.extractMetricWithFallbacks(sample, [
-          'broker.messagesOutPerSecond', 'messagesOutPerSecond', 'net.messagesOutPerSec'
-        ]),
-        'broker.bytesInPerSecond': this.extractMetricWithFallbacks(sample, [
-          'broker.bytesInPerSecond', 'bytesInPerSecond', 'net.bytesInPerSec'
-        ]),
-        'broker.bytesOutPerSecond': this.extractMetricWithFallbacks(sample, [
-          'broker.bytesOutPerSecond', 'bytesOutPerSecond', 'net.bytesOutPerSec'
-        ]),
+        // v3.0 Standard broker metrics following specification
+        metrics: {
+          // Throughput metrics per v3.0 spec
+          'broker.bytesInPerSecond': this.extractMetricWithFallbacks(sample, [
+            'broker.bytesInPerSecond', 'bytesInPerSecond', 'net.bytesInPerSec'
+          ]),
+          'broker.bytesOutPerSecond': this.extractMetricWithFallbacks(sample, [
+            'broker.bytesOutPerSecond', 'bytesOutPerSecond', 'net.bytesOutPerSec'
+          ]),
+          'broker.messagesInPerSecond': this.extractMetricWithFallbacks(sample, [
+            'broker.messagesInPerSecond', 'messagesInPerSecond', 'net.messagesInPerSec'
+          ]),
+          'broker.fetchRequestsPerSecond': this.extractMetricWithFallbacks(sample, [
+            'broker.requestsPerSecond', 'net.requestsPerSecond', 'requestsPerSecond'
+          ]),
+          'broker.produceRequestsPerSecond': this.extractMetricWithFallbacks(sample, [
+            'broker.requestsPerSecond', 'net.requestsPerSecond', 'requestsPerSecond'
+          ]),
+          
+          // Resource metrics per v3.0 spec
+          'broker.requestHandlerAvgIdlePercent': this.extractMetricWithFallbacks(sample, [
+            'broker.requestHandlerIdlePercent', 'net.requestHandlerAvgIdlePercent', 'requestHandlerIdlePercent'
+          ]),
+          'broker.networkProcessorAvgIdlePercent': this.extractMetricWithFallbacks(sample, [
+            'broker.networkProcessorIdlePercent', 'net.networkProcessorAvgIdlePercent', 'networkProcessorIdlePercent'
+          ]),
+          
+          // Replication metrics per v3.0 spec
+          'broker.partitionCount': this.extractMetricWithFallbacks(sample, [
+            'broker.partitionCount', 'partitionCount'
+          ]),
+          'broker.leaderCount': this.extractMetricWithFallbacks(sample, [
+            'broker.leaderCount', 'leaderCount'
+          ]),
+          'broker.underReplicatedPartitions': this.extractMetricWithFallbacks(sample, [
+            'broker.underReplicatedPartitions', 'underReplicatedPartitions'
+          ]),
+          'broker.offlinePartitionsCount': this.extractMetricWithFallbacks(sample, [
+            'broker.offlinePartitions', 'broker.offlinePartitionsCount', 'offlinePartitions'
+          ])
+        },
         
-        // Resource utilization with enhanced mapping
-        'broker.cpu.usage': this.calculateCpuUsage(sample),
-        'broker.memory.usage': this.extractMetricWithFallbacks(sample, [
-          'broker.JVMMemoryUsedPercent', 'jvmMemoryUsedPercent', 'memoryUsedPercent'
-        ]),
-        'broker.disk.usage': this.extractMetricWithFallbacks(sample, [
-          'broker.diskUsedPercent', 'disk.usedPercent', 'diskUsedPercent'
-        ]),
+        // v3.0 Latency metrics following specification
+        latency: {
+          'request.produce.totalTimeMs.p50': this.extractMetricWithFallbacks(sample, [
+            'request.produce.totalTimeMs.50thPercentile', 'produce.latency.p50'
+          ]),
+          'request.produce.totalTimeMs.p95': this.extractMetricWithFallbacks(sample, [
+            'request.produce.totalTimeMs.95thPercentile', 'produce.latency.p95'
+          ]),
+          'request.produce.totalTimeMs.p99': this.extractMetricWithFallbacks(sample, [
+            'request.produce.totalTimeMs.99thPercentile', 'produce.latency.p99'
+          ]),
+          'request.fetch.totalTimeMs.p50': this.extractMetricWithFallbacks(sample, [
+            'request.fetch.totalTimeMs.50thPercentile', 'fetch.latency.p50'
+          ]),
+          'request.fetch.totalTimeMs.p95': this.extractMetricWithFallbacks(sample, [
+            'request.fetch.totalTimeMs.95thPercentile', 'fetch.latency.p95'
+          ]),
+          'request.fetch.totalTimeMs.p99': this.extractMetricWithFallbacks(sample, [
+            'request.fetch.totalTimeMs.99thPercentile', 'fetch.latency.p99'
+          ])
+        },
         
-        // Network and request metrics with enhanced fallbacks
-        'broker.requestsPerSecond': this.extractMetricWithFallbacks(sample, [
-          'broker.requestsPerSecond', 'net.requestsPerSecond', 'requestsPerSecond'
-        ]),
-        'broker.networkProcessorIdlePercent': this.extractMetricWithFallbacks(sample, [
-          'broker.networkProcessorIdlePercent', 'net.networkProcessorAvgIdlePercent', 'networkProcessorIdlePercent'
-        ]),
-        'broker.requestHandlerIdlePercent': this.extractMetricWithFallbacks(sample, [
-          'broker.requestHandlerIdlePercent', 'net.requestHandlerAvgIdlePercent', 'requestHandlerIdlePercent'
-        ]),
+        // v3.0 Resource metrics
+        resources: {
+          'cpu.user': this.calculateCpuUsage(sample),
+          'memory.heap.used': this.extractMetricWithFallbacks(sample, [
+            'broker.JVMMemoryUsedPercent', 'jvmMemoryUsedPercent', 'memoryUsedPercent'
+          ]),
+          'disk.log.dir.used.percent': this.extractMetricWithFallbacks(sample, [
+            'broker.diskUsedPercent', 'disk.usedPercent', 'diskUsedPercent'
+          ]),
+          'network.connections.active': this.extractMetricWithFallbacks(sample, [
+            'broker.connectionCount', 'connectionCount'
+          ])
+        },
         
-        // Replication health metrics
-        'broker.underReplicatedPartitions': this.extractMetricWithFallbacks(sample, [
-          'broker.underReplicatedPartitions', 'underReplicatedPartitions'
-        ]),
-        'broker.offlinePartitions': this.extractMetricWithFallbacks(sample, [
-          'broker.offlinePartitions', 'broker.offlinePartitionsCount', 'offlinePartitions'
-        ]),
-        'broker.leaderElectionRate': this.extractMetricWithFallbacks(sample, [
-          'broker.leaderElectionRate', 'leaderElectionRate'
-        ]),
-        'broker.uncleanLeaderElections': this.extractMetricWithFallbacks(sample, [
-          'broker.uncleanLeaderElections', 'uncleanLeaderElections'
-        ]),
+        // v3.0 Golden metrics for UI display
+        goldenMetrics: [
+          {
+            name: 'broker.bytesInPerSecond',
+            value: this.extractMetricWithFallbacks(sample, [
+              'broker.bytesInPerSecond', 'bytesInPerSecond', 'net.bytesInPerSec'
+            ]),
+            unit: 'bytes/second'
+          },
+          {
+            name: 'broker.cpu.usage',
+            value: this.calculateCpuUsage(sample),
+            unit: 'percentage'
+          },
+          {
+            name: 'broker.memory.usage',
+            value: this.extractMetricWithFallbacks(sample, [
+              'broker.JVMMemoryUsedPercent', 'jvmMemoryUsedPercent', 'memoryUsedPercent'
+            ]),
+            unit: 'percentage'
+          },
+          {
+            name: 'broker.partitionCount',
+            value: this.extractMetricWithFallbacks(sample, [
+              'broker.partitionCount', 'partitionCount'
+            ]),
+            unit: 'count'
+          }
+        ],
         
-        // Enhanced tags with additional metadata
-        'tags.clusterName': clusterName,
-        'tags.brokerId': String(brokerId),
-        'tags.hostname': hostname,
-        'tags.kafkaVersion': sample.kafkaVersion || 'unknown',
-        'tags.environment': this.inferEnvironment(clusterName),
-        'tags.provider': 'kafka',
-        'tags.rack': sample['broker.rack'] || sample.rack || 'unknown',
-        'tags.jvmVersion': sample['broker.jvmVersion'] || 'unknown'
+        // v3.0 Tags following specification
+        tags: {
+          // Technical tags
+          provider: 'kafka',
+          environment: this.inferEnvironment(clusterName),
+          region: sample.region || 'unknown',
+          version: sample.kafkaVersion || sample['kafka.version'] || 'unknown',
+          
+          // Infrastructure tags
+          clusterName: clusterName,
+          brokerId: String(brokerId),
+          hostname: hostname,
+          rack: sample['broker.rack'] || sample.rack || 'unknown',
+          
+          // Custom tags for operational management
+          customTags: {
+            jvmVersion: sample['broker.jvmVersion'] || 'unknown',
+            kafkaCommitId: sample['kafka.commitId'] || 'unknown',
+            osVersion: sample['os.version'] || 'unknown'
+          }
+        }
       };
       
       // Add timestamp if available
@@ -279,21 +369,19 @@ class NriKafkaTransformer {
     const startTime = performance.now();
     
     try {
-      if (!sample || !sample.eventType || sample.eventType !== 'KafkaTopicSample') {
-        throw new Error('Invalid topic sample: missing or incorrect eventType');
+      // Handle both eventType and event_type field names from nri-kafka
+      const eventType = sample.eventType || sample.event_type;
+      if (!sample || !eventType || eventType !== 'KafkaTopicSample') {
+        throw new Error(`Invalid topic sample: missing or incorrect eventType. Got: ${eventType}`);
       }
 
-      const topicName = sample['topic.name'] || sample.topic_name;
+      // Extract topic name from various possible fields in nri-kafka data
+      const topicName = sample['topic.name'] || sample.topic_name || sample.entityName || sample.topic;
       if (!topicName) {
         throw new Error('Topic sample missing topic name');
       }
 
-      // Validate required fields
-      const requiredFields = ['topic.name'];
-      if (!this.validateRequiredFields(sample, requiredFields, 'MESSAGE_QUEUE_TOPIC')) {
-        this.stats.skippedSamples++;
-        return null;
-      }
+      // Topic name was already validated above
 
       const clusterName = sample.clusterName || sample.cluster_name || 'default';
       const brokerId = sample['broker.id'] || sample.broker_id;
@@ -306,78 +394,136 @@ class NriKafkaTransformer {
         entityGuid = this.generateGuid('MESSAGE_QUEUE_TOPIC', 'kafka', clusterName, topicName);
       }
       
-      // Create entity matching our MESSAGE_QUEUE format
+      // Create entity following Queues & Streaming v3.0 specification
       const entity = {
-        // Required entity fields
-        eventType: 'MessageQueue',
+        // Core entity fields per v3.0 spec
+        eventType: 'KafkaTopicSample',
         entityType: 'MESSAGE_QUEUE_TOPIC',
         entityGuid: entityGuid,
-        displayName: brokerId ? `${topicName} (Broker ${brokerId})` : topicName,
         entityName: topicName,
+        displayName: brokerId ? `${topicName} (Broker ${brokerId})` : topicName,
+        domain: 'INFRA',
+        reporting: true,
         
-        // Provider info
+        // Provider identification per v3.0
         provider: 'kafka',
+        providerAccountId: this.accountId,
+        
+        // v3.0 Required metadata
+        metadata: {
+          provider: 'kafka',
+          clusterName: clusterName,
+          topicName: topicName,
+          partitionCount: this.extractMetricWithFallbacks(sample, ['topic.partitionCount', 'partitionCount']),
+          replicationFactor: this.extractMetricWithFallbacks(sample, ['topic.replicationFactor', 'replicationFactor']),
+          environment: this.inferEnvironment(clusterName),
+          createdAt: new Date().toISOString(),
+          lastSeenAt: new Date().toISOString()
+        },
         
         // Topic-specific attributes
         topicName: topicName,
         clusterName: clusterName,
         
-        // Enhanced throughput metrics with fallbacks
-        'topic.messagesInPerSecond': this.extractMetricWithFallbacks(sample, [
-          'topic.messagesInPerSecond', 'messagesInPerSecond'
-        ]),
-        'topic.messagesOutPerSecond': this.extractMetricWithFallbacks(sample, [
-          'topic.messagesOutPerSecond', 'messagesOutPerSecond'
-        ]),
-        'topic.bytesInPerSecond': this.extractMetricWithFallbacks(sample, [
-          'topic.bytesInPerSecond', 'bytesInPerSecond'
-        ]),
-        'topic.bytesOutPerSecond': this.extractMetricWithFallbacks(sample, [
-          'topic.bytesOutPerSecond', 'bytesOutPerSecond'
-        ]),
+        // v3.0 Topic metrics following specification
+        metrics: {
+          'topic.messagesInPerSecond': this.extractMetricWithFallbacks(sample, [
+            'topic.messagesInPerSecond', 'messagesInPerSecond'
+          ]),
+          'topic.messagesOutPerSecond': this.extractMetricWithFallbacks(sample, [
+            'topic.messagesOutPerSecond', 'messagesOutPerSecond'
+          ]),
+          'topic.bytesInPerSecond': this.extractMetricWithFallbacks(sample, [
+            'topic.bytesInPerSecond', 'bytesInPerSecond'
+          ]),
+          'topic.bytesOutPerSecond': this.extractMetricWithFallbacks(sample, [
+            'topic.bytesOutPerSecond', 'bytesOutPerSecond'
+          ]),
+          'topic.fetchRequestsPerSecond': this.extractMetricWithFallbacks(sample, [
+            'topic.fetchRequestsPerSecond', 'fetchRequestsPerSecond'
+          ]),
+          'topic.produceRequestsPerSecond': this.extractMetricWithFallbacks(sample, [
+            'topic.produceRequestsPerSecond', 'produceRequestsPerSecond'
+          ]),
+          'topic.partitions.count': this.extractMetricWithFallbacks(sample, [
+            'topic.partitionCount', 'partitionCount', 'partitions'
+          ]),
+          'topic.replicationFactor': this.extractMetricWithFallbacks(sample, [
+            'topic.replicationFactor', 'replicationFactor'
+          ]),
+          'topic.retentionMs': this.extractMetricWithFallbacks(sample, [
+            'topic.retentionMs', 'retentionMs', 'retention.ms'
+          ]),
+          'topic.sizeBytes': this.extractMetricWithFallbacks(sample, [
+            'topic.diskSize', 'topic.sizeBytes', 'sizeBytes', 'diskSize'
+          ]),
+          'topic.underReplicatedPartitions': this.extractMetricWithFallbacks(sample, [
+            'topic.underReplicatedPartitions', 'underReplicatedPartitions'
+          ])
+        },
         
-        // Request metrics with enhanced mapping
-        'topic.fetchRequestsPerSecond': this.extractMetricWithFallbacks(sample, [
-          'topic.fetchRequestsPerSecond', 'fetchRequestsPerSecond'
-        ]),
-        'topic.produceRequestsPerSecond': this.extractMetricWithFallbacks(sample, [
-          'topic.produceRequestsPerSecond', 'produceRequestsPerSecond'
-        ]),
+        // v3.0 Golden metrics for topics
+        goldenMetrics: [
+          {
+            name: 'topic.throughput.in',
+            value: this.extractMetricWithFallbacks(sample, [
+              'topic.bytesInPerSecond', 'bytesInPerSecond'
+            ]),
+            unit: 'bytes/second'
+          },
+          {
+            name: 'topic.throughput.out', 
+            value: this.extractMetricWithFallbacks(sample, [
+              'topic.bytesOutPerSecond', 'bytesOutPerSecond'
+            ]),
+            unit: 'bytes/second'
+          },
+          {
+            name: 'topic.consumer.lag',
+            value: this.extractMetricWithFallbacks(sample, [
+              'topic.consumerLag', 'consumerLag'
+            ]),
+            unit: 'messages'
+          },
+          {
+            name: 'topic.error.rate',
+            value: this.extractMetricWithFallbacks(sample, [
+              'topic.errorRate', 'errorRate'
+            ]),
+            unit: 'errors/second'
+          }
+        ],
         
-        // Configuration metrics with fallbacks
-        'topic.partitions.count': this.extractMetricWithFallbacks(sample, [
-          'topic.partitionCount', 'partitionCount', 'partitions'
-        ]),
-        'topic.replicationFactor': this.extractMetricWithFallbacks(sample, [
-          'topic.replicationFactor', 'replicationFactor'
-        ]),
-        'topic.retentionMs': this.extractMetricWithFallbacks(sample, [
-          'topic.retentionMs', 'retentionMs', 'retention.ms'
-        ]),
-        'topic.sizeBytes': this.extractMetricWithFallbacks(sample, [
-          'topic.diskSize', 'topic.sizeBytes', 'sizeBytes', 'diskSize'
-        ]),
-        
-        // Health metrics
-        'topic.underReplicatedPartitions': this.extractMetricWithFallbacks(sample, [
-          'topic.underReplicatedPartitions', 'underReplicatedPartitions'
-        ]),
-        
-        // Enhanced tags
-        'tags.topicName': topicName,
-        'tags.clusterName': clusterName,
-        'tags.partitionCount': String(sample['topic.partitionCount'] || sample.partitionCount || 0),
-        'tags.replicationFactor': String(sample['topic.replicationFactor'] || sample.replicationFactor || 0),
-        'tags.environment': this.inferEnvironment(clusterName),
-        'tags.provider': 'kafka',
-        'tags.isCompacted': sample['topic.config.cleanup.policy'] === 'compact' ? 'true' : 'false',
-        'tags.retentionPolicy': sample['topic.config.cleanup.policy'] || 'delete'
+        // v3.0 Tags following specification
+        tags: {
+          // Technical tags
+          provider: 'kafka',
+          environment: this.inferEnvironment(clusterName),
+          region: sample.region || 'unknown',
+          
+          // Topic-specific tags
+          topicName: topicName,
+          clusterName: clusterName,
+          partitionCount: String(sample['topic.partitionCount'] || sample.partitionCount || 0),
+          replicationFactor: String(sample['topic.replicationFactor'] || sample.replicationFactor || 0),
+          
+          // Configuration tags
+          isCompacted: sample['topic.config.cleanup.policy'] === 'compact' ? 'true' : 'false',
+          retentionPolicy: sample['topic.config.cleanup.policy'] || 'delete',
+          compressionType: sample['topic.config.compression.type'] || 'producer',
+          
+          // Custom tags for operational management
+          customTags: {
+            retentionMs: String(sample['topic.retentionMs'] || sample.retentionMs || 0),
+            segmentBytes: String(sample['topic.config.segment.bytes'] || 'unknown')
+          }
+        }
       };
       
       // Add broker-specific tags if per-topic-per-broker metrics enabled
       if (this.options.enablePerTopicBrokerMetrics && brokerId) {
-        entity['tags.brokerId'] = String(brokerId);
-        entity['tags.isPerBrokerMetric'] = 'true';
+        entity.tags.brokerId = String(brokerId);
+        entity.tags.customTags.isPerBrokerMetric = 'true';
       }
       
       // Add timestamp if available
@@ -415,8 +561,10 @@ class NriKafkaTransformer {
     const startTime = performance.now();
     
     try {
-      if (!sample || !sample.eventType || sample.eventType !== 'KafkaConsumerSample') {
-        throw new Error('Invalid consumer sample: missing or incorrect eventType');
+      // Handle both eventType and event_type field names from nri-kafka  
+      const eventType = sample.eventType || sample.event_type;
+      if (!sample || !eventType || eventType !== 'KafkaConsumerSample') {
+        throw new Error(`Invalid consumer sample: missing or incorrect eventType. Got: ${eventType}`);
       }
 
       const consumerGroupId = sample['consumer.groupId'] || sample.consumer_group_id;
@@ -446,25 +594,117 @@ class NriKafkaTransformer {
       // Calculate advanced lag metrics
       const lagMetrics = this.calculateConsumerLagMetrics(sample);
       
-      // Create entity matching our MESSAGE_QUEUE format
+      // Create entity following Queues & Streaming v3.0 specification
       const entity = {
-        // Required entity fields
-        eventType: 'MessageQueue',
+        // Core entity fields per v3.0 spec
+        eventType: 'KafkaConsumerSample',
         entityType: 'MESSAGE_QUEUE_CONSUMER_GROUP',
         entityGuid: entityGuid,
+        entityName: consumerGroupId,
         displayName: partitionId !== undefined ? 
           `${consumerGroupId} (${topicName}:${partitionId})` : 
           `${consumerGroupId} (${clusterName})`,
-        entityName: consumerGroupId,
+        domain: 'INFRA',
+        reporting: true,
         
-        // Provider info
+        // Provider identification per v3.0
         provider: 'kafka',
+        providerAccountId: this.accountId,
+        
+        // v3.0 Required metadata
+        metadata: {
+          provider: 'kafka',
+          clusterName: clusterName,
+          consumerGroupId: consumerGroupId,
+          topicName: topicName,
+          partitionId: partitionId,
+          environment: this.inferEnvironment(clusterName),
+          createdAt: new Date().toISOString(),
+          lastSeenAt: new Date().toISOString()
+        },
         
         // Consumer group attributes
         consumerGroupId: consumerGroupId,
         clusterName: clusterName,
         
-        // State and membership with enhanced detection
+        // v3.0 Consumer metrics following specification
+        metrics: {
+          // Enhanced lag metrics - critical for consumer group monitoring
+          'consumerGroup.totalLag': lagMetrics.totalLag,
+          'consumerGroup.maxLag': lagMetrics.maxLag,
+          'consumerGroup.avgLag': lagMetrics.avgLag,
+          'consumerGroup.lagPerPartition': lagMetrics.lagPerPartition,
+          'consumerGroup.lagTrend': lagMetrics.lagTrend,
+          'consumerGroup.lagStabilityScore': lagMetrics.stabilityScore,
+          
+          // State and membership metrics
+          'consumerGroup.memberCount': this.extractMetricWithFallbacks(sample, [
+            'consumer.memberCount', 'consumer.members', 'memberCount'
+          ]),
+          'consumerGroup.activeMembers': this.extractMetricWithFallbacks(sample, [
+            'consumer.activeMembers', 'activeMembers'
+          ]),
+          
+          // Consumption metrics
+          'consumerGroup.messagesConsumedPerSecond': this.extractMetricWithFallbacks(sample, [
+            'consumer.messagesConsumedPerSecond', 'consumer.messageRate', 'messagesConsumedPerSecond'
+          ]),
+          'consumerGroup.bytesConsumedPerSecond': this.extractMetricWithFallbacks(sample, [
+            'consumer.bytesConsumedPerSecond', 'bytesConsumedPerSecond'
+          ]),
+          'consumerGroup.recordsPerPoll': this.extractMetricWithFallbacks(sample, [
+            'consumer.recordsPerPoll', 'recordsPerPoll'
+          ]),
+          
+          // Offset metrics
+          'consumerGroup.committedOffset': this.extractMetricWithFallbacks(sample, [
+            'consumer.offset', 'consumer.committedOffset', 'committedOffset'
+          ]),
+          'consumerGroup.currentOffset': this.extractMetricWithFallbacks(sample, [
+            'consumer.currentOffset', 'currentOffset'
+          ]),
+          'consumerGroup.offsetCommitRate': this.extractMetricWithFallbacks(sample, [
+            'consumer.offsetCommitRate', 'offsetCommitRate'
+          ]),
+          
+          // Performance metrics
+          'consumerGroup.processingTimeMs': this.extractMetricWithFallbacks(sample, [
+            'consumer.processingTimeMs', 'processingTimeMs'
+          ]),
+          'consumerGroup.pollIntervalMs': this.extractMetricWithFallbacks(sample, [
+            'consumer.pollIntervalMs', 'pollIntervalMs'
+          ])
+        },
+        
+        // v3.0 Golden metrics for consumer groups
+        goldenMetrics: [
+          {
+            name: 'consumer.lag',
+            value: lagMetrics.totalLag,
+            unit: 'messages'
+          },
+          {
+            name: 'consumer.throughput',
+            value: this.extractMetricWithFallbacks(sample, [
+              'consumer.messagesConsumedPerSecond', 'consumer.messageRate', 'messagesConsumedPerSecond'
+            ]),
+            unit: 'messages/second'
+          },
+          {
+            name: 'consumer.stability.score',
+            value: lagMetrics.stabilityScore,
+            unit: 'score'
+          },
+          {
+            name: 'consumer.member.count',
+            value: this.extractMetricWithFallbacks(sample, [
+              'consumer.memberCount', 'consumer.members', 'memberCount'
+            ]),
+            unit: 'count'
+          }
+        ],
+        
+        // State and membership with enhanced detection (keeping for backward compatibility)
         'consumerGroup.state': this.extractMetricWithFallbacks(sample, [
           'consumer.state', 'state', 'group.state'
         ], 'STABLE'),
@@ -520,22 +760,37 @@ class NriKafkaTransformer {
         'consumerGroup.isDead': this.getConsumerStateFlag(sample, 'DEAD'),
         'consumerGroup.isEmpty': this.getConsumerStateFlag(sample, 'EMPTY'),
         
-        // Enhanced tags with additional metadata
-        'tags.consumerGroupId': consumerGroupId,
-        'tags.state': sample['consumer.state'] || 'STABLE',
-        'tags.clusterName': clusterName,
-        'tags.topicName': topicName,
-        'tags.clientId': sample['consumer.clientId'] || 'unknown',
-        'tags.environment': this.inferEnvironment(clusterName),
-        'tags.provider': 'kafka',
-        'tags.protocol': sample['consumer.protocol'] || 'unknown',
-        'tags.assignmentStrategy': sample['consumer.assignmentStrategy'] || 'unknown'
+        // v3.0 Tags following specification
+        tags: {
+          // Technical tags
+          provider: 'kafka',
+          environment: this.inferEnvironment(clusterName),
+          region: sample.region || 'unknown',
+          
+          // Consumer group specific tags
+          consumerGroupId: consumerGroupId,
+          clusterName: clusterName,
+          topicName: topicName,
+          state: sample['consumer.state'] || 'STABLE',
+          clientId: sample['consumer.clientId'] || 'unknown',
+          protocol: sample['consumer.protocol'] || 'unknown',
+          assignmentStrategy: sample['consumer.assignmentStrategy'] || 'unknown',
+          
+          // Custom tags for operational management
+          customTags: {
+            partitionId: partitionId ? String(partitionId) : 'unknown',
+            memberCount: String(this.extractMetricWithFallbacks(sample, [
+              'consumer.memberCount', 'consumer.members', 'memberCount'
+            ])),
+            isPerPartitionMetric: partitionId !== undefined ? 'true' : 'false'
+          }
+        }
       };
       
-      // Add partition-specific tags if available
+      // Update partition-specific tags if available
       if (partitionId !== undefined) {
-        entity['tags.partitionId'] = String(partitionId);
-        entity['tags.isPerPartitionMetric'] = 'true';
+        entity.tags.partitionId = String(partitionId);
+        entity.tags.customTags.isPerPartitionMetric = 'true';
       }
       
       // Add timestamp if available
@@ -585,75 +840,133 @@ class NriKafkaTransformer {
       const aggregatedMetrics = this.aggregateClusterMetrics(brokerSamples, topicSamples, consumerGroupSamples);
       const brokerCount = brokerSamples.length;
       
-      // Create cluster entity with comprehensive metrics
+      // Create cluster entity following v3.0 specification
       const entity = {
-        // Required entity fields
-        eventType: 'MessageQueue',
+        // Core entity fields per v3.0 spec
+        eventType: 'KafkaClusterSample',
         entityType: 'MESSAGE_QUEUE_CLUSTER',
         entityGuid: entityGuid,
-        displayName: `Kafka Cluster: ${clusterName}`,
         entityName: clusterName,
+        displayName: `Kafka Cluster: ${clusterName}`,
+        domain: 'INFRA',
+        reporting: true,
         
-        // Provider info
+        // Provider identification per v3.0
         provider: 'kafka',
+        providerAccountId: this.accountId,
+        
+        // v3.0 Required metadata
+        metadata: {
+          provider: 'kafka',
+          clusterName: clusterName,
+          brokerCount: brokerCount,
+          version: kafkaVersion,
+          region: brokerSamples[0]?.region || 'unknown',
+          environment: this.inferEnvironment(clusterName),
+          createdAt: new Date().toISOString(),
+          lastSeenAt: new Date().toISOString()
+        },
         
         // Cluster attributes
         clusterName: clusterName,
         
-        // Enhanced broker metrics
-        'cluster.brokerCount': brokerCount,
-        'cluster.brokersOnline': aggregatedMetrics.brokersOnline,
-        'cluster.brokersOffline': Math.max(0, brokerCount - aggregatedMetrics.brokersOnline),
+        // v3.0 Cluster metrics following specification
+        metrics: {
+          // Enhanced broker metrics
+          'cluster.brokerCount': brokerCount,
+          'cluster.brokersOnline': aggregatedMetrics.brokersOnline,
+          'cluster.brokersOffline': Math.max(0, brokerCount - aggregatedMetrics.brokersOnline),
+          
+          // Throughput metrics with additional calculations
+          'cluster.throughput.messagesPerSecond': aggregatedMetrics.messagesIn + aggregatedMetrics.messagesOut,
+          'cluster.throughput.bytesPerSecond': aggregatedMetrics.bytesIn + aggregatedMetrics.bytesOut,
+          'cluster.messagesInPerSecond': aggregatedMetrics.messagesIn,
+          'cluster.messagesOutPerSecond': aggregatedMetrics.messagesOut,
+          'cluster.bytesInPerSecond': aggregatedMetrics.bytesIn,
+          'cluster.bytesOutPerSecond': aggregatedMetrics.bytesOut,
+          
+          // Average and peak resource utilization
+          'cluster.cpu.avgUsage': aggregatedMetrics.avgCpuUsage,
+          'cluster.cpu.maxUsage': aggregatedMetrics.maxCpuUsage,
+          'cluster.memory.avgUsage': aggregatedMetrics.avgMemoryUsage,
+          'cluster.memory.maxUsage': aggregatedMetrics.maxMemoryUsage,
+          'cluster.disk.avgUsage': aggregatedMetrics.avgDiskUsage,
+          'cluster.disk.maxUsage': aggregatedMetrics.maxDiskUsage,
+          
+          // Enhanced health metrics
+          'cluster.underReplicatedPartitions': aggregatedMetrics.underReplicatedPartitions,
+          'cluster.offlinePartitions': aggregatedMetrics.offlinePartitions,
+          'cluster.health.score': this.calculateEnhancedHealthScore(aggregatedMetrics, brokerCount),
+          'cluster.health.brokerHealthScore': aggregatedMetrics.brokerHealthScore,
+          'cluster.health.replicationHealthScore': aggregatedMetrics.replicationHealthScore,
+          
+          // Topic aggregations
+          'cluster.topicCount': aggregatedMetrics.topicCount,
+          'cluster.totalPartitions': aggregatedMetrics.totalPartitions,
+          'cluster.avgPartitionsPerTopic': aggregatedMetrics.avgPartitionsPerTopic,
+          'cluster.avgReplicationFactor': aggregatedMetrics.avgReplicationFactor,
+          
+          // Consumer group aggregations
+          'cluster.consumerGroupCount': aggregatedMetrics.consumerGroupCount,
+          'cluster.totalConsumerLag': aggregatedMetrics.totalConsumerLag,
+          'cluster.maxConsumerLag': aggregatedMetrics.maxConsumerLag,
+          'cluster.avgConsumerLag': aggregatedMetrics.avgConsumerLag,
+          
+          // Network and request metrics
+          'cluster.requestsPerSecond': aggregatedMetrics.requestsPerSecond,
+          'cluster.avgNetworkProcessorIdle': aggregatedMetrics.avgNetworkProcessorIdle,
+          'cluster.avgRequestHandlerIdle': aggregatedMetrics.avgRequestHandlerIdle
+        },
         
-        // Throughput metrics with additional calculations
-        'cluster.throughput.messagesPerSecond': aggregatedMetrics.messagesIn + aggregatedMetrics.messagesOut,
-        'cluster.throughput.bytesPerSecond': aggregatedMetrics.bytesIn + aggregatedMetrics.bytesOut,
-        'cluster.messagesInPerSecond': aggregatedMetrics.messagesIn,
-        'cluster.messagesOutPerSecond': aggregatedMetrics.messagesOut,
-        'cluster.bytesInPerSecond': aggregatedMetrics.bytesIn,
-        'cluster.bytesOutPerSecond': aggregatedMetrics.bytesOut,
+        // v3.0 Golden metrics for clusters
+        goldenMetrics: [
+          {
+            name: 'cluster.health.score',
+            value: this.calculateEnhancedHealthScore(aggregatedMetrics, brokerCount),
+            unit: 'percentage'
+          },
+          {
+            name: 'cluster.availability.percentage',
+            value: (aggregatedMetrics.brokersOnline / brokerCount) * 100,
+            unit: 'percentage'
+          },
+          {
+            name: 'cluster.throughput.total',
+            value: aggregatedMetrics.messagesIn + aggregatedMetrics.messagesOut,
+            unit: 'messages/second'
+          },
+          {
+            name: 'cluster.error.rate',
+            value: aggregatedMetrics.underReplicatedPartitions + aggregatedMetrics.offlinePartitions,
+            unit: 'errors/second'
+          }
+        ],
         
-        // Average and peak resource utilization
-        'cluster.cpu.avgUsage': aggregatedMetrics.avgCpuUsage,
-        'cluster.cpu.maxUsage': aggregatedMetrics.maxCpuUsage,
-        'cluster.memory.avgUsage': aggregatedMetrics.avgMemoryUsage,
-        'cluster.memory.maxUsage': aggregatedMetrics.maxMemoryUsage,
-        'cluster.disk.avgUsage': aggregatedMetrics.avgDiskUsage,
-        'cluster.disk.maxUsage': aggregatedMetrics.maxDiskUsage,
-        
-        // Enhanced health metrics
-        'cluster.underReplicatedPartitions': aggregatedMetrics.underReplicatedPartitions,
-        'cluster.offlinePartitions': aggregatedMetrics.offlinePartitions,
-        'cluster.health.score': this.calculateEnhancedHealthScore(aggregatedMetrics, brokerCount),
-        'cluster.health.brokerHealthScore': aggregatedMetrics.brokerHealthScore,
-        'cluster.health.replicationHealthScore': aggregatedMetrics.replicationHealthScore,
-        
-        // Topic aggregations
-        'cluster.topicCount': aggregatedMetrics.topicCount,
-        'cluster.totalPartitions': aggregatedMetrics.totalPartitions,
-        'cluster.avgPartitionsPerTopic': aggregatedMetrics.avgPartitionsPerTopic,
-        'cluster.avgReplicationFactor': aggregatedMetrics.avgReplicationFactor,
-        
-        // Consumer group aggregations
-        'cluster.consumerGroupCount': aggregatedMetrics.consumerGroupCount,
-        'cluster.totalConsumerLag': aggregatedMetrics.totalConsumerLag,
-        'cluster.maxConsumerLag': aggregatedMetrics.maxConsumerLag,
-        'cluster.avgConsumerLag': aggregatedMetrics.avgConsumerLag,
-        
-        // Network and request metrics
-        'cluster.requestsPerSecond': aggregatedMetrics.requestsPerSecond,
-        'cluster.avgNetworkProcessorIdle': aggregatedMetrics.avgNetworkProcessorIdle,
-        'cluster.avgRequestHandlerIdle': aggregatedMetrics.avgRequestHandlerIdle,
-        
-        // Enhanced tags with additional metadata
-        'tags.clusterName': clusterName,
-        'tags.brokerCount': String(brokerCount),
-        'tags.kafkaVersion': kafkaVersion,
-        'tags.environment': this.inferEnvironment(clusterName),
-        'tags.provider': 'kafka',
-        'tags.topicCount': String(aggregatedMetrics.topicCount),
-        'tags.consumerGroupCount': String(aggregatedMetrics.consumerGroupCount),
-        'tags.healthStatus': this.getHealthStatus(this.calculateEnhancedHealthScore(aggregatedMetrics, brokerCount))
+        // v3.0 Tags following specification
+        tags: {
+          // Technical tags
+          provider: 'kafka',
+          environment: this.inferEnvironment(clusterName),
+          region: brokerSamples[0]?.region || 'unknown',
+          version: kafkaVersion,
+          
+          // Cluster-specific tags
+          clusterName: clusterName,
+          brokerCount: String(brokerCount),
+          topicCount: String(aggregatedMetrics.topicCount),
+          consumerGroupCount: String(aggregatedMetrics.consumerGroupCount),
+          
+          // Health and operational tags
+          healthStatus: this.getHealthStatus(this.calculateEnhancedHealthScore(aggregatedMetrics, brokerCount)),
+          availability: String(Math.round((aggregatedMetrics.brokersOnline / brokerCount) * 100)),
+          
+          // Custom tags for operational management
+          customTags: {
+            totalPartitions: String(aggregatedMetrics.totalPartitions),
+            avgReplicationFactor: String(Math.round(aggregatedMetrics.avgReplicationFactor * 100) / 100),
+            maxConsumerLag: String(aggregatedMetrics.maxConsumerLag)
+          }
+        }
       };
       
       // Apply metric definitions and validation

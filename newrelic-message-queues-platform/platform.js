@@ -13,6 +13,8 @@ const { Command } = require('commander');
 const { EventEmitter } = require('events');
 const debug = require('debug')('platform:main');
 const chalk = require('chalk');
+const path = require('path');
+const DataModelExtractor = require('./core/data-models/data-model-extractor');
 
 // Core components
 const { EntityFactory } = require('./core/entities');
@@ -22,10 +24,16 @@ const ConfigValidator = require('./core/config-validator');
 const { getConfigManager } = require('./core/config/config-manager');
 const HybridModeManager = require('./core/hybrid-mode-manager');
 const RelationshipManager = require('./core/relationships/relationship-manager');
-const ErrorRecoveryManager = require('./core/error-recovery-manager');
+const ErrorRecoveryManager = require('./core/resilience/error-recovery-manager');
+
+// API components
+const ApiServer = require('./api/server');
+const { getHealthCheckService } = require('./core/health/health-check');
+const { getPrometheusExporter } = require('./core/metrics/prometheus-exporter');
 
 // Infrastructure components
 const InfraAgentCollector = require('./infrastructure/collectors/infra-agent-collector');
+const MultiClusterCollector = require('./infrastructure/collectors/multi-cluster-collector');
 const NriKafkaTransformer = require('./infrastructure/transformers/nri-kafka-transformer');
 
 // Enhanced infrastructure components
@@ -67,15 +75,23 @@ class MessageQueuesPlatform extends EventEmitter {
       brokerWorkerPoolSize: options.brokerWorkerPoolSize || 5,
       topicWorkerPoolSize: options.topicWorkerPoolSize || 8,
       consumerWorkerPoolSize: options.consumerWorkerPoolSize || 3,
+      // API options
+      apiEnabled: options.apiEnabled !== false,
+      apiPort: options.apiPort || 3000,
+      apiHost: options.apiHost || '0.0.0.0',
       ...options
     };
     
     this.validateConfig();
     this.setupErrorRecovery();
     this.setupComponents();
+    this.setupApiServer();
+    this.setupMetrics();
+    this.setupDataModelExtractor();
     
     this.running = false;
     this.intervalId = null;
+    this.initialized = false;
   }
   
   validateConfig() {
@@ -163,11 +179,78 @@ class MessageQueuesPlatform extends EventEmitter {
     }
   }
   
+  setupApiServer() {
+    if (!this.options.apiEnabled) {
+      debug('API server disabled');
+      return;
+    }
+    
+    // Initialize API server
+    this.apiServer = new ApiServer(this, {
+      port: this.options.apiPort,
+      host: this.options.apiHost
+    });
+    
+    debug('API server configured on %s:%d', this.options.apiHost, this.options.apiPort);
+  }
+  
+  setupMetrics() {
+    // Initialize Prometheus metrics exporter
+    this.prometheusExporter = getPrometheusExporter();
+    
+    // Set up metrics update interval
+    this.metricsUpdateInterval = setInterval(() => {
+      try {
+        this.prometheusExporter.updateFromPlatformStats(this);
+      } catch (error) {
+        debug('Error updating Prometheus metrics:', error);
+      }
+    }, 30000); // Update every 30 seconds
+    
+    debug('Prometheus metrics exporter initialized');
+  }
+
+  setupDataModelExtractor() {
+    // Initialize data model extractor for debugging and documentation
+    const extractorOptions = {
+      outputFormat: this.options.showDataModel ? 'console' : 'silent',
+      outputPath: this.options.saveDataModel || './data-model-output.json',
+      includeMetadata: true,
+      prettyPrint: true
+    };
+    
+    this.dataModelExtractor = new DataModelExtractor(extractorOptions);
+    this.showDataModel = this.options.showDataModel || false;
+    
+    // Store source data for documentation
+    this.sourceDataCapture = null;
+    
+    // Initialize pipeline documenter for beautiful markdown generation
+    const PipelineDocumenter = require('./core/documentation/pipeline-documenter');
+    this.pipelineDocumenter = new PipelineDocumenter({
+      outputDir: path.join(__dirname, 'data-pipeline-docs'),
+      includeTimestamp: true,
+      prettifyJson: true
+    });
+    
+    debug('Data model extractor initialized with options:', extractorOptions);
+    debug('Pipeline documenter initialized for beautiful documentation');
+  }
+  
   setupInfrastructureMode() {
     debug('Setting up infrastructure mode');
     
     // Use enhanced collector if available and enabled
-    if (this.options.useEnhancedCollector && EnhancedKafkaCollector) {
+    if (this.options.multiCluster || this.options.clusterFilter) {
+      console.log(chalk.blue('🌐 Using Multi-Cluster Collector'));
+      this.collector = new MultiClusterCollector({
+        ...this.configManager.getNewRelicConfig(),
+        clusterFilter: this.options.clusterFilter,
+        enableClusterDiscovery: this.options.enableClusterDiscovery !== false,
+        maxClustersPerQuery: this.options.maxClustersPerQuery || 10
+      });
+      this.infraCollector = this.collector;
+    } else if (this.options.useEnhancedCollector && EnhancedKafkaCollector) {
       console.log(chalk.blue('🚀 Using Enhanced Kafka Collector'));
       this.collector = new EnhancedKafkaCollector({
         ...this.configManager.getNewRelicConfig(),
@@ -359,6 +442,19 @@ class MessageQueuesPlatform extends EventEmitter {
     this.running = true;
     console.log(chalk.blue(`\n🚀 Starting Message Queues Platform in ${chalk.bold(this.options.mode)} mode\n`));
     
+    // Start API server if enabled
+    if (this.apiServer) {
+      try {
+        await this.apiServer.start();
+      } catch (error) {
+        console.error(chalk.red('Failed to start API server:'), error);
+        // Continue without API server
+      }
+    }
+    
+    // Mark as initialized for health checks
+    this.initialized = true;
+    
     // Initial run
     await this.runCycle();
     
@@ -491,6 +587,13 @@ class MessageQueuesPlatform extends EventEmitter {
       
       console.log(chalk.green(`✓ Found ${allResults.samples.length} samples`));
       
+      // Capture source data for documentation
+      this.sourceDataCapture = {
+        brokerSamples: allResults.samples.filter(s => s.eventType === 'KafkaBrokerSample'),
+        topicSamples: allResults.samples.filter(s => s.eventType === 'KafkaTopicSample'),
+        consumerSamples: allResults.consumerGroups || []
+      };
+      
       // 3. Transform to MESSAGE_QUEUE entities
       let transformResult;
       if (this.transformer.transformSamplesEnhanced && allResults.consumerGroups.length > 0) {
@@ -507,7 +610,9 @@ class MessageQueuesPlatform extends EventEmitter {
         transformResult = this.transformer.transformSamples(allSamples);
       }
       
-      allResults.entities = transformResult.entities;
+      // Convert plain objects to entity instances
+      const plainEntities = transformResult.entities;
+      allResults.entities = this.convertToEntityInstances(plainEntities);
       
       if (transformResult.errors && transformResult.errors.length > 0) {
         console.warn(chalk.yellow(`⚠️  ${transformResult.errors.length} transformation errors occurred`));
@@ -519,7 +624,25 @@ class MessageQueuesPlatform extends EventEmitter {
       // 4. Build relationships for infrastructure entities
       this.buildInfrastructureRelationships(allResults.entities);
       
-      // 5. Stream entities with error recovery
+      // Store synthesized entities for documentation
+      this.lastSynthesizedEntities = allResults.entities;
+      
+      // 5. Extract data model and generate documentation
+      if (this.dataModelExtractor) {
+        const extractedData = this.dataModelExtractor.extractFromStreaming(allResults.entities, 'infrastructure');
+        
+        // Generate transformation pipeline documentation (if enabled)
+        if (this.options.autoDocs !== false) {
+          this.generateTransformationDoc(extractedData, this.sourceDataCapture);
+        }
+        
+        // Show data model if requested
+        if (this.showDataModel) {
+          // Data model is already displayed by extractFromStreaming
+        }
+      }
+      
+      // 6. Stream entities with error recovery
       await this.errorRecovery.executeWithRecovery(
         'streamer',
         () => this.streamer.streamEvents(allResults.entities),
@@ -563,7 +686,9 @@ class MessageQueuesPlatform extends EventEmitter {
     const allEntities = [
       ...this.topology.clusters,
       ...this.topology.brokers,
-      ...this.topology.topics
+      ...this.topology.topics,
+      ...(this.topology.consumerGroups || []),
+      ...(this.topology.queues || [])
     ];
     
     console.log(chalk.cyan(`📊 Updating metrics for ${allEntities.length} entities`));
@@ -579,6 +704,38 @@ class MessageQueuesPlatform extends EventEmitter {
     
     for (const topic of this.topology.topics) {
       this.simulator.updateTopicMetrics(topic);
+    }
+    
+    // Update consumer group metrics
+    if (this.topology.consumerGroups) {
+      for (const consumerGroup of this.topology.consumerGroups) {
+        this.simulator.updateConsumerGroupMetrics(consumerGroup);
+      }
+    }
+    
+    // Update queue metrics
+    if (this.topology.queues) {
+      for (const queue of this.topology.queues) {
+        this.simulator.updateQueueMetrics(queue);
+      }
+    }
+    
+    // Store synthesized entities for documentation
+    this.lastSynthesizedEntities = allEntities;
+    
+    // Extract data model and generate documentation
+    if (this.dataModelExtractor) {
+      const extractedData = this.dataModelExtractor.extractFromStreaming(allEntities, 'simulation');
+      
+      // Generate transformation pipeline documentation (if enabled)
+      if (this.options.autoDocs !== false) {
+        this.generateTransformationDoc(extractedData, null); // No source data in simulation mode
+      }
+      
+      // Show data model if requested
+      if (this.showDataModel) {
+        // Data model is already displayed by extractFromStreaming
+      }
     }
     
     // Stream updated entities with error recovery
@@ -654,7 +811,10 @@ class MessageQueuesPlatform extends EventEmitter {
           result = this.transformer.transformSamples(samples);
         }
         
-        realEntities.push(...result.entities);
+        // Convert plain objects to entity instances
+        const plainEntities = result.entities;
+        const entityInstances = this.convertToEntityInstances(plainEntities);
+        realEntities.push(...entityInstances);
         console.log(chalk.green(`✓ Found ${realEntities.length} real entities`));
         
         // Build relationships for real entities
@@ -725,7 +885,25 @@ class MessageQueuesPlatform extends EventEmitter {
       }
     }
     
-    // 6. Stream all entities with error recovery
+    // Store synthesized entities for documentation
+    this.lastSynthesizedEntities = allEntities;
+    
+    // 6. Extract data model and generate documentation
+    if (this.dataModelExtractor) {
+      const extractedData = this.dataModelExtractor.extractFromStreaming(allEntities, 'hybrid');
+      
+      // Generate transformation pipeline documentation (if enabled)
+      if (this.options.autoDocs !== false) {
+        this.generateTransformationDoc(extractedData, this.sourceDataCapture);
+      }
+      
+      // Show data model if requested
+      if (this.showDataModel) {
+        // Data model is already displayed by extractFromStreaming
+      }
+    }
+    
+    // 7. Stream all entities with error recovery
     console.log(chalk.blue(`📤 Streaming ${allEntities.length} entities (${realEntities.length} real, ${simulatedEntities.length} simulated)`));
     await this.errorRecovery.executeWithRecovery(
       'streamer',
@@ -781,6 +959,119 @@ class MessageQueuesPlatform extends EventEmitter {
     console.log(chalk.cyan(`✓ Built ${relStats.totalRelationships} relationships for infrastructure entities`));
   }
 
+  /**
+   * Convert transformed plain objects to proper entity instances
+   */
+  convertToEntityInstances(transformedObjects) {
+    const entityInstances = [];
+    
+    for (const obj of transformedObjects) {
+      try {
+        let entity;
+        
+        switch (obj.entityType) {
+          case 'MESSAGE_QUEUE_CLUSTER':
+            entity = this.entityFactory.createCluster({
+              name: obj.clusterName,
+              provider: obj.provider,
+              accountId: obj.accountId || this.options.accountId,
+              metadata: {
+                environment: obj.environment,
+                region: obj.region,
+                ...obj
+              }
+            });
+            break;
+            
+          case 'MESSAGE_QUEUE_BROKER':
+            entity = this.entityFactory.createBroker({
+              name: obj.entityName || `broker-${obj.brokerId}`,
+              brokerId: obj.brokerId,
+              hostname: obj.hostname,
+              port: obj.port || 9092,
+              clusterName: obj.clusterName,
+              provider: obj.provider,
+              accountId: obj.accountId || this.options.accountId,
+              isController: obj.isController,
+              rack: obj.rack,
+              metadata: obj
+            });
+            
+            // Update metrics if available
+            if (obj['broker.cpu.usage'] !== undefined) {
+              entity.updateCpuUsage(obj['broker.cpu.usage']);
+            }
+            if (obj['broker.memory.usage'] !== undefined) {
+              entity.updateMemoryUsage(obj['broker.memory.usage']);
+            }
+            if (obj['broker.bytesInPerSecond'] !== undefined && obj['broker.bytesOutPerSecond'] !== undefined) {
+              entity.updateNetworkThroughput(obj['broker.bytesInPerSecond'] + obj['broker.bytesOutPerSecond']);
+            }
+            if (obj['broker.requestLatency'] !== undefined) {
+              entity.updateRequestLatency(obj['broker.requestLatency']);
+            }
+            break;
+            
+          case 'MESSAGE_QUEUE_TOPIC':
+            entity = this.entityFactory.createTopic({
+              name: obj.topicName || obj.entityName,
+              topic: obj.topicName,
+              clusterName: obj.clusterName,
+              provider: obj.provider,
+              accountId: obj.accountId || this.options.accountId,
+              partitionCount: obj.partitionCount,
+              replicationFactor: obj.replicationFactor,
+              metadata: obj
+            });
+            
+            // Update metrics if available
+            if (obj['topic.messagesInPerSecond'] !== undefined) {
+              entity.updateMessagesIn(obj['topic.messagesInPerSecond']);
+            }
+            if (obj['topic.messagesOutPerSecond'] !== undefined) {
+              entity.updateMessagesOut(obj['topic.messagesOutPerSecond']);
+            }
+            if (obj['topic.bytesInPerSecond'] !== undefined) {
+              entity.updateBytesIn(obj['topic.bytesInPerSecond']);
+            }
+            if (obj['topic.bytesOutPerSecond'] !== undefined) {
+              entity.updateBytesOut(obj['topic.bytesOutPerSecond']);
+            }
+            break;
+            
+          case 'MESSAGE_QUEUE_CONSUMER_GROUP':
+            entity = this.entityFactory.createConsumerGroup({
+              consumerGroupId: obj.consumerGroupId || obj.groupId,
+              clusterName: obj.clusterName,
+              provider: obj.provider,
+              accountId: obj.accountId || this.options.accountId,
+              state: obj.state,
+              metadata: obj
+            });
+            
+            // Update metrics if available
+            if (obj.totalLag !== undefined) {
+              entity.updateLag(obj.totalLag);
+            }
+            if (obj.memberCount !== undefined) {
+              entity.updateMemberCount(obj.memberCount);
+            }
+            break;
+            
+          default:
+            console.warn(chalk.yellow(`Unknown entity type: ${obj.entityType}`));
+            continue;
+        }
+        
+        entityInstances.push(entity);
+      } catch (error) {
+        console.error(chalk.red(`Failed to convert entity: ${error.message}`), obj);
+      }
+    }
+    
+    return entityInstances;
+  }
+
   async stop() {
     if (!this.running) {
       return;
@@ -789,44 +1080,187 @@ class MessageQueuesPlatform extends EventEmitter {
     console.log(chalk.yellow('\n⏹️  Stopping platform...'));
     this.running = false;
     
+    // Track all shutdown errors
+    const shutdownErrors = [];
+    const shutdownTasks = [];
+    
+    // Clear intervals first
     if (this.intervalId) {
       clearInterval(this.intervalId);
       this.intervalId = null;
     }
     
-    // Cleanup enhanced collector if available
+    if (this.metricsUpdateInterval) {
+      clearInterval(this.metricsUpdateInterval);
+      this.metricsUpdateInterval = null;
+    }
+    
+    // Create shutdown tasks with timeout
+    const createShutdownTask = (name, fn, timeout = 10000) => {
+      return Promise.race([
+        fn().catch(error => {
+          shutdownErrors.push({ component: name, error: error.message });
+          throw error;
+        }),
+        new Promise((_, reject) => 
+          setTimeout(() => reject(new Error(`Timeout after ${timeout}ms`)), timeout)
+        )
+      ]).then(
+        () => ({ component: name, status: 'success' }),
+        (error) => {
+          const errorEntry = { component: name, status: 'failed', error: error.message };
+          shutdownErrors.push(errorEntry);
+          return errorEntry;
+        }
+      );
+    };
+    
+    // Stop API server first
+    if (this.apiServer) {
+      shutdownTasks.push(
+        createShutdownTask('api-server', () => this.apiServer.stop())
+      );
+    }
+    
+    // Cleanup enhanced collector
     if (this.collector && this.collector.cleanup) {
-      try {
-        await this.collector.cleanup();
-        console.log(chalk.green('✓ Enhanced collector cleanup completed'));
-      } catch (error) {
-        console.warn(chalk.yellow('Enhanced collector cleanup warning:'), error.message);
-      }
+      shutdownTasks.push(
+        createShutdownTask('enhanced-collector', () => this.collector.cleanup())
+      );
     }
     
-    // Cleanup consumer offset collector if available
+    // Cleanup consumer offset collector
     if (this.consumerOffsetCollector && this.consumerOffsetCollector.cleanup) {
+      shutdownTasks.push(
+        createShutdownTask('consumer-offset-collector', () => this.consumerOffsetCollector.cleanup())
+      );
+    }
+    
+    // Flush streaming data
+    if (this.streamer) {
+      shutdownTasks.push(
+        createShutdownTask('streamer-flush', () => this.streamer.flushAll(), 30000)
+      );
+      shutdownTasks.push(
+        createShutdownTask('streamer-shutdown', () => this.streamer.shutdown())
+      );
+    }
+    
+    // Save any cached data
+    if (this.cachedEntities || this.cachedSamples) {
+      shutdownTasks.push(
+        createShutdownTask('cache-persist', async () => {
+          // In production, this would persist to disk or external storage
+          const cacheSize = (this.cachedEntities?.entities?.length || 0) + 
+                           (this.cachedSamples?.samples?.length || 0);
+          if (cacheSize > 0) {
+            console.log(chalk.gray(`Persisting ${cacheSize} cached items...`));
+          }
+        })
+      );
+    }
+    
+    // Execute all shutdown tasks in parallel
+    const results = await Promise.allSettled(shutdownTasks);
+    
+    // Shutdown error recovery manager last
+    if (this.errorRecovery) {
       try {
-        await this.consumerOffsetCollector.cleanup();
-        console.log(chalk.green('✓ Consumer offset collector cleanup completed'));
+        this.errorRecovery.shutdown();
       } catch (error) {
-        console.warn(chalk.yellow('Consumer offset collector cleanup warning:'), error.message);
+        shutdownErrors.push({ component: 'error-recovery', error: error.message });
       }
     }
     
-    // Flush any pending data
-    if (this.streamer) {
-      await this.streamer.flushAll();
-      await this.streamer.shutdown();
+    // Report shutdown summary
+    const successCount = results.filter(r => r.value?.status === 'success').length;
+    const failureCount = shutdownErrors.length;
+    
+    if (failureCount > 0) {
+      console.log(chalk.yellow(`\n⚠️  Platform stopped with ${failureCount} warnings:`));
+      shutdownErrors.forEach(err => {
+        console.log(chalk.yellow(`   • ${err.component}: ${err.error}`));
+      });
+    } else {
+      console.log(chalk.green('\n✅ Platform stopped successfully'));
     }
     
-    // Shutdown error recovery manager
-    if (this.errorRecovery) {
-      this.errorRecovery.shutdown();
-    }
+    console.log(chalk.gray(`   • Components shut down: ${successCount}/${shutdownTasks.length}`));
     
-    this.emit('stopped');
-    console.log(chalk.green('✓ Platform stopped'));
+    // Emit stopped event with summary
+    this.emit('stopped', {
+      success: failureCount === 0,
+      errors: shutdownErrors,
+      summary: {
+        total: shutdownTasks.length,
+        successful: successCount,
+        failed: failureCount
+      }
+    });
+    
+    // Return summary for programmatic use
+    return {
+      success: failureCount === 0,
+      errors: shutdownErrors,
+      summary: {
+        total: shutdownTasks.length,
+        successful: successCount,
+        failed: failureCount
+      }
+    };
+  }
+
+  /**
+   * Generate transformation pipeline documentation
+   */
+  generateTransformationDoc(extractedData, sourceData) {
+    try {
+      // Generate the beautiful pipeline documentation
+      if (this.pipelineDocumenter) {
+        // Prepare the three stages of data
+        const rawData = sourceData || {
+          brokerSamples: [],
+          topicSamples: [],
+          consumerSamples: []
+        };
+        
+        const transformedData = extractedData?.entities || [];
+        const synthesizedEntities = this.lastSynthesizedEntities || transformedData;
+        
+        // Generate the documentation
+        this.pipelineDocumenter.generatePipelineDoc(
+          rawData,
+          transformedData,
+          synthesizedEntities,
+          this.options.mode
+        );
+      }
+      
+      // Also generate the legacy documentation for compatibility
+      const pipelineDoc = this.dataModelExtractor.generateTransformationPipelineDoc(sourceData);
+      
+      // Always save to docs directory
+      const fs = require('fs');
+      
+      const docsDir = path.join(__dirname, 'docs');
+      if (!fs.existsSync(docsDir)) {
+        fs.mkdirSync(docsDir, { recursive: true });
+      }
+      
+      const docPath = path.join(docsDir, 'LIVE_DATA_TRANSFORMATION_PIPELINE.md');
+      fs.writeFileSync(docPath, pipelineDoc);
+      
+      console.log(chalk.green(`📄 Generated transformation pipeline documentation: ${docPath}`));
+      
+      // Also save to root for easy access
+      const rootDocPath = path.join(__dirname, 'CURRENT_DATA_MODEL.md');
+      fs.writeFileSync(rootDocPath, pipelineDoc);
+      
+      console.log(chalk.blue(`📄 Current data model available at: CURRENT_DATA_MODEL.md`));
+      
+    } catch (error) {
+      console.warn(chalk.yellow(`⚠️  Failed to generate transformation documentation: ${error.message}`));
+    }
   }
   
   async getStats() {
@@ -888,8 +1322,17 @@ class MessageQueuesPlatform extends EventEmitter {
   async testStreamerConnection() {
     // Simple health check - just get stats
     const stats = this.streamer.getStats();
-    if (stats.errors > stats.eventsSent + stats.metricsSent) {
-      throw new Error('Streamer error rate too high');
+    const totalSent = stats.eventsSent + stats.metricsSent;
+    
+    // If nothing has been sent yet, consider it healthy
+    if (totalSent === 0) {
+      return true;
+    }
+    
+    // Calculate error rate
+    const errorRate = stats.errors / (totalSent + stats.errors);
+    if (errorRate > 0.5) { // More than 50% error rate
+      throw new Error(`Streamer error rate too high: ${Math.round(errorRate * 100)}%`);
     }
     return true;
   }
@@ -953,7 +1396,17 @@ if (require.main === module) {
     .option('--no-detailed-topics', 'Disable detailed topic metrics')
     .option('--broker-workers <count>', 'Broker worker pool size', '5')
     .option('--topic-workers <count>', 'Topic worker pool size', '8')
-    .option('--consumer-workers <count>', 'Consumer worker pool size', '3');
+    .option('--consumer-workers <count>', 'Consumer worker pool size', '3')
+    .option('--multi-cluster', 'Enable multi-cluster monitoring')
+    .option('--cluster-filter <clusters>', 'Comma-separated list of cluster names to monitor')
+    .option('--max-clusters-per-query <count>', 'Maximum clusters per query batch', '10')
+    .option('--no-cluster-discovery', 'Disable automatic cluster discovery')
+    .option('--api-port <port>', 'API server port', '3000')
+    .option('--api-host <host>', 'API server host', '0.0.0.0')
+    .option('--no-api', 'Disable API server')
+    .option('--show-data-model', 'Display detailed data model information during streaming')
+    .option('--save-data-model <path>', 'Save data model to file (JSON format)')
+    .option('--no-auto-docs', 'Disable automatic documentation generation');
   
   program.parse();
   
@@ -976,7 +1429,20 @@ if (require.main === module) {
     enableDetailedTopicMetrics: options.detailedTopics !== false,
     brokerWorkerPoolSize: parseInt(options.brokerWorkers),
     topicWorkerPoolSize: parseInt(options.topicWorkers),
-    consumerWorkerPoolSize: parseInt(options.consumerWorkers)
+    consumerWorkerPoolSize: parseInt(options.consumerWorkers),
+    // Multi-cluster options
+    multiCluster: options.multiCluster || false,
+    clusterFilter: options.clusterFilter ? options.clusterFilter.split(',').map(c => c.trim()) : null,
+    maxClustersPerQuery: parseInt(options.maxClustersPerQuery),
+    enableClusterDiscovery: options.clusterDiscovery !== false,
+    // API server options
+    apiEnabled: options.api !== false,
+    apiPort: parseInt(options.apiPort),
+    apiHost: options.apiHost,
+    // Data model options
+    showDataModel: options.showDataModel || false,
+    saveDataModel: options.saveDataModel || null,
+    autoDocs: options.autoDocs !== false
   });
   
   // Event handlers

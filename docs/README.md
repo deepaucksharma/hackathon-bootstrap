@@ -18,7 +18,7 @@ The Message Queues Platform bridges the gap between your Kafka infrastructure an
 - ✅ **Entity Synthesis**: Creates MESSAGE_QUEUE_* entities for unified monitoring
 - ✅ **Dashboard Generator**: Pre-built templates for instant visibility
 - ✅ **Consumer Lag Tracking**: Monitor consumer group performance
-- ✅ **Multi-Provider Ready**: Designed to support Kafka, RabbitMQ, and more
+- ✅ **Multi-Provider Ready**: Designed to support Kafka and other message queue systems
 
 ## 🚀 Quick Start
 
@@ -36,8 +36,8 @@ npm install
 NEW_RELIC_API_KEY=your_key NEW_RELIC_ACCOUNT_ID=your_account \
 node platform.js --mode=simulation
 
-# Create your first dashboard
-node dashboards/cli.js create --template=cluster-overview --provider=kafka
+# Create your first dashboard using the standard template
+node newrelic-message-queues-platform/dashboards/templates/standard-message-queue-dashboard.js
 ```
 
 [**→ Detailed Getting Started Guide**](getting-started/README.md)
@@ -93,18 +93,25 @@ node platform.js --mode=hybrid
 
 [**→ Detailed Mode Comparison**](user-guide/platform-modes.md)
 
-## 📊 Available Dashboards
+## 📊 Dashboard Creation
 
-Pre-built dashboard templates ready to use:
+Create standardized dashboards using our template:
 
-| Template | Description | Use Case |
-|----------|-------------|----------|
-| `cluster-overview` | Cluster health and performance | Operations monitoring |
-| `broker-details` | Individual broker metrics | Performance analysis |
-| `topic-analysis` | Topic throughput and partitions | Capacity planning |
-| `consumer-groups` | Consumer lag and performance | Application monitoring |
+```bash
+# Standard 4-page dashboard
+node newrelic-message-queues-platform/dashboards/templates/standard-message-queue-dashboard.js
 
-[**→ Dashboard Template Catalog**](reference/dashboard-templates.md)
+# Custom named dashboard  
+node newrelic-message-queues-platform/dashboards/templates/standard-message-queue-dashboard.js "Production Kafka" "Production monitoring"
+```
+
+The standard dashboard includes:
+- **Executive Overview**: Business KPIs, health scores, cost metrics
+- **Consumer Groups**: Lag analysis, consumer health, performance
+- **Infrastructure & Cost**: Resource utilization, cost optimization
+- **Topics & Partitions**: Topic performance, partition distribution
+
+[**→ Dashboard Templates Guide**](../newrelic-message-queues-platform/dashboards/templates/README.md)
 
 ## 🔍 Key Metrics
 
@@ -145,7 +152,7 @@ DEBUG=platform:*,transform:*
 node platform.js --mode=infrastructure --interval=30
 
 # Create monitoring dashboard
-node dashboards/cli.js create --template=cluster-overview
+node dashboards/templates/standard-message-queue-dashboard.js
 ```
 
 ### Test with Simulated Data
@@ -191,9 +198,9 @@ node test-infrastructure-mode.js
 - Comprehensive testing and verification suite
 
 ### 🚧 In Progress
-- RabbitMQ provider support
 - Advanced anomaly detection
 - Automated alerting templates
+- Performance optimization for large-scale deployments
 
 ### 📅 Roadmap
 - Multi-provider architecture expansion

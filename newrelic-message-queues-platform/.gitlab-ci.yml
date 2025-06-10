@@ -1,0 +1,278 @@
+# GitLab CI/CD Pipeline for New Relic Message Queues Platform
+
+stages:
+  - validate
+  - test
+  - security
+  - build
+  - deploy
+
+variables:
+  NODE_VERSION: "18"
+  DOCKER_DRIVER: overlay2
+  DOCKER_TLS_CERTDIR: "/certs"
+  IMAGE_NAME: $CI_REGISTRY_IMAGE
+  HELM_VERSION: "3.12.0"
+
+# Templates
+.node_template: &node_template
+  image: node:${NODE_VERSION}
+  cache:
+    key: "$CI_COMMIT_REF_SLUG"
+    paths:
+      - node_modules/
+  before_script:
+    - npm ci
+
+.docker_template: &docker_template
+  image: docker:latest
+  services:
+    - docker:dind
+  before_script:
+    - echo $CI_REGISTRY_PASSWORD | docker login -u $CI_REGISTRY_USER --password-stdin $CI_REGISTRY
+
+.kubectl_template: &kubectl_template
+  image: alpine/helm:latest
+  before_script:
+    - apk add --no-cache curl
+    - curl -LO "https://dl.k8s.io/release/$(curl -L -s https://dl.k8s.io/release/stable.txt)/bin/linux/amd64/kubectl"
+    - chmod +x kubectl
+    - mv kubectl /usr/local/bin/
+
+# Validation Stage
+lint:
+  <<: *node_template
+  stage: validate
+  script:
+    - npm run lint
+  rules:
+    - if: $CI_PIPELINE_SOURCE == "merge_request_event"
+    - if: $CI_COMMIT_BRANCH == $CI_DEFAULT_BRANCH
+
+helm-lint:
+  image: alpine/helm:latest
+  stage: validate
+  script:
+    - helm lint helm/message-queues-platform
+    - |
+      helm template test-release helm/message-queues-platform \
+        --set secrets.newrelic.accountId=test \
+        --set secrets.newrelic.apiKey=test \
+        --set secrets.newrelic.ingestKey=test \
+        --dry-run --debug
+  rules:
+    - if: $CI_PIPELINE_SOURCE == "merge_request_event"
+    - if: $CI_COMMIT_BRANCH == $CI_DEFAULT_BRANCH
+
+validate-k8s:
+  image: alpine:latest
+  stage: validate
+  before_script:
+    - apk add --no-cache wget tar
+    - wget https://github.com/instrumenta/kubeval/releases/latest/download/kubeval-linux-amd64.tar.gz
+    - tar xf kubeval-linux-amd64.tar.gz
+    - mv kubeval /usr/local/bin
+  script:
+    - find k8s/ -name "*.yaml" -exec kubeval {} \;
+  rules:
+    - if: $CI_PIPELINE_SOURCE == "merge_request_event"
+    - if: $CI_COMMIT_BRANCH == $CI_DEFAULT_BRANCH
+
+# Test Stage
+unit-tests:
+  <<: *node_template
+  stage: test
+  script:
+    - npm run test:coverage
+  coverage: '/Lines\s*:\s*(\d+\.\d+)%/'
+  artifacts:
+    reports:
+      coverage_report:
+        coverage_format: cobertura
+        path: coverage/cobertura-coverage.xml
+    paths:
+      - coverage/
+    expire_in: 1 day
+  rules:
+    - if: $CI_PIPELINE_SOURCE == "merge_request_event"
+    - if: $CI_COMMIT_BRANCH == $CI_DEFAULT_BRANCH
+
+integration-tests:
+  <<: *node_template
+  stage: test
+  services:
+    - name: confluentinc/cp-zookeeper:latest
+      alias: zookeeper
+      variables:
+        ZOOKEEPER_CLIENT_PORT: 2181
+        ZOOKEEPER_TICK_TIME: 2000
+    - name: confluentinc/cp-kafka:latest
+      alias: kafka
+      variables:
+        KAFKA_BROKER_ID: 1
+        KAFKA_ZOOKEEPER_CONNECT: zookeeper:2181
+        KAFKA_ADVERTISED_LISTENERS: PLAINTEXT://kafka:9092
+        KAFKA_OFFSETS_TOPIC_REPLICATION_FACTOR: 1
+  variables:
+    KAFKA_BOOTSTRAP_SERVERS: kafka:9092
+  script:
+    - sleep 30  # Wait for Kafka to be ready
+    - npm run test:integration
+  rules:
+    - if: $CI_PIPELINE_SOURCE == "merge_request_event"
+    - if: $CI_COMMIT_BRANCH == $CI_DEFAULT_BRANCH
+
+# Security Stage
+dependency-scan:
+  <<: *node_template
+  stage: security
+  script:
+    - npm audit --audit-level high
+  allow_failure: true
+  rules:
+    - if: $CI_PIPELINE_SOURCE == "merge_request_event"
+    - if: $CI_COMMIT_BRANCH == $CI_DEFAULT_BRANCH
+
+container-scan:
+  <<: *docker_template
+  stage: security
+  script:
+    - docker build -t $IMAGE_NAME:$CI_COMMIT_SHA .
+    - |
+      docker run --rm -v /var/run/docker.sock:/var/run/docker.sock \
+        -v $(pwd):/workspace \
+        aquasec/trivy:latest image \
+        --format template --template "@contrib/sarif.tpl" \
+        --output /workspace/trivy-results.sarif \
+        $IMAGE_NAME:$CI_COMMIT_SHA
+  artifacts:
+    reports:
+      sast: trivy-results.sarif
+    expire_in: 1 day
+  rules:
+    - if: $CI_PIPELINE_SOURCE == "merge_request_event"
+    - if: $CI_COMMIT_BRANCH == $CI_DEFAULT_BRANCH
+
+secret-scan:
+  image: zricethezav/gitleaks:latest
+  stage: security
+  script:
+    - gitleaks detect --verbose --source . --report-format sarif --report-path gitleaks-report.sarif
+  artifacts:
+    reports:
+      sast: gitleaks-report.sarif
+    expire_in: 1 day
+  allow_failure: true
+  rules:
+    - if: $CI_PIPELINE_SOURCE == "merge_request_event"
+    - if: $CI_COMMIT_BRANCH == $CI_DEFAULT_BRANCH
+
+# Build Stage
+build-image:
+  <<: *docker_template
+  stage: build
+  script:
+    - docker build -t $IMAGE_NAME:$CI_COMMIT_SHA .
+    - docker tag $IMAGE_NAME:$CI_COMMIT_SHA $IMAGE_NAME:latest
+    - docker push $IMAGE_NAME:$CI_COMMIT_SHA
+    - docker push $IMAGE_NAME:latest
+  rules:
+    - if: $CI_COMMIT_BRANCH == $CI_DEFAULT_BRANCH
+    - if: $CI_COMMIT_TAG
+
+build-image-mr:
+  <<: *docker_template
+  stage: build
+  script:
+    - docker build -t $IMAGE_NAME:mr-$CI_MERGE_REQUEST_IID .
+    - docker push $IMAGE_NAME:mr-$CI_MERGE_REQUEST_IID
+  rules:
+    - if: $CI_PIPELINE_SOURCE == "merge_request_event"
+
+package-helm:
+  image: alpine/helm:latest
+  stage: build
+  script:
+    - helm package helm/message-queues-platform --destination ./helm-packages/
+  artifacts:
+    paths:
+      - helm-packages/
+    expire_in: 1 day
+  rules:
+    - if: $CI_COMMIT_TAG
+
+# Deploy Stage
+deploy-staging:
+  <<: *kubectl_template
+  stage: deploy
+  environment:
+    name: staging
+    url: https://message-queues-platform-staging.example.com
+  script:
+    - echo $STAGING_KUBECONFIG | base64 -d > kubeconfig
+    - export KUBECONFIG=kubeconfig
+    - |
+      helm upgrade --install message-queues-platform-staging \
+        helm/message-queues-platform \
+        --namespace staging \
+        --create-namespace \
+        --set image.tag=$CI_COMMIT_SHA \
+        --set image.repository=$IMAGE_NAME \
+        --set secrets.newrelic.accountId="$STAGING_NR_ACCOUNT_ID" \
+        --set secrets.newrelic.apiKey="$STAGING_NR_API_KEY" \
+        --set secrets.newrelic.ingestKey="$STAGING_NR_INGEST_KEY" \
+        --set platform.mode=simulation \
+        --set replicaCount=1 \
+        --wait --timeout=10m
+    # Smoke tests
+    - kubectl wait --for=condition=available --timeout=300s deployment/message-queues-platform-staging -n staging
+    - kubectl port-forward svc/message-queues-platform-staging 3000:3000 -n staging &
+    - sleep 10
+    - curl -f http://localhost:3000/health
+    - curl -f http://localhost:3000/metrics
+  rules:
+    - if: $CI_COMMIT_BRANCH == $CI_DEFAULT_BRANCH
+  when: manual
+
+deploy-production:
+  <<: *kubectl_template
+  stage: deploy
+  environment:
+    name: production
+    url: https://message-queues-platform.example.com
+  script:
+    - echo $PRODUCTION_KUBECONFIG | base64 -d > kubeconfig
+    - export KUBECONFIG=kubeconfig
+    - |
+      helm upgrade --install message-queues-platform-prod \
+        helm/message-queues-platform \
+        --namespace production \
+        --create-namespace \
+        --set image.tag=$CI_COMMIT_TAG \
+        --set image.repository=$IMAGE_NAME \
+        --set secrets.newrelic.accountId="$PROD_NR_ACCOUNT_ID" \
+        --set secrets.newrelic.apiKey="$PROD_NR_API_KEY" \
+        --set secrets.newrelic.ingestKey="$PROD_NR_INGEST_KEY" \
+        --set platform.mode=infrastructure \
+        --set replicaCount=3 \
+        --set autoscaling.enabled=true \
+        --set autoscaling.maxReplicas=10 \
+        --set monitoring.enabled=true \
+        --wait --timeout=15m
+    - kubectl wait --for=condition=available --timeout=600s deployment/message-queues-platform-prod -n production
+    - kubectl get pods -n production -l app.kubernetes.io/name=message-queues-platform
+    - kubectl get hpa -n production
+  rules:
+    - if: $CI_COMMIT_TAG
+  when: manual
+
+# Cleanup
+cleanup-mr-images:
+  <<: *docker_template
+  stage: deploy
+  script:
+    - docker rmi $IMAGE_NAME:mr-$CI_MERGE_REQUEST_IID || true
+  rules:
+    - if: $CI_PIPELINE_SOURCE == "merge_request_event"
+  when: always
+  allow_failure: true

@@ -1,0 +1,15 @@
+{{- if .Values.config.files }}
+apiVersion: v1
+kind: ConfigMap
+metadata:
+  name: {{ include "message-queues-platform.configMapName" . }}
+  labels:
+    {{- include "message-queues-platform.labels" . | nindent 4 }}
+data:
+  {{- with .Values.config.files }}
+  {{- range $file, $content := . }}
+  {{ $file }}: |
+    {{- $content | nindent 4 }}
+  {{- end }}
+  {{- end }}
+{{- end }}

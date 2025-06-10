@@ -120,7 +120,8 @@ simulate
       const simulator = new DataSimulator({
         businessHoursStart: 9,
         businessHoursEnd: 17,
-        anomalyRate: 0.05
+        anomalyRate: 0.05,
+        accountId: options.accountId || program.opts().accountId || process.env.NEW_RELIC_ACCOUNT_ID
       });
 
       const topologyConfig = {
@@ -311,7 +312,18 @@ dashboard
 
       if (options.dryRun) {
         console.log(chalk.yellow('🔍 Dashboard Preview:'));
-        console.log(JSON.stringify(result.dashboard, null, 2));
+        // Handle circular references when stringifying
+        const seen = new WeakSet();
+        const dashboardJSON = JSON.stringify(result.dashboard, (key, value) => {
+          if (typeof value === 'object' && value !== null) {
+            if (seen.has(value)) {
+              return '[Circular Reference]';
+            }
+            seen.add(value);
+          }
+          return value;
+        }, 2);
+        console.log(dashboardJSON);
       } else if (result.guid) {
         console.log(chalk.green('✅ Dashboard deployed successfully!'));
         console.log(chalk.white('📊 Dashboard Details:'));

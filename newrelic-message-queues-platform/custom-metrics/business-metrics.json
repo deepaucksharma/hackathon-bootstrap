@@ -1,0 +1,73 @@
+{
+  "message_value_rate": {
+    "description": "Estimated business value of messages processed per second",
+    "unit": "dollars/second",
+    "type": "gauge",
+    "entityTypes": ["MESSAGE_QUEUE_TOPIC"],
+    "provider": "calculation",
+    "formula": "context.topic.messagesPerSecond * (context.topic.tags?.messageValue || 0.10)",
+    "validation": {
+      "min": 0
+    },
+    "tags": {
+      "category": "business",
+      "dashboard": "executive"
+    }
+  },
+  
+  "sla_compliance_score": {
+    "description": "SLA compliance based on processing time and lag",
+    "unit": "percentage",
+    "type": "gauge",
+    "entityTypes": ["MESSAGE_QUEUE_CONSUMER_GROUP"],
+    "provider": "threshold",
+    "source": {
+      "path": "consumer.avgProcessingTime"
+    },
+    "thresholds": [
+      {"condition": "> 5000", "score": 0},
+      {"condition": "> 1000", "score": 50},
+      {"condition": "> 500", "score": 75},
+      {"condition": "> 100", "score": 90},
+      {"condition": "<= 100", "score": 100}
+    ],
+    "defaultScore": 0,
+    "tags": {
+      "category": "sla",
+      "compliance": true
+    }
+  },
+  
+  "cost_per_message": {
+    "description": "Infrastructure cost per message processed",
+    "unit": "dollars",
+    "type": "gauge",
+    "entityTypes": ["MESSAGE_QUEUE_CLUSTER"],
+    "collect": "const hourlyRate = context.cluster.tags?.hourlyRate || 10; const messagesPerHour = (context.cluster.messagesPerSecond || 0) * 3600; return messagesPerHour > 0 ? hourlyRate / messagesPerHour : 0;",
+    "validation": {
+      "min": 0,
+      "max": 1
+    },
+    "tags": {
+      "category": "cost",
+      "finance": true
+    }
+  },
+  
+  "data_freshness_score": {
+    "description": "How fresh the data in topics is based on lag",
+    "unit": "score",
+    "type": "gauge",
+    "entityTypes": ["MESSAGE_QUEUE_TOPIC"],
+    "provider": "calculation",
+    "formula": "100 - Math.min(100, (context.topic.maxConsumerLag || 0) / 1000)",
+    "validation": {
+      "min": 0,
+      "max": 100
+    },
+    "dimensions": ["topic", "cluster"],
+    "tags": {
+      "category": "data-quality"
+    }
+  }
+}

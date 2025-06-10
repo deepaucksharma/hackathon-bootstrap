@@ -58,9 +58,9 @@ class ConfigValidator {
         key: 'provider',
         required: false,
         type: 'string',
-        validate: (value) => ['kafka'].includes(value),
-        message: 'Provider must be: kafka',
-        help: 'Currently only Kafka is supported'
+        validate: (value) => ['kafka', 'rabbitmq', 'sqs', 'azure-servicebus', 'google-pubsub'].includes(value),
+        message: 'Provider must be one of: kafka, rabbitmq, sqs, azure-servicebus, google-pubsub',
+        help: 'Choose the message queue provider to simulate'
       },
       
       // Numeric validations
@@ -107,6 +107,30 @@ class ConfigValidator {
         check: (config) => config.provider === 'kafka',
         message: 'Kafka provider selected',
         help: 'Ensure JMX is enabled on Kafka brokers for metrics collection'
+      },
+      {
+        key: 'provider-rabbitmq',
+        check: (config) => config.provider === 'rabbitmq',
+        message: 'RabbitMQ provider selected',
+        help: 'Queue-based message broker with exchange routing'
+      },
+      {
+        key: 'provider-sqs',
+        check: (config) => config.provider === 'sqs',
+        message: 'AWS SQS provider selected',
+        help: 'Managed queue service from AWS'
+      },
+      {
+        key: 'provider-azure',
+        check: (config) => config.provider === 'azure-servicebus',
+        message: 'Azure Service Bus provider selected',
+        help: 'Enterprise messaging service from Azure'
+      },
+      {
+        key: 'provider-pubsub',
+        check: (config) => config.provider === 'google-pubsub',
+        message: 'Google Pub/Sub provider selected',
+        help: 'Scalable messaging service from Google Cloud'
       }
     ];
   }

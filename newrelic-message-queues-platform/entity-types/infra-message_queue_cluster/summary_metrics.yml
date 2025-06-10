@@ -1,0 +1,19 @@
+# Summary metrics are displayed in the entity list view
+# Maximum 3 metrics recommended
+healthScore:
+  title: Health Score
+  unit: PERCENTAGE
+  tag:
+    key: cluster.health.score
+  
+totalThroughput:
+  title: Total Throughput
+  unit: BYTES_PER_SECOND
+  tag:
+    key: cluster.throughput.total
+    
+underReplicatedPartitions:
+  title: Under-Replicated Partitions
+  unit: COUNT
+  tag:
+    key: cluster.underReplicatedPartitions

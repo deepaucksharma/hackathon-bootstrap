@@ -17,7 +17,7 @@ class DataSimulator extends EventEmitter {
     // Use centralized config manager
     this.configManager = getConfigManager(customConfig);
     this.config = {
-      ...this.configManager.getSimulationConfig(),
+      ...this.configManager.getConfig(),
       ...customConfig
     };
     
@@ -75,7 +75,8 @@ class DataSimulator extends EventEmitter {
         name: `${topology.metadata.environment}-${topology.metadata.provider}-cluster-${i + 1}`,
         provider: topology.metadata.provider,
         region: topology.metadata.region,
-        environment: topology.metadata.environment
+        environment: topology.metadata.environment,
+        accountId: this.config.accountId || topologyConfig.accountId
       });
       topology.clusters.push(cluster);
 
@@ -88,7 +89,8 @@ class DataSimulator extends EventEmitter {
           clusterName: cluster.clusterName,
           clusterGuid: cluster.guid,
           hostname: `${cluster.clusterName}-broker-${j}`,
-          provider: topology.metadata.provider
+          provider: topology.metadata.provider,
+          accountId: this.config.accountId || topologyConfig.accountId
         });
         topology.brokers.push(broker);
       }
@@ -101,7 +103,8 @@ class DataSimulator extends EventEmitter {
           topic: this.generateTopicName(topology.metadata.provider, k),
           clusterName: cluster.clusterName,
           clusterGuid: cluster.guid,
-          provider: topology.metadata.provider
+          provider: topology.metadata.provider,
+          accountId: this.config.accountId || topologyConfig.accountId
         });
         topology.topics.push(topic);
       }
@@ -114,7 +117,8 @@ class DataSimulator extends EventEmitter {
             ...topologyConfig.queueConfig,
             queueName: this.generateQueueName(topology.metadata.provider, l),
             provider: topology.metadata.provider,
-            region: topology.metadata.region
+            region: topology.metadata.region,
+            accountId: this.config.accountId || topologyConfig.accountId
           });
           topology.queues.push(queue);
         }
@@ -143,6 +147,7 @@ class DataSimulator extends EventEmitter {
             clusterName: cluster.clusterName,
             provider: topology.metadata.provider,
             topics: topicsToConsume,
+            accountId: this.config.accountId || topologyConfig.accountId,
             coordinator: {
               id: topology.brokers[brokerIndex].brokerId,
               host: topology.brokers[brokerIndex].hostname
@@ -192,6 +197,7 @@ class DataSimulator extends EventEmitter {
    */
   createBroker(config) {
     const broker = this.entityFactory.createBroker({
+      name: config.hostname || `${config.clusterName}-broker-${config.brokerId}`,
       brokerId: config.brokerId,
       hostname: config.hostname,
       port: config.port || this.getDefaultPort(config.provider),
@@ -218,6 +224,7 @@ class DataSimulator extends EventEmitter {
    */
   createTopic(config) {
     const topic = this.entityFactory.createTopic({
+      name: config.topic || config.topicName,
       topic: config.topic,
       clusterName: config.clusterName,
       clusterGuid: config.clusterGuid,
@@ -265,6 +272,7 @@ class DataSimulator extends EventEmitter {
    */
   createConsumerGroup(config) {
     const consumerGroup = this.entityFactory.createConsumerGroup({
+      name: config.consumerGroupId || config.name,
       consumerGroupId: config.consumerGroupId,
       clusterName: config.clusterName,
       provider: config.provider,

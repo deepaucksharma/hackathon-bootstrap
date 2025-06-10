@@ -1,0 +1,77 @@
+domain: INFRA
+type: MESSAGE_QUEUE_BROKER
+
+synthesis:
+  rules:
+    # Kafka brokers
+    - compositeIdentifier:
+        separator: ":"
+        attributes:
+          - clusterName
+          - broker.id
+      name: displayName
+      encodeIdentifierInGUID: true
+      conditions:
+        - attribute: eventType
+          value: KafkaBrokerSample
+        - attribute: broker.id
+          present: true
+      tags:
+        clusterName:
+        hostname:
+        port:
+        rack:
+        state:
+          multiValue: false
+        controller:
+          multiValue: false
+    
+    # RabbitMQ nodes
+    - compositeIdentifier:
+        separator: ":"
+        attributes:
+          - clusterName
+          - node
+      name: node
+      encodeIdentifierInGUID: true
+      conditions:
+        - attribute: eventType
+          value: RabbitmqNodeSample
+        - attribute: node
+          present: true
+      tags:
+        clusterName:
+        hostname:
+        port:
+        type:
+        running:
+          multiValue: false
+
+goldenTags:
+  - clusterName
+  - hostname
+  - rack
+  - port
+  - state
+  - controller
+
+compositeMetrics:
+  goldenMetrics:
+    - cpuUsage
+    - memoryUsage
+    - networkThroughput
+    - requestLatency
+
+  summaryMetrics:
+    - cpuUsage
+    - networkThroughput
+    - partitionCount
+
+configuration:
+  entityExpirationTime: EIGHT_DAYS
+  alertable: true
+
+dashboardTemplates:
+  newRelic:
+    template: broker-dashboard.json
+    filterNRQLByEntityID: true

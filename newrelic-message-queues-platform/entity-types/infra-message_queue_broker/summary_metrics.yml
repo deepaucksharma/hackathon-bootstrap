@@ -1,0 +1,19 @@
+# Summary metrics are displayed in the entity list view
+# Maximum 3 metrics recommended
+cpuUsage:
+  title: CPU Usage
+  unit: PERCENTAGE
+  tag:
+    key: broker.cpu.usage
+    
+networkThroughput:
+  title: Network Throughput
+  unit: BYTES_PER_SECOND
+  tag:
+    key: broker.network.throughput
+    
+requestLatency:
+  title: Request Latency
+  unit: MS
+  tag:
+    key: broker.request.latency

@@ -24,7 +24,7 @@ class SimulationAPI {
     
     // Initialize simulation components
     this.factory = new EntityFactory({
-      accountId: options.accountId || '3630072'
+      accountId: options.accountId || process.env.NEW_RELIC_ACCOUNT_ID || 'YOUR_ACCOUNT_ID'
     });
     
     this.simulator = new EnhancedDataSimulator({

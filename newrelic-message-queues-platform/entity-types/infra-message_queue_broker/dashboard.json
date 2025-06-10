@@ -1,0 +1,143 @@
+{
+  "name": "Message Queue Broker",
+  "description": "Performance dashboard for message queue broker entities",
+  "pages": [
+    {
+      "name": "Performance",
+      "description": "Broker performance metrics",
+      "widgets": [
+        {
+          "title": "CPU Usage",
+          "layout": {
+            "column": 1,
+            "row": 1,
+            "width": 4,
+            "height": 3
+          },
+          "visualization": {
+            "id": "viz.line"
+          },
+          "rawConfiguration": {
+            "queries": [
+              {
+                "query": "SELECT average(broker.cpu.usage) AS 'CPU %' FROM MessageQueue WHERE entity.guid = {{ entity.guid }} TIMESERIES SINCE 1 hour ago"
+              }
+            ],
+            "yAxisLeft": {
+              "zero": true,
+              "max": 100
+            }
+          }
+        },
+        {
+          "title": "Memory Usage",
+          "layout": {
+            "column": 5,
+            "row": 1,
+            "width": 4,
+            "height": 3
+          },
+          "visualization": {
+            "id": "viz.line"
+          },
+          "rawConfiguration": {
+            "queries": [
+              {
+                "query": "SELECT average(broker.memory.usage) AS 'Memory %' FROM MessageQueue WHERE entity.guid = {{ entity.guid }} TIMESERIES SINCE 1 hour ago"
+              }
+            ],
+            "yAxisLeft": {
+              "zero": true,
+              "max": 100
+            }
+          }
+        },
+        {
+          "title": "Network Throughput",
+          "layout": {
+            "column": 9,
+            "row": 1,
+            "width": 4,
+            "height": 3
+          },
+          "visualization": {
+            "id": "viz.line"
+          },
+          "rawConfiguration": {
+            "queries": [
+              {
+                "query": "SELECT sum(broker.network.throughput) AS 'Throughput' FROM MessageQueue WHERE entity.guid = {{ entity.guid }} TIMESERIES SINCE 1 hour ago"
+              }
+            ],
+            "yAxisLeft": {
+              "zero": true
+            }
+          }
+        },
+        {
+          "title": "Message Rate",
+          "layout": {
+            "column": 1,
+            "row": 4,
+            "width": 6,
+            "height": 3
+          },
+          "visualization": {
+            "id": "viz.area"
+          },
+          "rawConfiguration": {
+            "queries": [
+              {
+                "query": "SELECT rate(sum(broker.messages.in), 1 second) AS 'Messages In', rate(sum(broker.messages.out), 1 second) AS 'Messages Out' FROM MessageQueue WHERE entity.guid = {{ entity.guid }} TIMESERIES SINCE 1 hour ago"
+              }
+            ],
+            "yAxisLeft": {
+              "zero": true
+            }
+          }
+        },
+        {
+          "title": "Request Latency",
+          "layout": {
+            "column": 7,
+            "row": 4,
+            "width": 6,
+            "height": 3
+          },
+          "visualization": {
+            "id": "viz.line"
+          },
+          "rawConfiguration": {
+            "queries": [
+              {
+                "query": "SELECT average(broker.request.latency) AS 'Avg Latency', percentile(broker.request.latency, 95) AS 'P95 Latency', percentile(broker.request.latency, 99) AS 'P99 Latency' FROM MessageQueue WHERE entity.guid = {{ entity.guid }} TIMESERIES SINCE 1 hour ago"
+              }
+            ],
+            "yAxisLeft": {
+              "zero": true
+            }
+          }
+        },
+        {
+          "title": "Partition Management",
+          "layout": {
+            "column": 1,
+            "row": 7,
+            "width": 12,
+            "height": 3
+          },
+          "visualization": {
+            "id": "viz.table"
+          },
+          "rawConfiguration": {
+            "queries": [
+              {
+                "query": "SELECT latest(broker.partitionCount) AS 'Total Partitions', latest(broker.leaderPartitionCount) AS 'Leader Partitions', latest(broker.followerPartitionCount) AS 'Follower Partitions', latest(broker.underReplicatedPartitions) AS 'Under-Replicated' FROM MessageQueue WHERE entity.guid = {{ entity.guid }}"
+              }
+            ]
+          }
+        }
+      ]
+    }
+  ]
+}

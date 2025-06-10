@@ -275,9 +275,49 @@ class DashboardBuilder {
   }
 
   /**
-   * Execute NerdGraph query
+   * Execute NerdGraph query with retry logic
    */
-  async executeNerdGraphQuery(query) {
+  async executeNerdGraphQuery(query, options = {}) {
+    const maxRetries = options.maxRetries || 3;
+    const initialDelay = options.initialDelay || 1000;
+    const maxDelay = options.maxDelay || 16000;
+    const timeout = options.timeout || 30000;
+    
+    let lastError;
+    
+    for (let attempt = 0; attempt <= maxRetries; attempt++) {
+      try {
+        const result = await this._executeNerdGraphQueryInternal(query, timeout);
+        
+        // Check for API errors that should trigger retry
+        if (result.errors && result.errors.some(err => this._shouldRetryError(err))) {
+          throw new Error(`API errors: ${JSON.stringify(result.errors)}`);
+        }
+        
+        return result;
+      } catch (error) {
+        lastError = error;
+        
+        // Don't retry on non-retryable errors
+        if (!this._isRetryableError(error)) {
+          throw error;
+        }
+        
+        if (attempt < maxRetries) {
+          const delay = Math.min(initialDelay * Math.pow(2, attempt), maxDelay);
+          console.log(`Retrying NerdGraph query after ${delay}ms (attempt ${attempt + 1}/${maxRetries})`);
+          await new Promise(resolve => setTimeout(resolve, delay));
+        }
+      }
+    }
+    
+    throw new Error(`NerdGraph query failed after ${maxRetries} retries: ${lastError.message}`);
+  }
+
+  /**
+   * Internal method to execute NerdGraph query
+   */
+  async _executeNerdGraphQueryInternal(query, timeout) {
     return new Promise((resolve, reject) => {
       const payload = JSON.stringify({ query });
       const urlObj = new URL(this.config.nerdGraphUrl);
@@ -305,7 +345,17 @@ class DashboardBuilder {
         res.on('end', () => {
           try {
             const result = JSON.parse(responseData);
-            resolve(result);
+            
+            // Check HTTP status code
+            if (res.statusCode >= 500) {
+              reject(new Error(`Server error: ${res.statusCode} ${res.statusMessage}`));
+            } else if (res.statusCode === 429) {
+              reject(new Error('Rate limit exceeded'));
+            } else if (res.statusCode >= 400) {
+              reject(new Error(`Client error: ${res.statusCode} ${res.statusMessage} - ${responseData}`));
+            } else {
+              resolve(result);
+            }
           } catch (error) {
             reject(new Error(`Failed to parse response: ${error.message}`));
           }
@@ -316,10 +366,45 @@ class DashboardBuilder {
         reject(error);
       });
 
-      req.setTimeout(30000);
+      req.on('timeout', () => {
+        req.destroy();
+        reject(new Error(`Request timeout after ${timeout}ms`));
+      });
+
+      req.setTimeout(timeout);
       req.write(payload);
       req.end();
     });
+  }
+
+  /**
+   * Check if an error is retryable
+   */
+  _isRetryableError(error) {
+    const retryableMessages = [
+      'ECONNRESET',
+      'ETIMEDOUT',
+      'ENOTFOUND',
+      'ECONNREFUSED',
+      'timeout',
+      'Server error: 5',
+      'Rate limit'
+    ];
+    
+    return retryableMessages.some(msg => error.message.includes(msg));
+  }
+
+  /**
+   * Check if an API error should trigger retry
+   */
+  _shouldRetryError(error) {
+    const retryableTypes = [
+      'INTERNAL_SERVER_ERROR',
+      'SERVICE_UNAVAILABLE',
+      'GATEWAY_TIMEOUT'
+    ];
+    
+    return retryableTypes.includes(error.type);
   }
 
   /**

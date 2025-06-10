@@ -281,7 +281,7 @@ class DashboardTemplateEngine {
       },
       rawConfiguration: {
         nrqlQueries: [{
-          accountIds: [parseInt(process.env.NEW_RELIC_ACCOUNT_ID || '3630072')],
+          accountIds: [parseInt(process.env.NEW_RELIC_ACCOUNT_ID || '123456789')], // Use placeholder account ID
           query: query
         }],
         ...this.getVisualizationConfig(widgetType.visualization)

@@ -1,0 +1,44 @@
+cpuUsage:
+  title: CPU Usage
+  unit: PERCENTAGE
+  queries:
+    newRelic:
+      select: average(broker.cpu.usage)
+      from: MessageQueue
+      where: entityType = 'MESSAGE_QUEUE_BROKER'
+      eventId: entity.guid
+      eventName: entity.name
+
+memoryUsage:
+  title: Memory Usage
+  unit: PERCENTAGE
+  queries:
+    newRelic:
+      select: average(broker.memory.usage)
+      from: MessageQueue
+      where: entityType = 'MESSAGE_QUEUE_BROKER'
+      eventId: entity.guid
+      eventName: entity.name
+
+networkThroughput:
+  title: Network Throughput
+  unit: BYTES_PER_SECOND
+  queries:
+    newRelic:
+      select: sum(broker.network.in.bytesPerSecond + broker.network.out.bytesPerSecond) AS 'Network I/O'
+      from: MessageQueue
+      where: entityType = 'MESSAGE_QUEUE_BROKER'
+      eventId: entity.guid
+      eventName: entity.name
+
+requestLatency:
+  title: Request Latency (P99)
+  unit: MS
+  queries:
+    newRelic:
+      select: percentile(broker.request.latency, 99)
+      from: MessageQueue
+      where: entityType = 'MESSAGE_QUEUE_BROKER'
+      eventId: entity.guid
+      eventName: entity.name
+  displayAsValue: true

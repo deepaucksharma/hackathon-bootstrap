@@ -1,0 +1,33 @@
+apiVersion: v1
+kind: ConfigMap
+metadata:
+  name: mq-platform-config
+  namespace: message-queues-platform
+data:
+  # Platform configuration
+  MODE: "simulation"
+  PROVIDER: "kafka"
+  INTERVAL: "60"
+  ENVIRONMENT: "production"
+  
+  # Feature flags
+  USE_ENHANCED_COLLECTOR: "true"
+  ENABLE_CONSUMER_LAG: "true"
+  ENABLE_DETAILED_TOPICS: "true"
+  
+  # New Relic configuration
+  NEW_RELIC_REGION: "us"
+  NEW_RELIC_NERDGRAPH_URL: "https://api.newrelic.com/graphql"
+  
+  # Worker pool sizes
+  BROKER_WORKER_POOL_SIZE: "5"
+  TOPIC_WORKER_POOL_SIZE: "8"
+  CONSUMER_WORKER_POOL_SIZE: "3"
+  
+  # Simulation configuration
+  ANOMALY_RATE: "0.05"
+  BUSINESS_HOURS_ENABLED: "true"
+  
+  # Health check configuration
+  HEALTH_CHECK_PORT: "3001"
+  HEALTH_CHECK_INTERVAL: "30000"

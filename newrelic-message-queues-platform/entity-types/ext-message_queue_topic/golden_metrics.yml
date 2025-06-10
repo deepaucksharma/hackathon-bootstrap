@@ -1,0 +1,79 @@
+messagesInRate:
+  title: Messages In Rate
+  unit: COUNT_PER_MINUTE
+  queries:
+    - select: rate(sum(topic.throughput.in), 1 minute)
+      from: MessageQueue
+      where: "entity.type = 'MESSAGE_QUEUE_TOPIC'"
+      facet: entity.name
+      eventId: entity.guid
+
+messagesOutRate:
+  title: Messages Out Rate
+  unit: COUNT_PER_MINUTE
+  queries:
+    - select: rate(sum(topic.throughput.out), 1 minute)
+      from: MessageQueue
+      where: "entity.type = 'MESSAGE_QUEUE_TOPIC'"
+      facet: entity.name
+      eventId: entity.guid
+
+consumerLag:
+  title: Consumer Lag
+  unit: COUNT
+  queries:
+    - select: sum(topic.consumer.lag)
+      from: MessageQueue
+      where: "entity.type = 'MESSAGE_QUEUE_TOPIC'"
+      facet: entity.name
+      eventId: entity.guid
+
+bytesInPerSecond:
+  title: Bytes In Rate
+  unit: BYTES_PER_SECOND
+  queries:
+    - select: rate(sum(topic.bytes.in), 1 second)
+      from: MessageQueue
+      where: "entity.type = 'MESSAGE_QUEUE_TOPIC'"
+      facet: entity.name
+      eventId: entity.guid
+
+bytesOutPerSecond:
+  title: Bytes Out Rate
+  unit: BYTES_PER_SECOND
+  queries:
+    - select: rate(sum(topic.bytes.out), 1 second)
+      from: MessageQueue
+      where: "entity.type = 'MESSAGE_QUEUE_TOPIC'"
+      facet: entity.name
+      eventId: entity.guid
+
+partitionCount:
+  title: Partition Count
+  unit: COUNT
+  queries:
+    - select: latest(topic.partitionCount)
+      from: MessageQueue
+      where: "entity.type = 'MESSAGE_QUEUE_TOPIC'"
+      facet: entity.name
+      eventId: entity.guid
+
+replicationFactor:
+  title: Replication Factor
+  unit: COUNT
+  queries:
+    - select: latest(topic.replicationFactor)
+      from: MessageQueue
+      where: "entity.type = 'MESSAGE_QUEUE_TOPIC'"
+      facet: entity.name
+      eventId: entity.guid
+
+underReplicatedPartitions:
+  title: Under-Replicated Partitions
+  unit: COUNT
+  queries:
+    - select: latest(topic.underReplicatedPartitions)
+      from: MessageQueue
+      where: "entity.type = 'MESSAGE_QUEUE_TOPIC'"
+      facet: entity.name
+      eventId: entity.guid

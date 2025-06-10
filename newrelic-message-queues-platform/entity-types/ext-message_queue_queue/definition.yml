@@ -1,0 +1,135 @@
+domain: EXT
+type: MESSAGE_QUEUE_QUEUE
+
+# Synthesis rules for creating queue entities from telemetry data
+synthesis:
+  rules:
+    # RabbitMQ queue synthesis
+    - identifier: [clusterName, vhost, queue]
+      name: queue
+      encodeIdentifierInGUID: true
+      conditions:
+        - attribute: eventType
+          value: RabbitmqQueueSample
+        - attribute: queue
+          present: true
+        - attribute: clusterName
+          present: true
+      tags:
+        queue:
+          entityTagName: queueName
+        vhost:
+          entityTagName: queue.vhost
+        clusterName:
+          entityTagName: mq.cluster.name
+        provider:
+          entityTagName: mq.provider
+        durable:
+          entityTagName: queue.durable
+        exclusive:
+          entityTagName: queue.exclusive
+        autoDelete:
+          entityTagName: queue.autoDelete
+        environment:
+        cloud.provider:
+        cloud.region:
+        k8s.cluster.name:
+        k8s.namespace.name:
+        instrumentation.provider:
+          
+    # AWS SQS queue synthesis
+    - identifier: queueArn
+      name: queueName
+      encodeIdentifierInGUID: true
+      conditions:
+        - attribute: eventType
+          value: QueueSample
+        - attribute: provider
+          value: SqsQueue
+        - attribute: queueArn
+          present: true
+      tags:
+        queueArn:
+          entityTagName: aws.arn
+        queueName:
+        queueType:
+          entityTagName: queue.type
+        aws.region:
+        aws.accountId:
+        provider:
+          entityTagName: mq.provider
+        environment:
+        instrumentation.provider:
+          
+    # ActiveMQ queue synthesis
+    - identifier: [brokerName, destinationName]
+      name: destinationName
+      encodeIdentifierInGUID: true
+      conditions:
+        - attribute: eventType
+          value: ActiveMQQueueSample
+        - attribute: destinationType
+          value: Queue
+        - attribute: destinationName
+          present: true
+      tags:
+        destinationName:
+          entityTagName: queueName
+        brokerName:
+          entityTagName: mq.cluster.name
+        provider:
+          entityTagName: mq.provider
+        environment:
+        instrumentation.provider:
+          
+    # OpenTelemetry compatibility
+    - identifier: [messaging.destination.name, service.namespace]
+      name: messaging.destination.name
+      encodeIdentifierInGUID: true
+      conditions:
+        - attribute: eventType
+          value: Metric
+        - attribute: metricName
+          prefix: messaging.queue.
+        - attribute: messaging.destination.kind
+          value: queue
+        - attribute: messaging.destination.name
+          present: true
+        - attribute: newrelic.source
+          value: api.metrics.otlp
+      tags:
+        messaging.system:
+          entityTagName: mq.provider
+        messaging.destination.name:
+          entityTagName: queueName
+        messaging.destination.kind:
+        service.name:
+        service.namespace:
+          entityTagName: mq.cluster.name
+        telemetry.sdk.name:
+        telemetry.sdk.version:
+        telemetry.sdk.language:
+        cloud.provider:
+        cloud.region:
+        k8s.cluster.name:
+      legacyFeatures:
+        overrideGuidType: true
+
+# Golden tags are the most important tags for this entity type
+goldenTags:
+  - account
+  - accountId
+  - mq.provider
+  - mq.cluster.name
+  - environment
+  - queue.type
+  - queue.vhost
+  - cloud.provider
+  - cloud.region
+  - k8s.cluster.name
+  - instrumentation.provider
+
+# Entity configuration
+configuration:
+  entityExpirationTime: EIGHT_DAYS
+  alertable: true

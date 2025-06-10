@@ -19,6 +19,9 @@ class MessageQueueTopic extends BaseEntity {
     // Topic-specific properties
     this.topic = config.topic || config.name;
     this.clusterName = config.clusterName;
+    
+    // Regenerate GUID now that topic is set
+    this.guid = this.generateGUID();
     this.partitionCount = config.partitionCount || 1;
     this.replicationFactor = config.replicationFactor || 1;
     this.retentionMs = config.retentionMs;
@@ -99,6 +102,34 @@ class MessageQueueTopic extends BaseEntity {
    */
   updateErrorRate(errorRate) {
     this.updateGoldenMetric('topic.error.rate', errorRate, 'percentage');
+  }
+
+  /**
+   * Update messages in per second
+   */
+  updateMessagesIn(messagesPerSecond) {
+    this.updateThroughputIn(messagesPerSecond);
+  }
+
+  /**
+   * Update messages out per second
+   */
+  updateMessagesOut(messagesPerSecond) {
+    this.updateThroughputOut(messagesPerSecond);
+  }
+
+  /**
+   * Update bytes in per second
+   */
+  updateBytesIn(bytesPerSecond) {
+    this.updateMetadata('bytesInPerSecond', bytesPerSecond);
+  }
+
+  /**
+   * Update bytes out per second
+   */
+  updateBytesOut(bytesPerSecond) {
+    this.updateMetadata('bytesOutPerSecond', bytesPerSecond);
   }
 
   /**

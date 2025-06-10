@@ -1,0 +1,4 @@
+
+# Auto-formatter protection
+.eslintignore
+.prettierignore

@@ -75,7 +75,7 @@ class PlatformVerifier {
     // 1. Entity Factory
     try {
       console.log('Testing Entity Factory...');
-      const factory = new EntityFactory({ accountId: '3630072' });
+      const factory = new EntityFactory({ accountId: process.env.NEW_RELIC_ACCOUNT_ID || 'YOUR_ACCOUNT_ID' });
       const cluster = factory.createCluster({
         name: 'test-cluster',
         provider: 'kafka'
@@ -248,7 +248,7 @@ class PlatformVerifier {
     try {
       console.log('\nTesting Anomaly System...');
       const predictor = new AnomalyPredictor();
-      const factory = new EntityFactory({ accountId: '3630072' });
+      const factory = new EntityFactory({ accountId: process.env.NEW_RELIC_ACCOUNT_ID || 'YOUR_ACCOUNT_ID' });
       
       // Create test topology
       const cluster = factory.createCluster({ name: 'test', provider: 'kafka' });
@@ -302,7 +302,7 @@ class PlatformVerifier {
       console.log('Testing End-to-End Pipeline...');
       
       // 1. Create entities
-      const factory = new EntityFactory({ accountId: '3630072' });
+      const factory = new EntityFactory({ accountId: process.env.NEW_RELIC_ACCOUNT_ID || 'YOUR_ACCOUNT_ID' });
       const cluster = factory.createCluster({
         name: 'integration-test',
         provider: 'kafka'

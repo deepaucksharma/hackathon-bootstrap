@@ -62,8 +62,8 @@ class ErrorRecoveryManager extends EventEmitter {
       status: 'unknown'
     });
     
-    // Auto-create circuit breaker if component supports it
-    if (options.circuitBreakerConfig && component.setupCircuitBreaker) {
+    // Auto-create circuit breaker if config provided
+    if (options.circuitBreakerConfig) {
       this.createCircuitBreaker(name, options.circuitBreakerConfig);
     }
     
@@ -202,4 +202,248 @@ class ErrorRecoveryManager extends EventEmitter {
   /**
    * Handle circuit breaker closing
    */
-  handleCircuitClosed(componentName, data) {\n    logger.info(`🟢 Circuit closed for component '${componentName}' after ${data.successCount} successes`);\n    \n    const component = this.components.get(componentName);\n    if (component) {\n      component.status = 'healthy';\n    }\n    \n    this.recordRecoveryAttempt(componentName, null, 'recovered');\n    this.emit('circuitClosed', { component: componentName, ...data });\n  }\n  \n  /**\n   * Handle call rejection\n   */\n  handleCallRejected(componentName, data) {\n    logger.debug(`⚠️ Call rejected for component '${componentName}': ${data.error.message}`);\n    this.emit('callRejected', { component: componentName, ...data });\n  }\n  \n  /**\n   * Schedule recovery attempt for critical components\n   */\n  scheduleRecoveryAttempt(componentName, delay = 60000) {\n    setTimeout(async () => {\n      try {\n        await this.attemptComponentRecovery(componentName);\n      } catch (error) {\n        logger.error(`Recovery attempt failed for '${componentName}':`, error.message);\n      }\n    }, delay);\n  }\n  \n  /**\n   * Attempt to recover a component\n   */\n  async attemptComponentRecovery(componentName) {\n    if (this.activeRecoveries.size >= this.options.maxConcurrentRecoveries) {\n      logger.warn(`Max concurrent recoveries reached, skipping recovery for '${componentName}'`);\n      return;\n    }\n    \n    const component = this.components.get(componentName);\n    const circuitBreaker = this.circuitBreakers.get(componentName);\n    \n    if (!component || !circuitBreaker) {\n      return;\n    }\n    \n    logger.info(`🔧 Attempting recovery for component '${componentName}'`);\n    \n    try {\n      // Reset circuit breaker to allow testing\n      circuitBreaker.forceState('half_open');\n      \n      // Try a simple health check if available\n      if (component.healthCheck) {\n        await this.executeWithRecovery(componentName, component.healthCheck);\n      }\n      \n      logger.success(`✅ Recovery successful for component '${componentName}'`);\n      this.recordRecoveryAttempt(componentName, null, 'manual_recovery_success');\n      \n    } catch (error) {\n      logger.error(`❌ Recovery failed for component '${componentName}':`, error.message);\n      this.recordRecoveryAttempt(componentName, error, 'manual_recovery_failed');\n    }\n  }\n  \n  /**\n   * Record recovery attempt for metrics\n   */\n  recordRecoveryAttempt(componentName, error, outcome) {\n    const record = {\n      component: componentName,\n      timestamp: Date.now(),\n      outcome,\n      error: error ? error.message : null\n    };\n    \n    this.recoveryHistory.unshift(record);\n    \n    // Limit history size\n    if (this.recoveryHistory.length > this.maxHistorySize) {\n      this.recoveryHistory = this.recoveryHistory.slice(0, this.maxHistorySize);\n    }\n    \n    this.emit('recoveryAttempt', record);\n  }\n  \n  /**\n   * Start health monitoring\n   */\n  startHealthMonitoring() {\n    this.healthCheckTimer = setInterval(() => {\n      this.performHealthCheck();\n    }, this.options.healthCheckInterval);\n    \n    logger.debug('Health monitoring started');\n  }\n  \n  /**\n   * Perform comprehensive health check\n   */\n  async performHealthCheck() {\n    const startTime = Date.now();\n    const issues = [];\n    const metrics = {};\n    \n    try {\n      // Check circuit breaker health\n      for (const [name, circuitBreaker] of this.circuitBreakers) {\n        const stats = circuitBreaker.getStats();\n        metrics[`${name}_circuit_state`] = stats.state;\n        metrics[`${name}_failure_rate`] = stats.stats.successRate;\n        \n        if (!stats.isHealthy) {\n          issues.push(`Circuit breaker '${name}' is unhealthy (${stats.state})`);\n        }\n      }\n      \n      // Check component health\n      for (const [name, component] of this.components) {\n        metrics[`${name}_status`] = component.status;\n        \n        if (component.critical && component.status !== 'healthy') {\n          issues.push(`Critical component '${name}' is ${component.status}`);\n        }\n        \n        // Run component health check if available\n        if (component.healthCheck && component.status !== 'circuit_open') {\n          try {\n            await component.healthCheck();\n            component.status = 'healthy';\n            component.lastHealthCheck = Date.now();\n          } catch (error) {\n            component.status = 'unhealthy';\n            component.lastError = {\n              message: error.message,\n              timestamp: Date.now()\n            };\n            if (component.critical) {\n              issues.push(`Health check failed for '${name}': ${error.message}`);\n            }\n          }\n        }\n      }\n      \n      // Update system health\n      this.systemHealth = {\n        status: issues.length === 0 ? 'healthy' : 'degraded',\n        lastCheck: Date.now(),\n        issues,\n        metrics: {\n          ...metrics,\n          active_recoveries: this.activeRecoveries.size,\n          total_components: this.components.size,\n          total_circuit_breakers: this.circuitBreakers.size,\n          health_check_duration: Date.now() - startTime\n        }\n      };\n      \n      // Emit health update\n      this.emit('healthUpdate', this.systemHealth);\n      \n      if (issues.length > 0) {\n        logger.warn(`⚠️ System health check found ${issues.length} issues`);\n      }\n      \n    } catch (error) {\n      logger.error('Health check failed:', error.message);\n      this.systemHealth.status = 'error';\n    }\n  }\n  \n  /**\n   * Get system health status\n   */\n  getSystemHealth() {\n    return {\n      ...this.systemHealth,\n      components: Array.from(this.components.entries()).map(([name, component]) => ({\n        name,\n        type: component.type,\n        status: component.status,\n        critical: component.critical,\n        lastHealthCheck: component.lastHealthCheck,\n        lastError: component.lastError\n      })),\n      circuitBreakers: Array.from(this.circuitBreakers.entries()).map(([name, cb]) => ({\n        name,\n        ...cb.getStats()\n      }))\n    };\n  }\n  \n  /**\n   * Get recovery statistics\n   */\n  getRecoveryStats() {\n    const recentRecoveries = this.recoveryHistory.slice(0, 20);\n    const outcomes = {};\n    \n    recentRecoveries.forEach(record => {\n      outcomes[record.outcome] = (outcomes[record.outcome] || 0) + 1;\n    });\n    \n    return {\n      totalRecoveries: this.recoveryHistory.length,\n      recentRecoveries: recentRecoveries.length,\n      activeRecoveries: this.activeRecoveries.size,\n      outcomeBreakdown: outcomes,\n      recentHistory: recentRecoveries\n    };\n  }\n  \n  /**\n   * Reset all circuit breakers\n   */\n  resetAllCircuitBreakers() {\n    for (const [name, circuitBreaker] of this.circuitBreakers) {\n      circuitBreaker.reset();\n    }\n    logger.info('🔄 All circuit breakers reset');\n  }\n  \n  /**\n   * Shutdown recovery manager\n   */\n  shutdown() {\n    if (this.healthCheckTimer) {\n      clearInterval(this.healthCheckTimer);\n      this.healthCheckTimer = null;\n    }\n    \n    // Wait for active recoveries to complete\n    if (this.activeRecoveries.size > 0) {\n      logger.info(`Waiting for ${this.activeRecoveries.size} active recoveries to complete...`);\n    }\n    \n    logger.info('Error recovery manager shutdown complete');\n  }\n}\n\nmodule.exports = ErrorRecoveryManager;"
+  handleCircuitClosed(componentName, data) {
+    logger.info(`🟢 Circuit closed for component '${componentName}' after ${data.successCount} successes`);
+    
+    const component = this.components.get(componentName);
+    if (component) {
+      component.status = 'healthy';
+    }
+    
+    this.recordRecoveryAttempt(componentName, null, 'recovered');
+    this.emit('circuitClosed', { component: componentName, ...data });
+  }
+  
+  /**
+   * Handle call rejection
+   */
+  handleCallRejected(componentName, data) {
+    logger.debug(`⚠️ Call rejected for component '${componentName}': ${data.error.message}`);
+    this.emit('callRejected', { component: componentName, ...data });
+  }
+  
+  /**
+   * Schedule recovery attempt for critical components
+   */
+  scheduleRecoveryAttempt(componentName, delay = 60000) {
+    setTimeout(async () => {
+      try {
+        await this.attemptComponentRecovery(componentName);
+      } catch (error) {
+        logger.error(`Recovery attempt failed for '${componentName}':`, error.message);
+      }
+    }, delay);
+  }
+  
+  /**
+   * Attempt to recover a component
+   */
+  async attemptComponentRecovery(componentName) {
+    if (this.activeRecoveries.size >= this.options.maxConcurrentRecoveries) {
+      logger.warn(`Max concurrent recoveries reached, skipping recovery for '${componentName}'`);
+      return;
+    }
+    
+    const component = this.components.get(componentName);
+    const circuitBreaker = this.circuitBreakers.get(componentName);
+    
+    if (!component || !circuitBreaker) {
+      return;
+    }
+    
+    logger.info(`🔧 Attempting recovery for component '${componentName}'`);
+    
+    try {
+      // Reset circuit breaker to allow testing
+      circuitBreaker.forceState('half_open');
+      
+      // Try a simple health check if available
+      if (component.healthCheck) {
+        await this.executeWithRecovery(componentName, component.healthCheck);
+      }
+      
+      logger.success(`✅ Recovery successful for component '${componentName}'`);
+      this.recordRecoveryAttempt(componentName, null, 'manual_recovery_success');
+      
+    } catch (error) {
+      logger.error(`❌ Recovery failed for component '${componentName}':`, error.message);
+      this.recordRecoveryAttempt(componentName, error, 'manual_recovery_failed');
+    }
+  }
+  
+  /**
+   * Record recovery attempt for metrics
+   */
+  recordRecoveryAttempt(componentName, error, outcome) {
+    const record = {
+      component: componentName,
+      timestamp: Date.now(),
+      outcome,
+      error: error ? error.message : null
+    };
+    
+    this.recoveryHistory.unshift(record);
+    
+    // Limit history size
+    if (this.recoveryHistory.length > this.maxHistorySize) {
+      this.recoveryHistory = this.recoveryHistory.slice(0, this.maxHistorySize);
+    }
+    
+    this.emit('recoveryAttempt', record);
+  }
+  
+  /**
+   * Start health monitoring
+   */
+  startHealthMonitoring() {
+    this.healthCheckTimer = setInterval(() => {
+      this.performHealthCheck();
+    }, this.options.healthCheckInterval);
+    
+    logger.debug('Health monitoring started');
+  }
+  
+  /**
+   * Perform comprehensive health check
+   */
+  async performHealthCheck() {
+    const startTime = Date.now();
+    const issues = [];
+    const metrics = {};
+    
+    try {
+      // Check circuit breaker health
+      for (const [name, circuitBreaker] of this.circuitBreakers) {
+        const stats = circuitBreaker.getStats();
+        metrics[`${name}_circuit_state`] = stats.state;
+        metrics[`${name}_failure_rate`] = stats.stats.successRate;
+        
+        if (!stats.isHealthy) {
+          issues.push(`Circuit breaker '${name}' is unhealthy (${stats.state})`);
+        }
+      }
+      
+      // Check component health
+      for (const [name, component] of this.components) {
+        metrics[`${name}_status`] = component.status;
+        
+        if (component.critical && component.status !== 'healthy') {
+          issues.push(`Critical component '${name}' is ${component.status}`);
+        }
+        
+        // Run component health check if available
+        if (component.healthCheck && component.status !== 'circuit_open') {
+          try {
+            await component.healthCheck();
+            component.status = 'healthy';
+            component.lastHealthCheck = Date.now();
+          } catch (error) {
+            component.status = 'unhealthy';
+            component.lastError = {
+              message: error.message,
+              timestamp: Date.now()
+            };
+            if (component.critical) {
+              issues.push(`Health check failed for '${name}': ${error.message}`);
+            }
+          }
+        }
+      }
+      
+      // Update system health
+      this.systemHealth = {
+        status: issues.length === 0 ? 'healthy' : 'degraded',
+        lastCheck: Date.now(),
+        issues,
+        metrics: {
+          ...metrics,
+          active_recoveries: this.activeRecoveries.size,
+          total_components: this.components.size,
+          total_circuit_breakers: this.circuitBreakers.size,
+          health_check_duration: Date.now() - startTime
+        }
+      };
+      
+      // Emit health update
+      this.emit('healthUpdate', this.systemHealth);
+      
+      if (issues.length > 0) {
+        logger.warn(`⚠️ System health check found ${issues.length} issues`);
+      }
+      
+    } catch (error) {
+      logger.error('Health check failed:', error.message);
+      this.systemHealth.status = 'error';
+    }
+  }
+  
+  /**
+   * Get system health status
+   */
+  getSystemHealth() {
+    return {
+      ...this.systemHealth,
+      components: Array.from(this.components.entries()).map(([name, component]) => ({
+        name,
+        type: component.type,
+        status: component.status,
+        critical: component.critical,
+        lastHealthCheck: component.lastHealthCheck,
+        lastError: component.lastError
+      })),
+      circuitBreakers: Array.from(this.circuitBreakers.entries()).map(([name, cb]) => ({
+        name,
+        ...cb.getStats()
+      }))
+    };
+  }
+  
+  /**
+   * Get recovery statistics
+   */
+  getRecoveryStats() {
+    const recentRecoveries = this.recoveryHistory.slice(0, 20);
+    const outcomes = {};
+    
+    recentRecoveries.forEach(record => {
+      outcomes[record.outcome] = (outcomes[record.outcome] || 0) + 1;
+    });
+    
+    return {
+      totalRecoveries: this.recoveryHistory.length,
+      recentRecoveries: recentRecoveries.length,
+      activeRecoveries: this.activeRecoveries.size,
+      outcomeBreakdown: outcomes,
+      recentHistory: recentRecoveries
+    };
+  }
+  
+  /**
+   * Reset all circuit breakers
+   */
+  resetAllCircuitBreakers() {
+    for (const [name, circuitBreaker] of this.circuitBreakers) {
+      circuitBreaker.reset();
+    }
+    logger.info('🔄 All circuit breakers reset');
+  }
+  
+  /**
+   * Shutdown recovery manager
+   */
+  shutdown() {
+    if (this.healthCheckTimer) {
+      clearInterval(this.healthCheckTimer);
+      this.healthCheckTimer = null;
+    }
+    
+    // Wait for active recoveries to complete
+    if (this.activeRecoveries.size > 0) {
+      logger.info(`Waiting for ${this.activeRecoveries.size} active recoveries to complete...`);
+    }
+    
+    logger.info('Error recovery manager shutdown complete');
+  }
+}
+
+module.exports = ErrorRecoveryManager;

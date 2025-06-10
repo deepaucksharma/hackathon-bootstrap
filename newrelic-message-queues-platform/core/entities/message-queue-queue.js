@@ -11,10 +11,14 @@ class MessageQueueQueue extends BaseEntity {
   static ENTITY_TYPE = 'MESSAGE_QUEUE_QUEUE';
 
   constructor(config = {}) {
-    super({
+    // Ensure name is set from queueName
+    const superConfig = {
       ...config,
+      name: config.name || config.queueName,
       entityType: MessageQueueQueue.ENTITY_TYPE
-    });
+    };
+    
+    super(superConfig);
 
     // Queue-specific properties
     this.queueName = config.queueName || config.name;

@@ -22,6 +22,9 @@ class MessageQueueBroker extends BaseEntity {
     this.host = this.hostname; // Add host property for compatibility
     this.port = config.port || 9092;
     this.clusterName = config.clusterName;
+    
+    // Regenerate GUID now that broker properties are set
+    this.guid = this.generateGUID();
     this.isController = config.isController || false;
     this.rack = config.rack;
     this.partitionCount = config.partitionCount || 0;

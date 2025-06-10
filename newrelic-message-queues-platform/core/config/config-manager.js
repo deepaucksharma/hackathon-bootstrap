@@ -8,6 +8,16 @@
 const path = require('path');
 const fs = require('fs');
 
+// Lazy load secrets manager to avoid circular dependencies
+let secretsManager;
+function getSecretsManagerLazy() {
+  if (!secretsManager) {
+    const { getSecretsManager } = require('../security/secrets-manager');
+    secretsManager = getSecretsManager();
+  }
+  return secretsManager;
+}
+
 class ConfigManager {
   constructor(overrides = {}) {
     this._config = null;
@@ -122,8 +132,32 @@ class ConfigManager {
   /**
    * Get New Relic client configuration
    */
-  getNewRelicConfig() {
+  async getNewRelicConfig() {
     const config = this.getConfig();
+    
+    // Try to load from secrets manager if available
+    try {
+      const sm = getSecretsManagerLazy();
+      if (sm) {
+        const secrets = await sm.getNewRelicConfig();
+        return {
+          apiKey: secrets.apiKey || config.apiKey || config.userApiKey,
+          userApiKey: secrets.apiKey || config.userApiKey,
+          insertApiKey: secrets.ingestKey || config.insertApiKey || config.apiKey,
+          accountId: secrets.accountId || config.accountId,
+          region: secrets.region || config.region,
+          timeout: config.timeout,
+          retries: config.retries,
+          retryDelay: config.retryDelay,
+          verbose: config.verbose,
+          dryRun: config.dryRun
+        };
+      }
+    } catch (error) {
+      // Fall back to environment variables
+      console.warn('Secrets manager not available, using environment variables');
+    }
+    
     return {
       apiKey: config.apiKey || config.userApiKey,
       userApiKey: config.userApiKey,

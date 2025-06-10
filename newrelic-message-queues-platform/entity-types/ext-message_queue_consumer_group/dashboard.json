@@ -1,0 +1,164 @@
+{
+  "name": "Message Queue Consumer Group",
+  "description": "Consumer group performance and lag monitoring",
+  "pages": [
+    {
+      "name": "Consumer Group Health",
+      "description": "Consumer group lag and performance metrics",
+      "widgets": [
+        {
+          "title": "Total Consumer Lag",
+          "layout": {
+            "column": 1,
+            "row": 1,
+            "width": 4,
+            "height": 3
+          },
+          "visualization": {
+            "id": "viz.billboard"
+          },
+          "rawConfiguration": {
+            "queries": [
+              {
+                "query": "SELECT sum(consumerGroup.lag) AS 'Total Lag' FROM MessageQueue WHERE entity.guid = {{ entity.guid }} SINCE 5 minutes ago"
+              }
+            ],
+            "thresholds": [
+              {
+                "value": 10000,
+                "alertSeverity": "WARNING"
+              },
+              {
+                "value": 50000,
+                "alertSeverity": "CRITICAL"
+              }
+            ]
+          }
+        },
+        {
+          "title": "Message Consumption Rate",
+          "layout": {
+            "column": 5,
+            "row": 1,
+            "width": 4,
+            "height": 3
+          },
+          "visualization": {
+            "id": "viz.line"
+          },
+          "rawConfiguration": {
+            "queries": [
+              {
+                "query": "SELECT rate(sum(consumerGroup.messages.consumed), 1 minute) AS 'Messages/min' FROM MessageQueue WHERE entity.guid = {{ entity.guid }} TIMESERIES SINCE 1 hour ago"
+              }
+            ],
+            "yAxisLeft": {
+              "zero": true
+            }
+          }
+        },
+        {
+          "title": "Active Members",
+          "layout": {
+            "column": 9,
+            "row": 1,
+            "width": 4,
+            "height": 3
+          },
+          "visualization": {
+            "id": "viz.billboard"
+          },
+          "rawConfiguration": {
+            "queries": [
+              {
+                "query": "SELECT latest(consumerGroup.members) AS 'Active Members' FROM MessageQueue WHERE entity.guid = {{ entity.guid }} SINCE 5 minutes ago"
+              }
+            ]
+          }
+        },
+        {
+          "title": "Lag Trend",
+          "layout": {
+            "column": 1,
+            "row": 4,
+            "width": 6,
+            "height": 3
+          },
+          "visualization": {
+            "id": "viz.area"
+          },
+          "rawConfiguration": {
+            "queries": [
+              {
+                "query": "SELECT sum(consumerGroup.lag) AS 'Total Lag' FROM MessageQueue WHERE entity.guid = {{ entity.guid }} TIMESERIES SINCE 6 hours ago"
+              }
+            ],
+            "yAxisLeft": {
+              "zero": true
+            }
+          }
+        },
+        {
+          "title": "Bytes Consumed Rate",
+          "layout": {
+            "column": 7,
+            "row": 4,
+            "width": 6,
+            "height": 3
+          },
+          "visualization": {
+            "id": "viz.line"
+          },
+          "rawConfiguration": {
+            "queries": [
+              {
+                "query": "SELECT rate(sum(consumerGroup.bytes.consumed), 1 second) AS 'Bytes/sec' FROM MessageQueue WHERE entity.guid = {{ entity.guid }} TIMESERIES SINCE 1 hour ago"
+              }
+            ],
+            "yAxisLeft": {
+              "zero": true
+            }
+          }
+        },
+        {
+          "title": "Per-Topic Lag",
+          "layout": {
+            "column": 1,
+            "row": 7,
+            "width": 12,
+            "height": 3
+          },
+          "visualization": {
+            "id": "viz.bar"
+          },
+          "rawConfiguration": {
+            "queries": [
+              {
+                "query": "SELECT sum(consumerGroup.lag) AS 'Lag' FROM MessageQueue WHERE entity.guid = {{ entity.guid }} FACET topic SINCE 5 minutes ago"
+              }
+            ]
+          }
+        },
+        {
+          "title": "Consumer Group Details",
+          "layout": {
+            "column": 1,
+            "row": 10,
+            "width": 12,
+            "height": 3
+          },
+          "visualization": {
+            "id": "viz.table"
+          },
+          "rawConfiguration": {
+            "queries": [
+              {
+                "query": "SELECT latest(consumerGroup.state) AS 'State', uniqueCount(consumerGroup.topics) AS 'Topics', latest(consumerGroup.rebalances) AS 'Rebalances', average(consumerGroup.lag) / latest(consumerGroup.members) AS 'Avg Lag/Member' FROM MessageQueue WHERE entity.guid = {{ entity.guid }} SINCE 30 minutes ago"
+              }
+            ]
+          }
+        }
+      ]
+    }
+  ]
+}

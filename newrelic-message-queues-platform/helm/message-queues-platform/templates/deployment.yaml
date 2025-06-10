@@ -1,0 +1,194 @@
+apiVersion: apps/v1
+kind: Deployment
+metadata:
+  name: {{ include "message-queues-platform.fullname" . }}
+  labels:
+    {{- include "message-queues-platform.labels" . | nindent 4 }}
+spec:
+  {{- if not .Values.autoscaling.enabled }}
+  replicas: {{ .Values.replicaCount }}
+  {{- end }}
+  selector:
+    matchLabels:
+      {{- include "message-queues-platform.selectorLabels" . | nindent 6 }}
+  template:
+    metadata:
+      annotations:
+        checksum/config: {{ include (print $.Template.BasePath "/configmap.yaml") . | sha256sum }}
+        checksum/secret: {{ include (print $.Template.BasePath "/secret.yaml") . | sha256sum }}
+        {{- with .Values.podAnnotations }}
+        {{- toYaml . | nindent 8 }}
+        {{- end }}
+      labels:
+        {{- include "message-queues-platform.selectorLabels" . | nindent 8 }}
+    spec:
+      {{- with .Values.imagePullSecrets }}
+      imagePullSecrets:
+        {{- toYaml . | nindent 8 }}
+      {{- end }}
+      serviceAccountName: {{ include "message-queues-platform.serviceAccountName" . }}
+      securityContext:
+        {{- toYaml .Values.podSecurityContext | nindent 8 }}
+      containers:
+        - name: {{ .Chart.Name }}
+          securityContext:
+            {{- toYaml .Values.securityContext | nindent 12 }}
+          image: "{{ .Values.image.repository }}:{{ .Values.image.tag | default .Chart.AppVersion }}"
+          imagePullPolicy: {{ .Values.image.pullPolicy }}
+          ports:
+            - name: http
+              containerPort: {{ .Values.api.port }}
+              protocol: TCP
+          env:
+            - name: MODE
+              value: {{ .Values.platform.mode | quote }}
+            - name: PROVIDER
+              value: {{ .Values.platform.provider | quote }}
+            - name: INTERVAL
+              value: {{ .Values.platform.interval | quote }}
+            - name: DEBUG
+              value: {{ .Values.platform.debug | quote }}
+            - name: API_PORT
+              value: {{ .Values.api.port | quote }}
+            - name: API_HOST
+              value: {{ .Values.api.host | quote }}
+            - name: CLUSTERS
+              value: {{ .Values.platform.simulation.clusters | quote }}
+            - name: BROKERS
+              value: {{ .Values.platform.simulation.brokers | quote }}
+            - name: TOPICS
+              value: {{ .Values.platform.simulation.topics | quote }}
+            - name: CONSUMER_GROUPS
+              value: {{ .Values.platform.simulation.consumerGroups | quote }}
+            - name: ENVIRONMENT
+              value: {{ .Values.platform.simulation.environment | quote }}
+            {{- if .Values.platform.enhancedCollector.enabled }}
+            - name: BROKER_WORKERS
+              value: {{ .Values.platform.enhancedCollector.brokerWorkerPoolSize | quote }}
+            - name: TOPIC_WORKERS
+              value: {{ .Values.platform.enhancedCollector.topicWorkerPoolSize | quote }}
+            - name: CONSUMER_WORKERS
+              value: {{ .Values.platform.enhancedCollector.consumerWorkerPoolSize | quote }}
+            {{- end }}
+            {{- if .Values.platform.multiCluster.enabled }}
+            - name: MULTI_CLUSTER
+              value: "true"
+            - name: MAX_CLUSTERS_PER_QUERY
+              value: {{ .Values.platform.multiCluster.maxClustersPerQuery | quote }}
+            - name: ENABLE_CLUSTER_DISCOVERY
+              value: {{ .Values.platform.multiCluster.enableClusterDiscovery | quote }}
+            {{- if .Values.platform.multiCluster.clusterFilter }}
+            - name: CLUSTER_FILTER
+              value: {{ .Values.platform.multiCluster.clusterFilter | join "," | quote }}
+            {{- end }}
+            {{- end }}
+            {{- if .Values.secrets.encryption.enabled }}
+            - name: SECRETS_ENCRYPTION_KEY
+              valueFrom:
+                secretKeyRef:
+                  name: {{ include "message-queues-platform.secretName" . }}
+                  key: encryption-key
+            {{- end }}
+            - name: NEW_RELIC_ACCOUNT_ID
+              valueFrom:
+                secretKeyRef:
+                  name: {{ include "message-queues-platform.secretName" . }}
+                  key: account-id
+            - name: NEW_RELIC_API_KEY
+              valueFrom:
+                secretKeyRef:
+                  name: {{ include "message-queues-platform.secretName" . }}
+                  key: api-key
+            - name: NEW_RELIC_INGEST_KEY
+              valueFrom:
+                secretKeyRef:
+                  name: {{ include "message-queues-platform.secretName" . }}
+                  key: ingest-key
+            - name: NEW_RELIC_REGION
+              valueFrom:
+                secretKeyRef:
+                  name: {{ include "message-queues-platform.secretName" . }}
+                  key: region
+            {{- with .Values.config.env }}
+            {{- range $key, $value := . }}
+            - name: {{ $key }}
+              value: {{ $value | quote }}
+            {{- end }}
+            {{- end }}
+          {{- if .Values.probes.liveness.enabled }}
+          livenessProbe:
+            httpGet:
+              path: {{ .Values.probes.liveness.path }}
+              port: http
+            initialDelaySeconds: {{ .Values.probes.liveness.initialDelaySeconds }}
+            periodSeconds: {{ .Values.probes.liveness.periodSeconds }}
+            timeoutSeconds: {{ .Values.probes.liveness.timeoutSeconds }}
+            failureThreshold: {{ .Values.probes.liveness.failureThreshold }}
+            successThreshold: {{ .Values.probes.liveness.successThreshold }}
+          {{- end }}
+          {{- if .Values.probes.readiness.enabled }}
+          readinessProbe:
+            httpGet:
+              path: {{ .Values.probes.readiness.path }}
+              port: http
+            initialDelaySeconds: {{ .Values.probes.readiness.initialDelaySeconds }}
+            periodSeconds: {{ .Values.probes.readiness.periodSeconds }}
+            timeoutSeconds: {{ .Values.probes.readiness.timeoutSeconds }}
+            failureThreshold: {{ .Values.probes.readiness.failureThreshold }}
+            successThreshold: {{ .Values.probes.readiness.successThreshold }}
+          {{- end }}
+          {{- if .Values.probes.startup.enabled }}
+          startupProbe:
+            httpGet:
+              path: {{ .Values.probes.startup.path }}
+              port: http
+            initialDelaySeconds: {{ .Values.probes.startup.initialDelaySeconds }}
+            periodSeconds: {{ .Values.probes.startup.periodSeconds }}
+            timeoutSeconds: {{ .Values.probes.startup.timeoutSeconds }}
+            failureThreshold: {{ .Values.probes.startup.failureThreshold }}
+            successThreshold: {{ .Values.probes.startup.successThreshold }}
+          {{- end }}
+          resources:
+            {{- toYaml .Values.resources | nindent 12 }}
+          volumeMounts:
+            - name: tmp
+              mountPath: /tmp
+            {{- if .Values.secrets.encryption.enabled }}
+            - name: secrets
+              mountPath: /app/.secrets
+              readOnly: true
+            {{- end }}
+            {{- with .Values.config.files }}
+            {{- range $file, $content := . }}
+            - name: config-files
+              mountPath: /app/config/{{ $file }}
+              subPath: {{ $file }}
+              readOnly: true
+            {{- end }}
+            {{- end }}
+      volumes:
+        - name: tmp
+          emptyDir: {}
+        {{- if .Values.secrets.encryption.enabled }}
+        - name: secrets
+          secret:
+            secretName: {{ include "message-queues-platform.secretName" . }}
+            defaultMode: 0400
+        {{- end }}
+        {{- if .Values.config.files }}
+        - name: config-files
+          configMap:
+            name: {{ include "message-queues-platform.configMapName" . }}
+        {{- end }}
+      {{- with .Values.nodeSelector }}
+      nodeSelector:
+        {{- toYaml . | nindent 8 }}
+      {{- end }}
+      {{- with .Values.affinity }}
+      affinity:
+        {{- toYaml . | nindent 8 }}
+      {{- end }}
+      {{- with .Values.tolerations }}
+      tolerations:
+        {{- toYaml . | nindent 8 }}
+      {{- end }}

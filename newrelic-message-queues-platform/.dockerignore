@@ -1,0 +1,71 @@
+# Dependencies
+node_modules/
+npm-debug.log*
+yarn-debug.log*
+yarn-error.log*
+
+# Environment files (will be mounted as volumes)
+.env
+.env.local
+.env.*.local
+
+# Test files
+*.test.js
+*.spec.js
+__tests__/
+coverage/
+.nyc_output/
+
+# Development files
+.git/
+.gitignore
+.eslintrc*
+.prettierrc*
+.editorconfig
+
+# Documentation
+README.md
+docs/
+*.md
+
+# IDE files
+.vscode/
+.idea/
+*.swp
+*.swo
+*~
+
+# OS files
+.DS_Store
+Thumbs.db
+
+# Build artifacts
+dist/
+build/
+*.log
+
+# Docker files (don't copy into image)
+Dockerfile
+docker-compose*.yml
+.dockerignore
+
+# Kubernetes files
+k8s/
+*.yaml
+*.yml
+
+# CI/CD files
+.github/
+.gitlab-ci.yml
+.travis.yml
+
+# Examples and test data
+examples/
+test-data/
+results/
+
+# Temporary files
+tmp/
+temp/
+*.tmp
+*.temp

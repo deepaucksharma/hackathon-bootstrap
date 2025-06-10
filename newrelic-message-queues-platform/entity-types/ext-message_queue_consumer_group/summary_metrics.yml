@@ -1,0 +1,19 @@
+# Summary metrics are displayed in the entity list view
+# Maximum 3 metrics recommended
+totalLag:
+  title: Total Lag
+  unit: COUNT
+  tag:
+    key: consumerGroup.lag
+    
+messageRate:
+  title: Message Rate
+  unit: COUNT_PER_MINUTE
+  tag:
+    key: consumerGroup.messageRate
+    
+memberCount:
+  title: Active Members
+  unit: COUNT
+  tag:
+    key: consumerGroup.members

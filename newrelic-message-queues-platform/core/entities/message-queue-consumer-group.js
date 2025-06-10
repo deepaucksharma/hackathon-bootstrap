@@ -37,6 +37,16 @@ class MessageQueueConsumerGroup extends BaseEntity {
     
     // Initialize base entity properties
     this._initializeEntity();
+    
+    // Regenerate GUID now that all properties are set
+    this.guid = this.generateGUID();
+  }
+  
+  /**
+   * Generate composite key for GUID
+   */
+  generateCompositeKey() {
+    return `${this.clusterName}:${this.consumerGroupId}`;
   }
 
   _initializeEntity() {
@@ -272,6 +282,28 @@ class MessageQueueConsumerGroup extends BaseEntity {
     });
     
     return metrics;
+  }
+
+  /**
+   * Update consumer lag
+   */
+  updateLag(totalLag) {
+    this.totalLag = totalLag;
+    this.metrics['consumerGroup.totalLag'] = totalLag;
+    if (this.updateGoldenMetric) {
+      this.updateGoldenMetric('consumerGroup.totalLag', totalLag, 'messages');
+    }
+  }
+
+  /**
+   * Update member count
+   */
+  updateMemberCount(memberCount) {
+    this.memberCount = memberCount;
+    this.metrics['consumerGroup.memberCount'] = memberCount;
+    if (this.updateGoldenMetric) {
+      this.updateGoldenMetric('consumerGroup.memberCount', memberCount, 'count');
+    }
   }
 }
 

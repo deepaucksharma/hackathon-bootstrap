@@ -1,0 +1,184 @@
+# Default values for message-queues-platform
+replicaCount: 1
+
+image:
+  repository: newrelic/message-queues-platform
+  pullPolicy: IfNotPresent
+  tag: "1.0.0"
+
+imagePullSecrets: []
+nameOverride: ""
+fullnameOverride: ""
+
+serviceAccount:
+  create: true
+  annotations: {}
+  name: ""
+
+podAnnotations: {}
+
+podSecurityContext:
+  fsGroup: 2000
+
+securityContext:
+  allowPrivilegeEscalation: false
+  runAsNonRoot: true
+  runAsUser: 1000
+  capabilities:
+    drop:
+    - ALL
+  readOnlyRootFilesystem: true
+
+service:
+  type: ClusterIP
+  port: 3000
+  targetPort: 3000
+
+api:
+  enabled: true
+  port: 3000
+  host: "0.0.0.0"
+
+platform:
+  mode: simulation
+  provider: kafka
+  interval: 60
+  debug: false
+  continuous: true
+  
+  # Multi-cluster options
+  multiCluster:
+    enabled: false
+    clusterFilter: []  # List of cluster names to monitor
+    maxClustersPerQuery: 10
+    enableClusterDiscovery: true
+  
+  # Enhanced collector options
+  enhancedCollector:
+    enabled: true
+    brokerWorkerPoolSize: 5
+    topicWorkerPoolSize: 8
+    consumerWorkerPoolSize: 3
+    enableConsumerLagCollection: true
+    enableDetailedTopicMetrics: true
+
+  # Simulation options
+  simulation:
+    clusters: 1
+    brokers: 3
+    topics: 5
+    consumerGroups: 3
+    environment: production
+
+secrets:
+  # Secret management
+  encryption:
+    enabled: true
+    key: ""  # Set via --set or external secret
+  
+  # New Relic configuration
+  newrelic:
+    accountId: ""
+    apiKey: ""
+    ingestKey: ""
+    region: "us"
+
+# Resource limits and requests
+resources:
+  limits:
+    cpu: 1000m
+    memory: 512Mi
+  requests:
+    cpu: 100m
+    memory: 128Mi
+
+# Horizontal Pod Autoscaler
+autoscaling:
+  enabled: true
+  minReplicas: 1
+  maxReplicas: 3
+  targetCPUUtilizationPercentage: 80
+  targetMemoryUtilizationPercentage: 80
+
+# Node selection
+nodeSelector: {}
+tolerations: []
+affinity: {}
+
+# Probes configuration
+probes:
+  liveness:
+    enabled: true
+    initialDelaySeconds: 30
+    periodSeconds: 10
+    timeoutSeconds: 5
+    failureThreshold: 3
+    successThreshold: 1
+    path: /health/live
+    
+  readiness:
+    enabled: true
+    initialDelaySeconds: 15
+    periodSeconds: 5
+    timeoutSeconds: 3
+    failureThreshold: 3
+    successThreshold: 1
+    path: /health/ready
+    
+  startup:
+    enabled: true
+    initialDelaySeconds: 10
+    periodSeconds: 10
+    timeoutSeconds: 5
+    failureThreshold: 30
+    successThreshold: 1
+    path: /health/startup
+
+# Monitoring
+monitoring:
+  enabled: true
+  serviceMonitor:
+    enabled: true
+    interval: 30s
+    path: /metrics
+    port: http
+    
+# ConfigMap for application configuration
+config:
+  # Additional environment variables
+  env: {}
+  
+  # Mount additional config files
+  files: {}
+
+# Persistent volume for secrets (optional)
+persistence:
+  enabled: false
+  accessMode: ReadWriteOnce
+  size: 1Gi
+  storageClass: ""
+
+# Network policies
+networkPolicy:
+  enabled: false
+  ingress:
+    - from: []
+  egress:
+    - to: []
+
+# Pod disruption budget
+podDisruptionBudget:
+  enabled: true
+  minAvailable: 1
+
+# Ingress configuration
+ingress:
+  enabled: false
+  className: ""
+  annotations: {}
+  hosts:
+    - host: message-queues-platform.local
+      paths:
+        - path: /
+          pathType: Prefix
+  tls: []

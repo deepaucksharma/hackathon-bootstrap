@@ -1,255 +1,309 @@
-# New Relic Message Queues Platform
+# New Relic Message Queues Platform v3.0
 
-A comprehensive platform for monitoring message queue infrastructure using New Relic's ecosystem, combining real infrastructure data from nri-kafka with simulation capabilities for testing and development.
-
-> **📋 Technical Specification**: For the complete technical architecture and implementation details, see the [Technical Specification](../docs/TECHNICAL_SPECIFICATION.md).
-
-## 🎯 Platform Goals
-
-1. **Real Infrastructure Monitoring**: Leverage nri-kafka and New Relic Infrastructure agent for production Kafka monitoring
-2. **Entity Framework**: Transform infrastructure data into MESSAGE_QUEUE_* entities for consistent observability
-3. **Simulation Support**: Maintain simulation capabilities for testing, demos, and development
-4. **Dashboard Generation**: Create standardized dashboards from templates
-5. **Hybrid Mode**: Combine real and simulated data for comprehensive coverage
-
-## 🏗️ Architecture
-
-The platform implements a Unified Data Model (UDM) architecture that bridges production Kafka monitoring (via nri-kafka) with development/testing capabilities through simulation:
-
-```
-┌─────────────────┐     ┌──────────────────┐     ┌─────────────────┐
-│   Kafka Cluster │────▶│   nri-kafka      │────▶│  Infrastructure │
-│  (JMX/Admin API)│     │  Integration     │     │     Agent       │
-└─────────────────┘     └──────────────────┘     └────────┬────────┘
-                                                           │
-                        ┌──────────────────────────────────┘
-                        ▼
-             ┌──────────────────┐                 ┌──────────────────┐
-             │ UDM Transform    │                 │    Simulation    │
-             │     Layer        │                 │     Engine       │
-             └────────┬─────────┘                 └────────┬─────────┘
-                      │                                     │
-                      └──────────────┬──────────────────────┘
-                                     ▼
-                        ┌────────────────────────┐
-                        │  MESSAGE_QUEUE_*       │
-                        │  Entities (UDM)        │
-                        └───────────┬────────────┘
-                                    │
-                        ┌───────────▼────────────┐
-                        │   Dashboard CI/CD      │
-                        │   Platform             │
-                        └────────────────────────┘
-```
+A unified, enterprise-grade platform for monitoring Apache Kafka and message queue systems with New Relic's v3.0 data model specification.
 
 ## 🚀 Quick Start
 
-### 1. Install Dependencies
+### Single Command Deployment
 
 ```bash
-npm install
+# Quick start - deploys everything and starts monitoring
+node launch.js quick-start
 ```
 
-### 2. Configure Environment
-
-Create a `.env` file:
+### Interactive Mode
 
 ```bash
-NEW_RELIC_ACCOUNT_ID=your_account_id
-NEW_RELIC_INGEST_KEY=your_ingest_key
-NEW_RELIC_USER_API_KEY=your_user_api_key
+# Launch interactive menu
+node launch.js
 ```
 
-### 3. Run Platform
+```
+╔══════════════════════════════════════════════════════════════╗
+║                                                              ║
+║    🚀 New Relic Message Queues Platform                     ║
+║                                                              ║
+║    Version: 3.0.0                                           ║
+║    Unified platform for Kafka monitoring with v3.0 data    ║
+║                                                              ║
+╚══════════════════════════════════════════════════════════════╝
+
+🎯 Available Actions:
+
+  1. Quick Start (Deploy Everything)
+  2. Deploy Minikube + Kafka
+  3. Start Monitoring Only
+  4. Generate Dashboards Only
+  5. Full Demo (Deploy + Monitor + Dashboards)
+  6. Status Check
+  7. Clean Up Everything
+  8. Show Help
+  q. Quit
+```
+
+## 📋 Available Commands
+
+| Command | Description | Usage |
+|---------|-------------|-------|
+| `quick-start` | Deploy everything and start monitoring | `node launch.js quick-start` |
+| `deploy` | Deploy minikube + Kafka infrastructure | `node launch.js deploy` |
+| `monitor` | Start monitoring platform only | `node launch.js monitor` |
+| `dashboards` | Generate New Relic dashboards | `node launch.js dashboards --open` |
+| `demo` | Run full demo with all features | `node launch.js demo` |
+| `status` | Show current platform status | `node launch.js status` |
+| `cleanup` | Clean up all deployments | `node launch.js cleanup` |
+| `help` | Show detailed help | `node launch.js help` |
+
+## 🛠️ Prerequisites
+
+### Required Tools
+- **Node.js** (v14 or higher)
+- **kubectl** (Kubernetes CLI)
+- **minikube** (Local Kubernetes cluster)
+- **Docker** (Container runtime)
+
+### Install Prerequisites
 
 ```bash
-# Simulation mode (default) - generates test data
-node platform.js --mode simulation
+# macOS
+brew install kubectl minikube docker
 
-# Infrastructure mode - transforms real nri-kafka data
-node platform.js --mode infrastructure
+# Ubuntu/Debian
+curl -LO "https://dl.k8s.io/release/$(curl -L -s https://dl.k8s.io/release/stable.txt)/bin/linux/amd64/kubectl"
+curl -LO https://storage.googleapis.com/minikube/releases/latest/minikube-linux-amd64
 
-# Hybrid mode - combines real and simulated data
-node platform.js --mode hybrid
+# Windows (using Chocolatey)
+choco install kubernetes-cli minikube docker-desktop
 ```
 
-### 4. Test Locally with Docker
+### New Relic Configuration
+
+Set up your New Relic credentials (optional for demo mode):
 
 ```bash
-# Start local Kafka cluster
-cd infrastructure
-docker-compose up -d
-
-# Test with simulated nri-kafka data
-DRY_RUN=true node test-local-kafka.js
-
-# Run platform with real credentials
-node ../platform.js --mode infrastructure --interval 30
+export NEW_RELIC_ACCOUNT_ID="your-account-id"
+export NEW_RELIC_USER_API_KEY="your-user-api-key"
+export NEW_RELIC_INGEST_KEY="your-ingest-license-key"
 ```
 
-## 📚 Platform Modes
+> **Note:** Platform runs in demo mode with mock data if credentials are not provided.
 
-### 1. **Simulation Mode**: Generates realistic message queue data for testing and demos
-   - Creates complete Kafka topology (clusters, brokers, topics, consumer groups)
-   - Simulates realistic metrics with patterns (business hours, anomalies)
-   - Perfect for development and testing without real infrastructure
+## 🏗️ Architecture
 
-### 2. **Infrastructure Mode**: Transforms real nri-kafka data to MESSAGE_QUEUE entities
-   - Queries KafkaBrokerSample, KafkaTopicSample, KafkaConsumerSample from NRDB
-   - Transforms to standardized MESSAGE_QUEUE_* entity types
-   - Builds entity relationships automatically
-   - Requires nri-kafka integration on your Kafka hosts
+### Components
 
-### 3. **Hybrid Mode**: Combines real and simulated data for complete coverage
-   - Uses real infrastructure data where available
-   - Fills gaps with simulated entities (missing topics, consumer groups)
-   - Ensures complete visibility even with partial instrumentation
+```
+┌─────────────────┬─────────────────┬─────────────────┐
+│   Deployment    │   Monitoring    │   Dashboards    │
+├─────────────────┼─────────────────┼─────────────────┤
+│ • Minikube      │ • Data Collector│ • Real-time     │
+│ • Kafka Cluster │ • v3.0 Transform│ • Golden Metrics│
+│ • Zookeeper     │ • NR Streaming  │ • Alerts        │
+│ • nri-kafka     │ • Entity Synth  │ • Topology      │
+└─────────────────┴─────────────────┴─────────────────┘
+```
 
-## 📁 Project Structure
+### Data Flow
 
+```
+Kafka JMX → nri-kafka → Platform → v3.0 Entities → New Relic → Dashboards
+```
+
+## 📊 Features
+
+### ✅ Complete v3.0 Data Model Support
+- **Entity Types**: MESSAGE_QUEUE_BROKER, MESSAGE_QUEUE_TOPIC, MESSAGE_QUEUE_CONSUMER_GROUP, MESSAGE_QUEUE_CLUSTER
+- **GUID Format**: `{accountId}|INFRA|{entityType}|{uniqueHash}`
+- **Comprehensive Metadata**: Provider, environment, configuration details
+- **Golden Metrics**: UI-ready metrics for key performance indicators
+- **Structured Tags**: Categorized operational tags
+
+### ✅ Infrastructure Deployment
+- **Automated Minikube Setup**: Multi-node Kafka cluster
+- **Kafka Configuration**: Production-ready settings with JMX
+- **Monitoring Integration**: nri-kafka DaemonSet deployment
+- **Service Discovery**: Automatic broker and topic detection
+
+### ✅ Real-time Monitoring
+- **Live Data Collection**: 30-second intervals (configurable)
+- **Entity Synthesis**: Automatic relationship mapping
+- **Health Monitoring**: Cluster, broker, and consumer group health
+- **Performance Metrics**: Throughput, latency, resource utilization
+
+### ✅ Dashboard Generation
+- **Comprehensive Dashboards**: Cluster overview, broker details, topic analysis
+- **Interactive Charts**: Real-time updates and drill-down capabilities
+- **Alert Templates**: Pre-configured alerting rules
+- **Export Options**: JSON, permalink, and screenshot export
+
+## 🎬 Demo Scenarios
+
+### 1. Local Development Demo
+```bash
+# Start local demo with mock data
+node launch.js demo
+```
+
+### 2. Full Infrastructure Demo
+```bash
+# Deploy complete infrastructure
+node launch.js deploy
+node launch.js monitor --background
+node launch.js dashboards --open
+```
+
+### 3. Monitoring Only Demo
+```bash
+# Connect to existing Kafka cluster
+NEW_RELIC_ACCOUNT_ID=your-id node launch.js monitor
+```
+
+## 📈 Monitoring Coverage
+
+### Broker Metrics
+- Throughput (messages/bytes per second)
+- Resource utilization (CPU, memory, disk)
+- Request latency (produce/fetch)
+- Partition and replication health
+
+### Topic Metrics
+- Message rates and retention
+- Partition distribution
+- Consumer lag analysis
+- Size and growth trends
+
+### Consumer Group Metrics
+- Lag monitoring and trends
+- Member stability
+- Offset commit rates
+- Processing performance
+
+### Cluster Metrics
+- Overall health scoring
+- Broker availability
+- Replication status
+- Network performance
+
+## 🔧 Configuration
+
+### Platform Configuration
+The platform uses environment variables and command-line options:
+
+```bash
+# Environment Variables
+NEW_RELIC_ACCOUNT_ID=123456
+NEW_RELIC_USER_API_KEY=NRAK-...
+NEW_RELIC_INGEST_KEY=...
+
+# Command-line Options
+node launch.js monitor --dry-run          # Test mode
+node launch.js dashboards --output=./out  # Custom output
+node launch.js demo                        # Full demonstration
+```
+
+### Kafka Configuration
+Deployed Kafka cluster includes:
+- **Replicas**: 3 brokers (configurable)
+- **JMX**: Enabled on port 9999
+- **Auto-create Topics**: Enabled
+- **Default Replication**: Factor 2
+- **Partitions**: 12 default (configurable)
+
+## 🐛 Troubleshooting
+
+### Common Issues
+
+1. **Minikube not starting**
+   ```bash
+   # Check system resources
+   node launch.js status
+   
+   # Clean up and retry
+   node launch.js cleanup
+   node launch.js quick-start
+   ```
+
+2. **No data in New Relic**
+   ```bash
+   # Verify credentials
+   echo $NEW_RELIC_ACCOUNT_ID
+   
+   # Test with dry-run
+   node launch.js monitor --dry-run
+   ```
+
+3. **Dashboard generation fails**
+   ```bash
+   # Check API permissions
+   node launch.js dashboards --dry-run
+   ```
+
+### Debug Mode
+```bash
+# Enable debug logging
+DEBUG=true node launch.js [command]
+
+# Check platform status
+node launch.js status
+```
+
+## 📝 Development
+
+### Project Structure
 ```
 newrelic-message-queues-platform/
-├── core/                    # Core framework components
-│   ├── entities/           # Entity definitions and factory
-│   └── relationships/      # Entity relationship management
-├── simulation/             # Data simulation engines
-│   ├── engines/           # Pattern and anomaly generators
-│   └── streaming/         # New Relic data streaming
-├── infrastructure/         # Infrastructure mode components
-│   ├── collectors/        # nri-kafka data collection
-│   ├── transformers/      # Data transformation pipeline
-│   └── docker-compose.yml # Local Kafka setup
-├── dashboards/            # Dashboard generation framework
-│   ├── framework/        # Core dashboard engine
-│   ├── templates/        # Reusable templates
-│   └── cli.js           # Dashboard CLI tool
-├── examples/             # Example usage and patterns
-└── docs/                # Documentation
+├── launch.js                    # 🚀 Unified entry point
+├── platform.js                  # Core platform logic
+├── core/                        # Entity and metric definitions
+├── dashboards/                  # Dashboard generation
+├── infrastructure/              # Data collection and transformation
+├── simulation/                  # Data streaming to New Relic
+└── archive/                     # Legacy test files
 ```
 
-## 🔧 Key Features
+### Automatic Documentation
+The platform automatically generates beautiful documentation every time it runs:
 
-### Real Infrastructure Integration
-- Leverages battle-tested nri-kafka for JMX metrics
-- Queries Infrastructure agent data via NerdGraph
-- Transforms KafkaBrokerSample → MESSAGE_QUEUE_BROKER
-- Aggregates cluster-level metrics
-
-### Entity Framework
-- Consistent MESSAGE_QUEUE_* entity model
-- Proper entity relationships and synthesis
-- Golden metrics for each entity type
-- Tag-based filtering and grouping
-
-### Dashboard Generation
-- Template-based dashboard creation
-- Provider-specific optimizations
-- NRQL query builders with entity awareness
-- Responsive layout engine
-
-### Simulation Engine
-- Realistic traffic patterns (business hours, seasonality)
-- Anomaly injection for testing
-- Multiple provider support
-- API and WebSocket control interface
-
-## 📊 Entity Types (Unified Data Model)
-
-| Entity Type | Source Event | Key Metrics | GUID Pattern |
-|------------|--------------|-------------|-------------|
-| MESSAGE_QUEUE_BROKER | MessageQueueBrokerSample | throughput, partitions, controller status | `MESSAGE_QUEUE_BROKER\|{accountId}\|kafka\|{clusterName}\|{brokerId}` |
-| MESSAGE_QUEUE_TOPIC | MessageQueueTopicSample | partitions, replication, throughput | `MESSAGE_QUEUE_TOPIC\|{accountId}\|kafka\|{clusterName}\|{topicName}` |
-| MESSAGE_QUEUE_CONSUMER | MessageQueueOffsetSample | lag, offset, partition details | `MESSAGE_QUEUE_CONSUMER\|{accountId}\|kafka\|{clusterName}\|{consumerGroupId}` |
-
-## 🛠️ Common Commands
-
-### Testing
 ```bash
-# Run unit tests
-npm test
+# View documentation features
+node tools/show-auto-docs.js
 
-# Test infrastructure mode
-node test-infrastructure-pipeline.js
+# Generate docs with platform run
+node platform.js --mode simulation --no-continuous
 
-# Test with local Kafka
-DRY_RUN=true node infrastructure/test-local-kafka.js
+# Disable automatic docs
+node platform.js --mode simulation --no-auto-docs
 ```
 
-### Dashboard Operations
-```bash
-# List available templates
-node dashboards/cli.js list-templates
+**Generated Files:**
+- `CURRENT_DATA_MODEL.md` - Live execution data model
+- `docs/LIVE_DATA_TRANSFORMATION_PIPELINE.md` - Complete transformation pipeline
 
-# Create dashboard from template
-node dashboards/cli.js create --template=cluster-overview --provider=kafka
-
-# Generate complete dashboard suite
-node dashboards/cli.js generate-suite --provider=kafka --environment=production
-```
-
-### Platform Operations
-```bash
-# Start infrastructure monitoring
-node platform.js --mode infrastructure --interval 60
-
-# Run in debug mode
-DEBUG=platform:*,transform:* node platform.js --mode infrastructure
-
-# Run simulation with custom topology
-node platform.js --mode simulation --clusters 2 --brokers 3 --topics 10
-```
-
-## 🔍 Troubleshooting
-
-| Issue | Solution |
-|-------|----------|
-| No KafkaBrokerSample data | Verify nri-kafka is installed and configured correctly |
-| Entity synthesis failing | Check GUID format matches pattern, wait 2-3 minutes |
-| Dashboard queries empty | Ensure data has been streaming for 5+ minutes |
-| Transformation errors | Enable debug logging: `DEBUG=transform:*` |
-
-## 🚦 Current Status & Roadmap
-
-### ✅ Completed
-- [x] Unified Data Model (UDM) implementation
-- [x] nri-kafka data transformation with correct entity GUIDs
-- [x] MESSAGE_QUEUE entity framework (BROKER, TOPIC, CONSUMER)
-- [x] Entity relationship mapping with bidirectional tracking
-- [x] Dashboard CI/CD platform with verification
-- [x] Simulation engine with realistic patterns
-- [x] Infrastructure mode with NerdGraph integration
-- [x] Hybrid mode with gap detection and filling
-- [x] Configuration validation with helpful error messages
-- [x] End-to-end test suite for all modes
-- [x] Docker-compose setup for local testing
-- [x] Consumer offset collection via Admin API
-
-### 🚧 In Progress
-- [ ] Health checks and monitoring for the platform itself
-- [ ] RabbitMQ provider support
-- [ ] Advanced anomaly detection patterns
-
-### 📋 Future
-- [ ] Data caching to reduce NerdGraph query load
-- [ ] Support for multiple Kafka clusters in infrastructure mode
-- [ ] Dashboard template validation framework
-- [ ] Automated anomaly detection
-- [ ] Platform health dashboard
-
-## 📚 Documentation
-
-**Unified documentation is now available at**: [/docs/README.md](../docs/README.md)
-
-### Key Documents
-- [Technical Specification](../docs/TECHNICAL_SPECIFICATION.md) - Complete architecture and UDM details
-- [Getting Started](../docs/getting-started/README.md) - Installation and quick start
-- [Developer Guide](../docs/developer-guide/README.md) - API reference and extension guide
-- [Operations Guide](../docs/operations/README.md) - Infrastructure setup and deployment
+### Extending the Platform
+1. **Add New Entity Types**: Extend `core/entities/`
+2. **Custom Metrics**: Add to `core/metrics/`
+3. **Dashboard Templates**: Create in `dashboards/builders/`
+4. **Data Sources**: Implement in `infrastructure/collectors/`
 
 ## 🤝 Contributing
 
-See our [Developer Guide](../docs/developer-guide/README.md) for contribution guidelines.
+1. Fork the repository
+2. Create a feature branch
+3. Test with `node launch.js demo`
+4. Submit a pull request
 
 ## 📄 License
 
-Apache License 2.0
+MIT License - see LICENSE file for details.
+
+## 🆘 Support
+
+- **Issues**: [GitHub Issues](https://github.com/your-repo/issues)
+- **Documentation**: [Wiki](https://github.com/your-repo/wiki)
+- **Discussions**: [GitHub Discussions](https://github.com/your-repo/discussions)
+
+---
+
+**Made with ❤️ for the New Relic community**
+
+*Unified platform for enterprise-grade Kafka monitoring with v3.0 data model compliance*

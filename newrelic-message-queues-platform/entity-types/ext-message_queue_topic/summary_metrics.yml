@@ -1,0 +1,19 @@
+# Summary metrics are displayed in the entity list view
+# Maximum 3 metrics recommended
+messagesInRate:
+  title: Messages In Rate
+  unit: COUNT_PER_MINUTE
+  tag:
+    key: topic.throughput.in
+    
+consumerLag:
+  title: Consumer Lag
+  unit: COUNT
+  tag:
+    key: topic.consumer.lag
+    
+messagesOutRate:
+  title: Messages Out Rate
+  unit: COUNT_PER_MINUTE
+  tag:
+    key: topic.throughput.out

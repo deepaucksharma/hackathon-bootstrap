@@ -1,0 +1,15 @@
+cpuUsage:
+  title: CPU Usage
+  unit: PERCENTAGE
+  goldenMetric: cpuUsage
+
+networkThroughput:
+  title: Network I/O
+  unit: BYTES_PER_SECOND
+  goldenMetric: networkThroughput
+
+partitionCount:
+  title: Partitions
+  unit: COUNT
+  tag:
+    key: partitionCount

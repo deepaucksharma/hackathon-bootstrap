@@ -16,7 +16,7 @@ integrations:
       AUTODISCOVER_STRATEGY: "zookeeper"
       
       # Zookeeper connection for discovery
-      ZOOKEEPER_HOSTS: '[{"host": "localhost", "port": 2181}]'
+      ZOOKEEPER_HOSTS: '[{"host": "host.docker.internal", "port": 2181}]'
       
       # Alternative: Bootstrap discovery (comment out zookeeper above)
       # AUTODISCOVER_STRATEGY: "bootstrap"

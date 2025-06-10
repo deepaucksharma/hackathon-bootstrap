@@ -1,0 +1,67 @@
+domain: INFRA
+type: MESSAGE_QUEUE_CLUSTER
+
+synthesis:
+  rules:
+    # Kafka clusters
+    - identifier: clusterName
+      name: clusterName
+      encodeIdentifierInGUID: true
+      conditions:
+        - attribute: eventType
+          value: KafkaClusterSample
+        - attribute: provider
+          value: kafka
+      tags:
+        environment:
+        region:
+        version:
+        datacenter:
+        team:
+        sla:
+          multiValue: false
+    
+    # RabbitMQ clusters  
+    - identifier: clusterName
+      name: clusterName
+      encodeIdentifierInGUID: true
+      conditions:
+        - attribute: eventType
+          value: RabbitmqClusterSample
+        - attribute: provider
+          value: rabbitmq
+      tags:
+        environment:
+        region:
+        version:
+        team:
+
+goldenTags:
+  - provider
+  - environment
+  - region
+  - version
+  - datacenter
+  - team
+  - sla
+
+compositeMetrics:
+  goldenMetrics:
+    - healthScore
+    - totalThroughput
+    - errorRate
+    - availability
+
+  summaryMetrics:
+    - healthScore
+    - totalThroughput
+    - errorRate
+
+configuration:
+  entityExpirationTime: EIGHT_DAYS
+  alertable: true
+
+dashboardTemplates:
+  newRelic:
+    template: cluster-dashboard.json
+    filterNRQLByEntityID: true

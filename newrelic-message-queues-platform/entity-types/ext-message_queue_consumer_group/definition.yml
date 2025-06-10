@@ -1,0 +1,113 @@
+domain: EXT
+type: MESSAGE_QUEUE_CONSUMER_GROUP
+
+# Synthesis rules for creating consumer group entities from telemetry data
+synthesis:
+  rules:
+    # Standard Kafka consumer group synthesis
+    - identifier: [clusterName, consumer.group.id]
+      name: consumer.group.id
+      encodeIdentifierInGUID: true
+      conditions:
+        - attribute: eventType
+          value: KafkaConsumerSample
+        - attribute: consumer.group.id
+          present: true
+        - attribute: clusterName
+          present: true
+      tags:
+        consumer.group.id:
+          entityTagName: consumerGroupId
+        clusterName:
+          entityTagName: mq.cluster.name
+        provider:
+          entityTagName: mq.provider
+        consumer.type:
+        consumer.clientId:
+        topic:
+          multiValue: true
+          entityTagName: consumerGroup.topics
+        environment:
+        cloud.provider:
+        cloud.region:
+        k8s.cluster.name:
+        k8s.namespace.name:
+        k8s.deployment.name:
+        instrumentation.provider:
+          
+    # AWS MSK consumer group synthesis
+    - identifier: [clusterArn, consumerGroupId]
+      name: consumerGroupId
+      encodeIdentifierInGUID: true
+      conditions:
+        - attribute: eventType
+          value: AwsMskConsumerGroupSample
+        - attribute: clusterArn
+          present: true
+        - attribute: consumerGroupId
+          present: true
+      tags:
+        consumerGroupId:
+        clusterArn:
+          entityTagName: aws.arn
+        clusterName:
+          entityTagName: mq.cluster.name
+        state:
+          entityTagName: consumerGroup.state
+        aws.region:
+        provider:
+          entityTagName: mq.provider
+        environment:
+        instrumentation.provider:
+          
+    # OpenTelemetry compatibility
+    - identifier: [messaging.consumer.group.name, service.namespace]
+      name: messaging.consumer.group.name
+      encodeIdentifierInGUID: true
+      conditions:
+        - attribute: eventType
+          value: Metric
+        - attribute: metricName
+          prefix: messaging.kafka.consumer_group.
+        - attribute: messaging.consumer.group.name
+          present: true
+        - attribute: newrelic.source
+          value: api.metrics.otlp
+      tags:
+        messaging.system:
+          entityTagName: mq.provider
+        messaging.consumer.group.name:
+          entityTagName: consumerGroupId
+        messaging.destination.name:
+          multiValue: true
+          entityTagName: consumerGroup.topics
+        service.name:
+        service.namespace:
+          entityTagName: mq.cluster.name
+        telemetry.sdk.name:
+        telemetry.sdk.version:
+        telemetry.sdk.language:
+        cloud.provider:
+        cloud.region:
+        k8s.cluster.name:
+      legacyFeatures:
+        overrideGuidType: true
+
+# Golden tags are the most important tags for this entity type
+goldenTags:
+  - account
+  - accountId
+  - mq.provider
+  - mq.cluster.name
+  - environment
+  - consumer.type
+  - cloud.provider
+  - cloud.region
+  - k8s.cluster.name
+  - k8s.deployment.name
+  - instrumentation.provider
+
+# Entity configuration
+configuration:
+  entityExpirationTime: FOUR_HOURS
+  alertable: true

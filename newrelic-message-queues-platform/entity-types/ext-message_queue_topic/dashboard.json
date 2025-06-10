@@ -1,0 +1,135 @@
+{
+  "name": "Message Queue Topic",
+  "description": "Topic performance and consumer lag dashboard",
+  "pages": [
+    {
+      "name": "Topic Performance",
+      "description": "Topic throughput and consumer metrics",
+      "widgets": [
+        {
+          "title": "Message Throughput",
+          "layout": {
+            "column": 1,
+            "row": 1,
+            "width": 6,
+            "height": 3
+          },
+          "visualization": {
+            "id": "viz.area"
+          },
+          "rawConfiguration": {
+            "queries": [
+              {
+                "query": "SELECT rate(sum(topic.throughput.in), 1 minute) AS 'Messages In', rate(sum(topic.throughput.out), 1 minute) AS 'Messages Out' FROM MessageQueue WHERE entity.guid = {{ entity.guid }} TIMESERIES SINCE 6 hours ago"
+              }
+            ],
+            "yAxisLeft": {
+              "zero": true
+            }
+          }
+        },
+        {
+          "title": "Consumer Lag",
+          "layout": {
+            "column": 7,
+            "row": 1,
+            "width": 6,
+            "height": 3
+          },
+          "visualization": {
+            "id": "viz.line"
+          },
+          "rawConfiguration": {
+            "queries": [
+              {
+                "query": "SELECT sum(topic.consumer.lag) AS 'Total Lag' FROM MessageQueue WHERE entity.guid = {{ entity.guid }} TIMESERIES SINCE 6 hours ago"
+              }
+            ],
+            "yAxisLeft": {
+              "zero": true
+            }
+          }
+        },
+        {
+          "title": "Byte Rate",
+          "layout": {
+            "column": 1,
+            "row": 4,
+            "width": 6,
+            "height": 3
+          },
+          "visualization": {
+            "id": "viz.area"
+          },
+          "rawConfiguration": {
+            "queries": [
+              {
+                "query": "SELECT rate(sum(topic.bytes.in), 1 second) AS 'Bytes In', rate(sum(topic.bytes.out), 1 second) AS 'Bytes Out' FROM MessageQueue WHERE entity.guid = {{ entity.guid }} TIMESERIES SINCE 6 hours ago"
+              }
+            ],
+            "yAxisLeft": {
+              "zero": true
+            }
+          }
+        },
+        {
+          "title": "Topic Configuration",
+          "layout": {
+            "column": 7,
+            "row": 4,
+            "width": 6,
+            "height": 3
+          },
+          "visualization": {
+            "id": "viz.table"
+          },
+          "rawConfiguration": {
+            "queries": [
+              {
+                "query": "SELECT latest(topic.partitionCount) AS 'Partitions', latest(topic.replicationFactor) AS 'Replication Factor', latest(topic.underReplicatedPartitions) AS 'Under-Replicated', latest(topic.retention.ms) AS 'Retention (ms)' FROM MessageQueue WHERE entity.guid = {{ entity.guid }}"
+              }
+            ]
+          }
+        },
+        {
+          "title": "Consumer Groups",
+          "layout": {
+            "column": 1,
+            "row": 7,
+            "width": 12,
+            "height": 3
+          },
+          "visualization": {
+            "id": "viz.table"
+          },
+          "rawConfiguration": {
+            "queries": [
+              {
+                "query": "SELECT latest(consumerGroup.lag) AS 'Lag', latest(consumerGroup.members) AS 'Members', latest(consumerGroup.messageRate) AS 'Message Rate' FROM MessageQueue WHERE entity.type = 'MESSAGE_QUEUE_CONSUMER_GROUP' AND topicName = {{ entity.name }} FACET entity.name AS 'Consumer Group' SINCE 5 minutes ago"
+              }
+            ]
+          }
+        },
+        {
+          "title": "Production vs Consumption",
+          "layout": {
+            "column": 1,
+            "row": 10,
+            "width": 12,
+            "height": 3
+          },
+          "visualization": {
+            "id": "viz.billboard"
+          },
+          "rawConfiguration": {
+            "queries": [
+              {
+                "query": "SELECT rate(sum(topic.throughput.in), 1 minute) AS 'Production Rate', rate(sum(topic.throughput.out), 1 minute) AS 'Consumption Rate', (rate(sum(topic.throughput.in), 1 minute) - rate(sum(topic.throughput.out), 1 minute)) AS 'Rate Difference' FROM MessageQueue WHERE entity.guid = {{ entity.guid }} SINCE 30 minutes ago"
+              }
+            ]
+          }
+        }
+      ]
+    }
+  ]
+}
