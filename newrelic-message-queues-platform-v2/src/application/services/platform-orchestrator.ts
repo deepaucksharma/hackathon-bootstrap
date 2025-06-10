@@ -43,8 +43,6 @@ export class PlatformOrchestrator {
   private collector?: BaseCollector;
   private transformer?: BaseTransformer;
   private synthesizer: EntitySynthesizer;
-  private entityStreamer: EntityStreamer;
-  private metricStreamer: MetricStreamer;
   private pipelineDocumenter?: PipelineDocumenter;
   private isRunning = false;
   private cycleTimer?: NodeJS.Timeout;
@@ -144,7 +142,7 @@ export class PlatformOrchestrator {
         id: cycleId,
         type: 'OrchestratorCycleStarted',
         aggregateId: 'platform',
-        timestamp: startTime,
+        timestamp: new Date(startTime),
         version: 1,
         data: { mode: this.config.getPlatformMode() }
       });
@@ -202,7 +200,7 @@ export class PlatformOrchestrator {
         id: `${cycleId}-completed`,
         type: 'OrchestratorCycleCompleted',
         aggregateId: 'platform',
-        timestamp: Date.now(),
+        timestamp: new Date(),
         version: 1,
         data: {
           cycleId,
@@ -231,7 +229,7 @@ export class PlatformOrchestrator {
         id: `${cycleId}-error`,
         type: 'OrchestratorCycleError',
         aggregateId: 'platform',
-        timestamp: Date.now(),
+        timestamp: new Date(),
         version: 1,
         data: {
           cycleId,

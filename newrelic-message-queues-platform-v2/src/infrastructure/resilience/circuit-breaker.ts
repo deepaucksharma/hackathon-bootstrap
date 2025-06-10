@@ -17,6 +17,7 @@ export interface CircuitBreakerOptions {
   timeout?: number;
   retryDelay?: number;
   volumeThreshold?: number;
+  monitoringWindow?: number;
   logger?: Logger;
 }
 
